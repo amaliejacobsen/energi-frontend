@@ -213,26 +213,79 @@ function InstalledCapacity() {
 
 function Consumption() {
   const zones = ["DK1", "DK2", "Tyskland"];
-  const [data, setData] = useState({});
+  const [monthly, setMonthly] = useState({});
+  const [hourly,  setHourly]  = useState({});
 
   useEffect(() => {
     zones.forEach(zone => {
-      fetch(`${API}/consumption/${zone}`).then(r => r.json()).then(d => {
-        setData(prev => ({ ...prev, [zone]: d }));
-      });
+      fetch(`${API}/consumption/${zone}`)
+        .then(r => r.json())
+        .then(d => setMonthly(prev => ({ ...prev, [zone]: d })));
+      fetch(`${API}/consumption-hourly/${zone}`)
+        .then(r => r.json())
+        .then(d => setHourly(prev => ({ ...prev, [zone]: d })));
     });
   }, []);
+
+  const HOUR_LABELS = Array.from({length: 24}, (_, h) => `${String(h).padStart(2,'0')}:00`);
+
+  function groupHourlyByYear(data) {
+    const currentYear = new Date().getFullYear();
+    const years = [...new Set(data.map(d => d.year))].sort();
+    const byHour = HOUR_LABELS.map((label, h) => {
+      const row = { hour: label };
+      years.forEach(year => {
+        const found = data.find(d => d.year === year && d.hour === h);
+        row[year] = found ? found.value_mwh : null;
+      });
+      const vals = years
+        .filter(y => y !== currentYear)
+        .map(y => {
+          const f = data.find(d => d.year === y && d.hour === h);
+          return f ? f.value_mwh : null;
+        })
+        .filter(v => v !== null);
+      row["Median"] = median(vals);
+      return row;
+    });
+    return { years, byHour };
+  }
 
   return (
     <div>
       {zones.map(zone => (
-        <YearlyLineChart
-          key={zone}
-          data={data[zone] || []}
-          valueKey="value_mwh"
-          title={`Forbrug – ${zone} (MWh)`}
-          yLabel="MWh"
-        />
+        <div key={zone}>
+          <YearlyLineChart
+            data={monthly[zone] || []}
+            valueKey="value_mwh"
+            title={`Forbrug – ${zone} månedligt gennemsnit (MWh)`}
+            yLabel="MWh"
+          />
+          <div className="chart-box">
+            <h3>Forbrug – {zone} timesgennemsnit (MWh)</h3>
+            {(() => {
+              const { years, byHour } = groupHourlyByYear(hourly[zone] || []);
+              return (
+                <ResponsiveContainer width="100%" height={320}>
+                  <LineChart data={byHour}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                    <XAxis dataKey="hour" tick={{ fontSize: 11 }} interval={2} />
+                    <YAxis tick={{ fontSize: 12 }} label={{ value: "MWh", angle: -90, position: "insideLeft", fontSize: 12 }} />
+                    <Tooltip /><Legend />
+                    {years.map((year, i) => (
+                      <Line key={year} type="monotone" dataKey={year}
+                        stroke={YEAR_COLORS[i % YEAR_COLORS.length]}
+                        strokeWidth={year === new Date().getFullYear() ? 2.5 : 1.25}
+                        dot={false} connectNulls={false} />
+                    ))}
+                    <Line type="monotone" dataKey="Median" stroke="#000000"
+                      strokeWidth={2.25} strokeDasharray="6 3" dot={false} connectNulls={false} />
+                  </LineChart>
+                </ResponsiveContainer>
+              );
+            })()}
+          </div>
+        </div>
       ))}
     </div>
   );
