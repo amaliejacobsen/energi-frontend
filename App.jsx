@@ -211,7 +211,34 @@ function InstalledCapacity() {
   );
 }
 
-const TABS = ["DK1 Priser","DK2 Priser","DK1 Produktion","DK2 Produktion","Norge Hydro","Sverige Hydro","Gas Storage","Installed Capacity"];
+function Consumption() {
+  const zones = ["DK1", "DK2", "Tyskland"];
+  const [data, setData] = useState({});
+
+  useEffect(() => {
+    zones.forEach(zone => {
+      fetch(`${API}/consumption/${zone}`).then(r => r.json()).then(d => {
+        setData(prev => ({ ...prev, [zone]: d }));
+      });
+    });
+  }, []);
+
+  return (
+    <div>
+      {zones.map(zone => (
+        <YearlyLineChart
+          key={zone}
+          data={data[zone] || []}
+          valueKey="value_mwh"
+          title={`Forbrug – ${zone} (MWh)`}
+          yLabel="MWh"
+        />
+      ))}
+    </div>
+  );
+}
+
+const TABS = ["DK1 Priser","DK2 Priser","DK1 Produktion","DK2 Produktion","Norge Hydro","Sverige Hydro","Gas Storage","Installed Capacity","Forbrug"];
 
 export default function App() {
   const [tab, setTab] = useState(TABS[0]);
@@ -233,6 +260,11 @@ export default function App() {
         {tab === "Sverige Hydro" && <HydroSection country="Sverige" zones={["SE1","SE2","SE3","SE4"]} />}
         {tab === "Gas Storage" && <GasStorage />}
         {tab === "Installed Capacity" && <InstalledCapacity />}
+        {tab === "Forbrug" && <Consumption />}
+```
+
+```
+https://energi-backend-production.up.railway.app/api/refresh
       </main>
       <style>{`
         * { box-sizing: border-box; margin: 0; padding: 0; }
