@@ -1,20 +1,9 @@
 import { useState, useEffect } from "react";
-import {
-  LineChart, Line, BarChart, Bar,
-  XAxis, YAxis, CartesianGrid, Tooltip,
-  Legend, ResponsiveContainer
-} from "recharts";
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
 const API = "https://energi-backend-production.up.railway.app/api";
-
-const YEAR_COLORS = [
-  "#2C3E50", "#E74C3C", "#3498DB", "#2ECC71",
-  "#9B59B6", "#F39C12", "#1ABC9C", "#E67E22",
-  "#95A5A6", "#D35400"
-];
-
-const MONTH_NAMES = ["Jan","Feb","Mar","Apr","Maj","Jun",
-                     "Jul","Aug","Sep","Okt","Nov","Dec"];
+const YEAR_COLORS = ["#2C3E50","#E74C3C","#3498DB","#2ECC71","#9B59B6","#F39C12","#1ABC9C","#E67E22","#95A5A6","#D35400"];
+const MONTH_NAMES = ["Jan","Feb","Mar","Apr","Maj","Jun","Jul","Aug","Sep","Okt","Nov","Dec"];
 
 function groupByYear(data, valueKey) {
   const years = [...new Set(data.map(d => d.year))].sort();
@@ -42,15 +31,7 @@ function YearlyLineChart({ data, valueKey, title, yLabel }) {
           <Tooltip />
           <Legend />
           {years.map((year, i) => (
-            <Line
-              key={year}
-              type="monotone"
-              dataKey={year}
-              stroke={YEAR_COLORS[i % YEAR_COLORS.length]}
-              strokeWidth={year === new Date().getFullYear() ? 2.5 : 1.5}
-              dot={false}
-              connectNulls={false}
-            />
+            <Line key={year} type="monotone" dataKey={year} stroke={YEAR_COLORS[i % YEAR_COLORS.length]} strokeWidth={year === new Date().getFullYear() ? 2.5 : 1.5} dot={false} connectNulls={false} />
           ))}
         </LineChart>
       </ResponsiveContainer>
@@ -61,24 +42,11 @@ function YearlyLineChart({ data, valueKey, title, yLabel }) {
 function DKPrices({ area }) {
   const [data, setData] = useState([]);
   useEffect(() => {
-    fetch(`${API}/dk-prices/${area}`)
-      .then(r => r.json()).then(setData);
+    fetch(`${API}/dk-prices/${area}`).then(r => r.json()).then(setData);
   }, [area]);
 
-  const chartData = data.map(d => ({
-    month: d.month,
-    Spotpris: d.spot_price,
-    Solar: d.solar_weighted,
-    Offshore: d.offshore_weighted,
-    Onshore: d.onshore_weighted,
-  }));
-
-  const captureData = data.map(d => ({
-    month: d.month,
-    Solar: d.solar_capture_rate,
-    Offshore: d.offshore_capture_rate,
-    Onshore: d.onshore_capture_rate,
-  }));
+  const chartData = data.map(d => ({ month: d.month, Spotpris: d.spot_price, Solar: d.solar_weighted, Offshore: d.offshore_weighted, Onshore: d.onshore_weighted }));
+  const captureData = data.map(d => ({ month: d.month, Solar: d.solar_capture_rate, Offshore: d.offshore_capture_rate, Onshore: d.onshore_capture_rate }));
 
   return (
     <div>
@@ -91,10 +59,10 @@ function DKPrices({ area }) {
             <YAxis tick={{ fontSize: 12 }} label={{ value: "DKK/MWh", angle: -90, position: "insideLeft", fontSize: 12 }} />
             <Tooltip />
             <Legend />
-            <Line type="monotone" dataKey="Spotpris"  stroke="#2C3E50" strokeWidth={2.5} dot={false} />
-            <Line type="monotone" dataKey="Solar"     stroke="#F4A927" strokeWidth={1.75} dot={false} />
-            <Line type="monotone" dataKey="Offshore"  stroke="#1A7BB9" strokeWidth={1.75} dot={false} />
-            <Line type="monotone" dataKey="Onshore"   stroke="#3DAA6E" strokeWidth={1.75} dot={false} strokeDasharray="5 5" />
+            <Line type="monotone" dataKey="Spotpris" stroke="#2C3E50" strokeWidth={2.5} dot={false} />
+            <Line type="monotone" dataKey="Solar" stroke="#F4A927" strokeWidth={1.75} dot={false} />
+            <Line type="monotone" dataKey="Offshore" stroke="#1A7BB9" strokeWidth={1.75} dot={false} />
+            <Line type="monotone" dataKey="Onshore" stroke="#3DAA6E" strokeWidth={1.75} dot={false} strokeDasharray="5 5" />
           </LineChart>
         </ResponsiveContainer>
       </div>
@@ -107,9 +75,9 @@ function DKPrices({ area }) {
             <YAxis tick={{ fontSize: 12 }} label={{ value: "%", angle: -90, position: "insideLeft", fontSize: 12 }} />
             <Tooltip />
             <Legend />
-            <Line type="monotone" dataKey="Solar"    stroke="#F4A927" strokeWidth={1.75} dot={false} />
+            <Line type="monotone" dataKey="Solar" stroke="#F4A927" strokeWidth={1.75} dot={false} />
             <Line type="monotone" dataKey="Offshore" stroke="#1A7BB9" strokeWidth={1.75} dot={false} />
-            <Line type="monotone" dataKey="Onshore"  stroke="#3DAA6E" strokeWidth={1.75} dot={false} strokeDasharray="5 5" />
+            <Line type="monotone" dataKey="Onshore" stroke="#3DAA6E" strokeWidth={1.75} dot={false} strokeDasharray="5 5" />
           </LineChart>
         </ResponsiveContainer>
       </div>
@@ -118,9 +86,9 @@ function DKPrices({ area }) {
 }
 
 function DKProduction({ area }) {
-  const [solar,    setSolar]    = useState([]);
+  const [solar, setSolar] = useState([]);
   const [offshore, setOffshore] = useState([]);
-  const [onshore,  setOnshore]  = useState([]);
+  const [onshore, setOnshore] = useState([]);
 
   useEffect(() => {
     fetch(`${API}/dk-production/${area}/solar`).then(r => r.json()).then(setSolar);
@@ -130,20 +98,19 @@ function DKProduction({ area }) {
 
   return (
     <div>
-      <YearlyLineChart data={solar}    valueKey="value_mwh" title={`${area} – Sol produktion (MWh)`}           yLabel="MWh" />
+      <YearlyLineChart data={solar} valueKey="value_mwh" title={`${area} – Sol produktion (MWh)`} yLabel="MWh" />
       <YearlyLineChart data={offshore} valueKey="value_mwh" title={`${area} – Offshore vind produktion (MWh)`} yLabel="MWh" />
-      <YearlyLineChart data={onshore}  valueKey="value_mwh" title={`${area} – Onshore vind produktion (MWh)`}  yLabel="MWh" />
+      <YearlyLineChart data={onshore} valueKey="value_mwh" title={`${area} – Onshore vind produktion (MWh)`} yLabel="MWh" />
     </div>
   );
 }
 
 function HydroSection({ country, zones }) {
   const [selected, setSelected] = useState(zones[0]);
-  const [data, setData]         = useState([]);
+  const [data, setData] = useState([]);
 
   useEffect(() => {
-    fetch(`${API}/hydro/${country}/${selected}`)
-      .then(r => r.json()).then(setData);
+    fetch(`${API}/hydro/${country}/${selected}`).then(r => r.json()).then(setData);
   }, [country, selected]);
 
   return (
@@ -173,13 +140,7 @@ function GasStorage() {
   return (
     <div>
       {areas.map(area => (
-        <YearlyLineChart
-          key={area}
-          data={data[area] || []}
-          valueKey="full_pct"
-          title={`Gas storage – ${area} (% kapacitet)`}
-          yLabel="%"
-        />
+        <YearlyLineChart key={area} data={data[area] || []} valueKey="full_pct" title={`Gas storage – ${area} (% kapacitet)`} yLabel="%" />
       ))}
     </div>
   );
@@ -188,14 +149,13 @@ function GasStorage() {
 function InstalledCapacity() {
   const countries = ["Danmark","Norge","Sverige","Finland","Holland","Frankrig"];
   const [selected, setSelected] = useState("Danmark");
-  const [data, setData]         = useState([]);
+  const [data, setData] = useState([]);
 
   useEffect(() => {
-    fetch(`${API}/capacity/${selected}`)
-      .then(r => r.json()).then(setData);
+    fetch(`${API}/capacity/${selected}`).then(r => r.json()).then(setData);
   }, [selected]);
 
-  const years    = [...new Set(data.map(d => d.year))].sort();
+  const years = [...new Set(data.map(d => d.year))].sort();
   const psrTypes = [...new Set(data.map(d => d.psr_name))];
   const chartData = psrTypes.map(psr => {
     const row = { psr };
@@ -232,12 +192,7 @@ function InstalledCapacity() {
   );
 }
 
-const TABS = [
-  "DK1 Priser", "DK2 Priser",
-  "DK1 Produktion", "DK2 Produktion",
-  "Norge Hydro", "Sverige Hydro",
-  "Gas Storage", "Installed Capacity"
-];
+const TABS = ["DK1 Priser","DK2 Priser","DK1 Produktion","DK2 Produktion","Norge Hydro","Sverige Hydro","Gas Storage","Installed Capacity"];
 
 export default function App() {
   const [tab, setTab] = useState(TABS[0]);
@@ -253,13 +208,13 @@ export default function App() {
         ))}
       </nav>
       <main>
-        {tab === "DK1 Priser"         && <DKPrices area="DK1" />}
-        {tab === "DK2 Priser"         && <DKPrices area="DK2" />}
-        {tab === "DK1 Produktion"     && <DKProduction area="DK1" />}
-        {tab === "DK2 Produktion"     && <DKProduction area="DK2" />}
-        {tab === "Norge Hydro"        && <HydroSection country="Norge"   zones={["NO1","NO2","NO3","NO4","NO5"]} />}
-        {tab === "Sverige Hydro"      && <HydroSection country="Sverige" zones={["SE1","SE2","SE3","SE4"]} />}
-        {tab === "Gas Storage"        && <GasStorage />}
+        {tab === "DK1 Priser" && <DKPrices area="DK1" />}
+        {tab === "DK2 Priser" && <DKPrices area="DK2" />}
+        {tab === "DK1 Produktion" && <DKProduction area="DK1" />}
+        {tab === "DK2 Produktion" && <DKProduction area="DK2" />}
+        {tab === "Norge Hydro" && <HydroSection country="Norge" zones={["NO1","NO2","NO3","NO4","NO5"]} />}
+        {tab === "Sverige Hydro" && <HydroSection country="Sverige" zones={["SE1","SE2","SE3","SE4"]} />}
+        {tab === "Gas Storage" && <GasStorage />}
         {tab === "Installed Capacity" && <InstalledCapacity />}
       </main>
       <style>{`
@@ -269,30 +224,4 @@ export default function App() {
         header { padding: 24px 0 16px; border-bottom: 2px solid #e0e6ed; margin-bottom: 16px; }
         h1 { font-size: 1.6rem; color: #2C3E50; }
         .nav-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 24px; }
-        .nav-tab { padding: 8px 14px; border: 1px solid #d0d7de; background: #fff;
-                   border-radius: 6px; cursor: pointer; font-size: 13px; color: #444;
-                   transition: all 0.15s; }
-        .nav-tab:hover { background: #f0f4f8; }
-        .nav-tab.active { background: #2C3E50; color: #fff; border-color: #2C3E50; }
-        .chart-box { background: #fff; border-radius: 10px; padding: 20px 16px;
-                     margin-bottom: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
-        .chart-box h3 { font-size: 1rem; color: #2C3E50; margin-bottom: 16px; }
-        .tab-row { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
-        .tab { padding: 6px 12px; border: 1px solid #d0d7de; background: #fff;
-               border-radius: 5px; cursor: pointer; font-size: 13px; }
-        .tab.active { background: #1A7BB9; color: #fff; border-color: #1A7BB9; }
-      `}</style>
-    </div>
-  );
-}
-```
-
-Mappestrukturen skal se sådan ud:
-```
-energi-frontend/
-├── index.html
-├── package.json
-├── vite.config.js
-└── src/
-    ├── main.jsx
-    └── App.jsx
+        .nav-tab { padding: 8px 14px; border: 1px solid #d0d7de; background: #fff; border-radius:
