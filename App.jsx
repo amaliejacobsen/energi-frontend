@@ -5,7 +5,15 @@ const API = "https://energi-backend-production.up.railway.app/api";
 const YEAR_COLORS = ["#2C3E50","#E74C3C","#3498DB","#2ECC71","#9B59B6","#F39C12","#1ABC9C","#E67E22","#95A5A6","#D35400"];
 const MONTH_NAMES = ["Jan","Feb","Mar","Apr","Maj","Jun","Jul","Aug","Sep","Okt","Nov","Dec"];
 
+function median(values) {
+  if (!values.length) return null;
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+}
+
 function groupByYear(data, valueKey) {
+  const currentYear = new Date().getFullYear();
   const years = [...new Set(data.map(d => d.year))].sort();
   const byMonth = MONTH_NAMES.map((name, i) => {
     const row = { month: name };
@@ -13,12 +21,22 @@ function groupByYear(data, valueKey) {
       const found = data.find(d => d.year === year && d.month === i + 1);
       row[year] = found ? found[valueKey] : null;
     });
+    // Beregn median fra alle år undtagen indeværende
+    const vals = years
+      .filter(y => y !== currentYear)
+      .map(y => {
+        const f = data.find(d => d.year === y && d.month === i + 1);
+        return f ? f[valueKey] : null;
+      })
+      .filter(v => v !== null && v > 0);
+    row["Median"] = median(vals);
     return row;
   });
   return { years, byMonth };
 }
 
 function YearlyLineChart({ data, valueKey, title, yLabel }) {
+  const currentYear = new Date().getFullYear();
   const { years, byMonth } = groupByYear(data, valueKey);
   return (
     <div className="chart-box">
@@ -31,8 +49,11 @@ function YearlyLineChart({ data, valueKey, title, yLabel }) {
           <Tooltip />
           <Legend />
           {years.map((year, i) => (
-            <Line key={year} type="monotone" dataKey={year} stroke={YEAR_COLORS[i % YEAR_COLORS.length]} strokeWidth={year === new Date().getFullYear() ? 2.5 : 1.5} dot={false} connectNulls={false} />
+            <Line key={year} type="monotone" dataKey={year} stroke={YEAR_COLORS[i % YEAR_COLORS.length]}
+              strokeWidth={year === currentYear ? 2.5 : 1.25} dot={false} connectNulls={false} />
           ))}
+          <Line type="monotone" dataKey="Median" stroke="#000000" strokeWidth={2.25}
+            strokeDasharray="6 3" dot={false} connectNulls={false} />
         </LineChart>
       </ResponsiveContainer>
     </div>
@@ -57,8 +78,7 @@ function DKPrices({ area }) {
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
             <XAxis dataKey="month" tick={{ fontSize: 11 }} interval={2} />
             <YAxis tick={{ fontSize: 12 }} label={{ value: "DKK/MWh", angle: -90, position: "insideLeft", fontSize: 12 }} />
-            <Tooltip />
-            <Legend />
+            <Tooltip /><Legend />
             <Line type="monotone" dataKey="Spotpris" stroke="#2C3E50" strokeWidth={2.5} dot={false} />
             <Line type="monotone" dataKey="Solar" stroke="#F4A927" strokeWidth={1.75} dot={false} />
             <Line type="monotone" dataKey="Offshore" stroke="#1A7BB9" strokeWidth={1.75} dot={false} />
@@ -73,8 +93,7 @@ function DKPrices({ area }) {
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
             <XAxis dataKey="month" tick={{ fontSize: 11 }} interval={2} />
             <YAxis tick={{ fontSize: 12 }} label={{ value: "%", angle: -90, position: "insideLeft", fontSize: 12 }} />
-            <Tooltip />
-            <Legend />
+            <Tooltip /><Legend />
             <Line type="monotone" dataKey="Solar" stroke="#F4A927" strokeWidth={1.75} dot={false} />
             <Line type="monotone" dataKey="Offshore" stroke="#1A7BB9" strokeWidth={1.75} dot={false} />
             <Line type="monotone" dataKey="Onshore" stroke="#3DAA6E" strokeWidth={1.75} dot={false} strokeDasharray="5 5" />
@@ -140,7 +159,8 @@ function GasStorage() {
   return (
     <div>
       {areas.map(area => (
-        <YearlyLineChart key={area} data={data[area] || []} valueKey="full_pct" title={`Gas storage – ${area} (% kapacitet)`} yLabel="%" />
+        <YearlyLineChart key={area} data={data[area] || []} valueKey="full_pct"
+          title={`Gas storage – ${area} (% kapacitet)`} yLabel="%" />
       ))}
     </div>
   );
@@ -179,9 +199,8 @@ function InstalledCapacity() {
           <BarChart data={chartData} layout="vertical">
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
             <XAxis type="number" tick={{ fontSize: 12 }} />
-            <YAxis type="category" dataKey="psr" width={160} tick={{ fontSize: 11 }} />
-            <Tooltip />
-            <Legend />
+            <YAxis type="category" dataKey="psr" width={180} tick={{ fontSize: 11 }} />
+            <Tooltip /><Legend />
             {years.map((year, i) => (
               <Bar key={year} dataKey={year} stackId="a" fill={YEAR_COLORS[i % YEAR_COLORS.length]} />
             ))}
@@ -199,9 +218,7 @@ export default function App() {
 
   return (
     <div className="app">
-      <header>
-        <h1>⚡ Energianalyse</h1>
-      </header>
+      <header><h1>⚡ Energianalyse</h1></header>
       <nav className="nav-tabs">
         {TABS.map(t => (
           <button key={t} className={tab === t ? "nav-tab active" : "nav-tab"} onClick={() => setTab(t)}>{t}</button>
@@ -223,7 +240,7 @@ export default function App() {
         .app { max-width: 1400px; margin: 0 auto; padding: 0 20px 40px; }
         header { padding: 24px 0 16px; border-bottom: 2px solid #e0e6ed; margin-bottom: 16px; }
         h1 { font-size: 1.6rem; color: #2C3E50; }
-.nav-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 24px; }
+        .nav-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 24px; }
         .nav-tab { padding: 8px 14px; border: 1px solid #d0d7de; background: #fff; border-radius: 6px; cursor: pointer; font-size: 13px; color: #444; transition: all 0.15s; }
         .nav-tab:hover { background: #f0f4f8; }
         .nav-tab.active { background: #2C3E50; color: #fff; border-color: #2C3E50; }
