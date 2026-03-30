@@ -222,19 +222,12 @@ function Consumption() {
       fetch(`${API}/consumption/${zone}`)
         .then(r => r.json())
         .then(d => setMonthly(prev => ({ ...prev, [zone]: d })));
-
       fetch(`${API}/consumption-hourly/${zone}`)
         .then(r => r.json())
         .then(d => setHourly(prev => ({ ...prev, [zone]: d })));
     });
   }, []);
 
-  return (
-    <div>
-      {/* din UI */}
-    </div>
-  );
-}
   const HOUR_LABELS = Array.from({length: 24}, (_, h) => `${String(h).padStart(2,'0')}:00`);
 
   function groupHourlyByYear(data) {
