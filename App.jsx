@@ -261,8 +261,11 @@ export default function App() {
         {tab === "Gas Storage" && <GasStorage />}
         {tab === "Installed Capacity" && <InstalledCapacity />}
         {tab === "Forbrug" && <Consumption />}
-```
-
+```jsx
+        {tab === "Installed Capacity" && <InstalledCapacity />}
+        {tab === "Forbrug" && <Consumption />}
+      </main>
+      <style>{`
 ```
 https://energi-backend-production.up.railway.app/api/refresh
       </main>
