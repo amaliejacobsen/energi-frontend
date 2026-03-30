@@ -184,7 +184,8 @@ function InstalledCapacity() {
       row[year] = found ? found.value_mw : 0;
     });
     return row;
-  });
+    });
+  }, []);
 
   return (
     <div>
