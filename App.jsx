@@ -225,7 +225,6 @@ function Consumption() {
         .then(r => r.json())
         .then(d => setHourly(prev => ({ ...prev, [zone]: d })));
     });
-  }, []);
 
   const HOUR_LABELS = Array.from({length: 24}, (_, h) => `${String(h).padStart(2,'0')}:00`);
 
