@@ -4,8 +4,9 @@ import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, L
 const API = "https://energi-backend-production.up.railway.app/api";
 const YEAR_COLORS = ["#2C3E50","#E74C3C","#3498DB","#2ECC71","#9B59B6","#F39C12","#1ABC9C","#E67E22","#95A5A6","#D35400"];
 const MONTH_NAMES = ["Jan","Feb","Mar","Apr","Maj","Jun","Jul","Aug","Sep","Okt","Nov","Dec"];
+const HOUR_LABELS = Array.from({length: 24}, (_, h) => `${String(h).padStart(2,'0')}:00`);
 
-function median(values) {
+function calcMedian(values) {
   if (!values.length) return null;
   const sorted = [...values].sort((a, b) => a - b);
   const mid = Math.floor(sorted.length / 2);
@@ -21,21 +22,31 @@ function groupByYear(data, valueKey) {
       const found = data.find(d => d.year === year && d.month === i + 1);
       row[year] = found ? found[valueKey] : null;
     });
-    // Beregn median fra alle år undtagen indeværende
     const vals = years
       .filter(y => y !== currentYear)
-      .map(y => {
-        const f = data.find(d => d.year === y && d.month === i + 1);
-        return f ? f[valueKey] : null;
-      })
+      .map(y => { const f = data.find(d => d.year === y && d.month === i + 1); return f ? f[valueKey] : null; })
       .filter(v => v !== null && v > 0);
-    row["Median"] = median(vals);
+    row["Median"] = calcMedian(vals);
     return row;
   });
   return { years, byMonth };
 }
 
-function YearlyLineChart({ data, valueKey, title, yLabel }) {
+function groupHourlyByYear(data) {
+  const currentYear = new Date().getFullYear();
+  const years = [...new Set(data.map(d => d.year))].sort();
+  const byHour = HOUR_LABELS.map((label, h) => {
+    const row = { hour: label };
+    years.forEach(year => {
+      const found = data.find(d => d.year === year && d.hour === h);
+      row[year] = found ? found.value_mwh : null;
+    });
+    return row;
+  });
+  return { years, byHour };
+}
+
+function YearlyLineChart({ data, valueKey, title, yLabel, showMedian = true }) {
   const currentYear = new Date().getFullYear();
   const { years, byMonth } = groupByYear(data, valueKey);
   return (
@@ -46,14 +57,41 @@ function YearlyLineChart({ data, valueKey, title, yLabel }) {
           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
           <XAxis dataKey="month" tick={{ fontSize: 12 }} />
           <YAxis tick={{ fontSize: 12 }} label={{ value: yLabel, angle: -90, position: "insideLeft", fontSize: 12 }} />
-          <Tooltip />
-          <Legend />
+          <Tooltip /><Legend />
           {years.map((year, i) => (
-            <Line key={year} type="monotone" dataKey={year} stroke={YEAR_COLORS[i % YEAR_COLORS.length]}
-              strokeWidth={year === currentYear ? 2.5 : 1.25} dot={false} connectNulls={false} />
+            <Line key={year} type="monotone" dataKey={year}
+              stroke={YEAR_COLORS[i % YEAR_COLORS.length]}
+              strokeWidth={year === currentYear ? 2.5 : 1.25}
+              dot={false} connectNulls={false} />
           ))}
-          <Line type="monotone" dataKey="Median" stroke="#000000" strokeWidth={2.25}
-            strokeDasharray="6 3" dot={false} connectNulls={false} />
+          {showMedian && (
+            <Line type="monotone" dataKey="Median" stroke="#000000"
+              strokeWidth={2.25} strokeDasharray="6 3" dot={false} connectNulls={false} />
+          )}
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
+
+function HourlyLineChart({ data, title }) {
+  const currentYear = new Date().getFullYear();
+  const { years, byHour } = groupHourlyByYear(data);
+  return (
+    <div className="chart-box">
+      <h3>{title}</h3>
+      <ResponsiveContainer width="100%" height={320}>
+        <LineChart data={byHour}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+          <XAxis dataKey="hour" tick={{ fontSize: 11 }} interval={2} />
+          <YAxis tick={{ fontSize: 12 }} label={{ value: "MWh", angle: -90, position: "insideLeft", fontSize: 12 }} />
+          <Tooltip /><Legend />
+          {years.map((year, i) => (
+            <Line key={year} type="monotone" dataKey={year}
+              stroke={YEAR_COLORS[i % YEAR_COLORS.length]}
+              strokeWidth={year === currentYear ? 2.5 : 1.25}
+              dot={false} connectNulls={false} />
+          ))}
         </LineChart>
       </ResponsiveContainer>
     </div>
@@ -184,8 +222,7 @@ function InstalledCapacity() {
       row[year] = found ? found.value_mw : 0;
     });
     return row;
-    });
-  }, []);
+  });
 
   return (
     <div>
@@ -200,7 +237,7 @@ function InstalledCapacity() {
           <BarChart data={chartData} layout="vertical">
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
             <XAxis type="number" tick={{ fontSize: 12 }} />
-            <YAxis type="category" dataKey="psr" width={180} tick={{ fontSize: 11 }} />
+            <YAxis type="category" dataKey="psr" width={200} tick={{ fontSize: 11 }} />
             <Tooltip /><Legend />
             {years.map((year, i) => (
               <Bar key={year} dataKey={year} stackId="a" fill={YEAR_COLORS[i % YEAR_COLORS.length]} />
@@ -215,7 +252,7 @@ function InstalledCapacity() {
 function Consumption() {
   const zones = ["DK1", "DK2", "Tyskland"];
   const [monthly, setMonthly] = useState({});
-  const [hourly,  setHourly]  = useState({});
+  const [hourly, setHourly] = useState({});
 
   useEffect(() => {
     zones.forEach(zone => {
@@ -228,30 +265,6 @@ function Consumption() {
     });
   }, []);
 
-  const HOUR_LABELS = Array.from({length: 24}, (_, h) => `${String(h).padStart(2,'0')}:00`);
-
-  function groupHourlyByYear(data) {
-    const currentYear = new Date().getFullYear();
-    const years = [...new Set(data.map(d => d.year))].sort();
-    const byHour = HOUR_LABELS.map((label, h) => {
-      const row = { hour: label };
-      years.forEach(year => {
-        const found = data.find(d => d.year === year && d.hour === h);
-        row[year] = found ? found.value_mwh : null;
-      });
-      const vals = years
-        .filter(y => y !== currentYear)
-        .map(y => {
-          const f = data.find(d => d.year === y && d.hour === h);
-          return f ? f.value_mwh : null;
-        })
-        .filter(v => v !== null);
-      row["Median"] = median(vals);
-      return row;
-    });
-    return { years, byHour };
-  }
-
   return (
     <div>
       {zones.map(zone => (
@@ -261,31 +274,12 @@ function Consumption() {
             valueKey="value_mwh"
             title={`Forbrug – ${zone} månedligt gennemsnit (MWh)`}
             yLabel="MWh"
+            showMedian={false}
           />
-          <div className="chart-box">
-            <h3>Forbrug – {zone} timesgennemsnit (MWh)</h3>
-            {(() => {
-              const { years, byHour } = groupHourlyByYear(hourly[zone] || []);
-              return (
-                <ResponsiveContainer width="100%" height={320}>
-                  <LineChart data={byHour}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                    <XAxis dataKey="hour" tick={{ fontSize: 11 }} interval={2} />
-                    <YAxis tick={{ fontSize: 12 }} label={{ value: "MWh", angle: -90, position: "insideLeft", fontSize: 12 }} />
-                    <Tooltip /><Legend />
-                    {years.map((year, i) => (
-                      <Line key={year} type="monotone" dataKey={year}
-                        stroke={YEAR_COLORS[i % YEAR_COLORS.length]}
-                        strokeWidth={year === new Date().getFullYear() ? 2.5 : 1.25}
-                        dot={false} connectNulls={false} />
-                    ))}
-                    <Line type="monotone" dataKey="Median" stroke="#000000"
-                      strokeWidth={2.25} strokeDasharray="6 3" dot={false} connectNulls={false} />
-                  </LineChart>
-                </ResponsiveContainer>
-              );
-            })()}
-          </div>
+          <HourlyLineChart
+            data={hourly[zone] || []}
+            title={`Forbrug – ${zone} timesgennemsnit (MWh)`}
+          />
         </div>
       ))}
     </div>
@@ -315,13 +309,6 @@ export default function App() {
         {tab === "Gas Storage" && <GasStorage />}
         {tab === "Installed Capacity" && <InstalledCapacity />}
         {tab === "Forbrug" && <Consumption />}
-```jsx
-        {tab === "Installed Capacity" && <InstalledCapacity />}
-        {tab === "Forbrug" && <Consumption />}
-      </main>
-      <style>{`
-```
-https://energi-backend-production.up.railway.app/api/refresh
       </main>
       <style>{`
         * { box-sizing: border-box; margin: 0; padding: 0; }
