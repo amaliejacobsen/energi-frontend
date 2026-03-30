@@ -223,5 +223,16 @@ export default function App() {
         .app { max-width: 1400px; margin: 0 auto; padding: 0 20px 40px; }
         header { padding: 24px 0 16px; border-bottom: 2px solid #e0e6ed; margin-bottom: 16px; }
         h1 { font-size: 1.6rem; color: #2C3E50; }
-        .nav-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 24px; }
-        .nav-tab { padding: 8px 14px; border: 1px solid #d0d7de; background: #fff; border-radius:
+.nav-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 24px; }
+        .nav-tab { padding: 8px 14px; border: 1px solid #d0d7de; background: #fff; border-radius: 6px; cursor: pointer; font-size: 13px; color: #444; transition: all 0.15s; }
+        .nav-tab:hover { background: #f0f4f8; }
+        .nav-tab.active { background: #2C3E50; color: #fff; border-color: #2C3E50; }
+        .chart-box { background: #fff; border-radius: 10px; padding: 20px 16px; margin-bottom: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+        .chart-box h3 { font-size: 1rem; color: #2C3E50; margin-bottom: 16px; }
+        .tab-row { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
+        .tab { padding: 6px 12px; border: 1px solid #d0d7de; background: #fff; border-radius: 5px; cursor: pointer; font-size: 13px; }
+        .tab.active { background: #1A7BB9; color: #fff; border-color: #1A7BB9; }
+      `}</style>
+    </div>
+  );
+}
