@@ -14,26 +14,37 @@ function calcMedian(values) {
 }
 
 function groupByYear(data, valueKey) {
-  if (!data) return { years: [], byMonth: [] };
+  if (!data || data.length === 0) return { years: [], byMonth: [] };
+  
   const currentYear = new Date().getFullYear();
-  const years = [...new Set(data.map(d => d.year))].sort();
+
+  // 1. Find unikke år ved at kigge i "2026-03" strengen
+  const years = [...new Set(data.map(d => {
+    if (d.year) return d.year; // Hvis year findes separat
+    return parseInt(String(d.month).split('-')[0]); // Ellers snup "2026" fra "2026-03"
+  }))].sort();
   
   const byMonth = MONTH_NAMES.map((name, i) => {
     const monthNum = i + 1;
     const row = { month: name };
     
     years.forEach(year => {
-      const found = data.find(d => d.year === year && d.month === monthNum);
+      // 2. Vi skal matche både år og måned korrekt
+      const found = data.find(d => {
+        const dMonth = String(d.month).includes('-') 
+          ? parseInt(d.month.split('-')[1]) 
+          : d.month;
+        const dYear = d.year || parseInt(d.month.split('-')[0]);
+        
+        return dYear === year && dMonth === monthNum;
+      });
       row[year] = found ? found[valueKey] : null;
     });
 
-    // Beregn median baseret på alle år undtagen det nuværende
+    // 3. Beregn median for historiske år (alt før 2026)
     const historicVals = years
-      .filter(y => y !== currentYear)
-      .map(year => {
-        const found = data.find(d => d.year === year && d.month === monthNum);
-        return found ? found[valueKey] : null;
-      })
+      .filter(y => y < currentYear)
+      .map(year => row[year]) // Vi har allerede fundet værdien ovenfor
       .filter(v => v !== null && v !== undefined && v > 0);
       
     row["Median"] = calcMedian(historicVals);
