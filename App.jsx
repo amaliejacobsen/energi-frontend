@@ -7,33 +7,44 @@ const MONTH_NAMES = ["Jan","Feb","Mar","Apr","Maj","Jun","Jul","Aug","Sep","Okt"
 const HOUR_LABELS = Array.from({length: 24}, (_, h) => `${String(h).padStart(2,'0')}:00`);
 
 function calcMedian(values) {
-  if (!values.length) return null;
+  if (!values || !values.length) return null;
   const sorted = [...values].sort((a, b) => a - b);
   const mid = Math.floor(sorted.length / 2);
   return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
 }
 
 function groupByYear(data, valueKey) {
+  if (!data) return { years: [], byMonth: [] };
   const currentYear = new Date().getFullYear();
   const years = [...new Set(data.map(d => d.year))].sort();
+  
   const byMonth = MONTH_NAMES.map((name, i) => {
+    const monthNum = i + 1;
     const row = { month: name };
+    
     years.forEach(year => {
-      const found = data.find(d => d.year === year && d.month === i + 1);
+      const found = data.find(d => d.year === year && d.month === monthNum);
       row[year] = found ? found[valueKey] : null;
     });
-    const vals = years
+
+    // Beregn median baseret på alle år undtagen det nuværende
+    const historicVals = years
       .filter(y => y !== currentYear)
-      .map(y => { const f = data.find(d => d.year === y && d.month === i + 1); return f ? f[valueKey] : null; })
-      .filter(v => v !== null && v > 0);
-    row["Median"] = calcMedian(vals);
+      .map(year => {
+        const found = data.find(d => d.year === year && d.month === monthNum);
+        return found ? found[valueKey] : null;
+      })
+      .filter(v => v !== null && v !== undefined && v > 0);
+      
+    row["Median"] = calcMedian(historicVals);
     return row;
   });
+  
   return { years, byMonth };
 }
 
 function groupHourlyByYear(data) {
-  const currentYear = new Date().getFullYear();
+  if (!data) return { years: [], byHour: [] };
   const years = [...new Set(data.map(d => d.year))].sort();
   const byHour = HOUR_LABELS.map((label, h) => {
     const row = { hour: label };
@@ -49,6 +60,7 @@ function groupHourlyByYear(data) {
 function YearlyLineChart({ data, valueKey, title, yLabel, showMedian = true }) {
   const currentYear = new Date().getFullYear();
   const { years, byMonth } = groupByYear(data, valueKey);
+  
   return (
     <div className="chart-box">
       <h3>{title}</h3>
@@ -57,16 +69,22 @@ function YearlyLineChart({ data, valueKey, title, yLabel, showMedian = true }) {
           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
           <XAxis dataKey="month" tick={{ fontSize: 12 }} />
           <YAxis tick={{ fontSize: 12 }} label={{ value: yLabel, angle: -90, position: "insideLeft", fontSize: 12 }} />
-          <Tooltip /><Legend />
+          <Tooltip />
+          <Legend />
           {years.map((year, i) => (
-            <Line key={year} type="monotone" dataKey={year}
+            <Line 
+              key={year} 
+              type="monotone" 
+              dataKey={year}
               stroke={YEAR_COLORS[i % YEAR_COLORS.length]}
-              strokeWidth={year === currentYear ? 2.5 : 1.25}
-              dot={false} connectNulls={false} />
+              strokeWidth={year === currentYear ? 3 : 1.25}
+              dot={year === currentYear} 
+              connectNulls={true} 
+            />
           ))}
           {showMedian && (
             <Line type="monotone" dataKey="Median" stroke="#000000"
-              strokeWidth={2.25} strokeDasharray="6 3" dot={false} connectNulls={false} />
+              strokeWidth={2} strokeDasharray="6 3" dot={false} connectNulls={true} />
           )}
         </LineChart>
       </ResponsiveContainer>
@@ -90,7 +108,7 @@ function HourlyLineChart({ data, title }) {
             <Line key={year} type="monotone" dataKey={year}
               stroke={YEAR_COLORS[i % YEAR_COLORS.length]}
               strokeWidth={year === currentYear ? 2.5 : 1.25}
-              dot={false} connectNulls={false} />
+              dot={false} connectNulls={true} />
           ))}
         </LineChart>
       </ResponsiveContainer>
@@ -101,26 +119,41 @@ function HourlyLineChart({ data, title }) {
 function DKPrices({ area }) {
   const [data, setData] = useState([]);
   useEffect(() => {
-    fetch(`${API}/dk-prices/${area}`).then(r => r.json()).then(setData);
+    fetch(`${API}/dk-prices/${area}`).then(r => r.json()).then(setData).catch(console.error);
   }, [area]);
 
-  const chartData = data.map(d => ({ month: d.month, Spotpris: d.spot_price, Solar: d.solar_weighted, Offshore: d.offshore_weighted, Onshore: d.onshore_weighted }));
-  const captureData = data.map(d => ({ month: d.month, Solar: d.solar_capture_rate, Offshore: d.offshore_capture_rate, Onshore: d.onshore_capture_rate }));
+  // Sørg for at data er sorteret efter måned så grafen ikke hopper
+  const sortedData = [...data].sort((a,b) => a.month - b.month);
+
+  const chartData = sortedData.map(d => ({ 
+    month: MONTH_NAMES[d.month - 1], 
+    Spotpris: d.spot_price, 
+    Solar: d.solar_weighted, 
+    Offshore: d.offshore_weighted, 
+    Onshore: d.onshore_weighted 
+  }));
+  
+  const captureData = sortedData.map(d => ({ 
+    month: MONTH_NAMES[d.month - 1], 
+    Solar: d.solar_capture_rate, 
+    Offshore: d.offshore_capture_rate, 
+    Onshore: d.onshore_capture_rate 
+  }));
 
   return (
     <div>
       <div className="chart-box">
-        <h3>{area} – Spotpris og vægtet gennemsnit</h3>
+        <h3>{area} – Spotpris og vægtet gennemsnit (2026)</h3>
         <ResponsiveContainer width="100%" height={320}>
           <LineChart data={chartData}>
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-            <XAxis dataKey="month" tick={{ fontSize: 11 }} interval={2} />
+            <XAxis dataKey="month" tick={{ fontSize: 11 }} />
             <YAxis tick={{ fontSize: 12 }} label={{ value: "DKK/MWh", angle: -90, position: "insideLeft", fontSize: 12 }} />
             <Tooltip /><Legend />
-            <Line type="monotone" dataKey="Spotpris" stroke="#2C3E50" strokeWidth={2.5} dot={false} />
-            <Line type="monotone" dataKey="Solar" stroke="#F4A927" strokeWidth={1.75} dot={false} />
-            <Line type="monotone" dataKey="Offshore" stroke="#1A7BB9" strokeWidth={1.75} dot={false} />
-            <Line type="monotone" dataKey="Onshore" stroke="#3DAA6E" strokeWidth={1.75} dot={false} strokeDasharray="5 5" />
+            <Line type="monotone" dataKey="Spotpris" stroke="#2C3E50" strokeWidth={2.5} dot={true} connectNulls={true} />
+            <Line type="monotone" dataKey="Solar" stroke="#F4A927" strokeWidth={1.75} dot={true} connectNulls={true} />
+            <Line type="monotone" dataKey="Offshore" stroke="#1A7BB9" strokeWidth={1.75} dot={true} connectNulls={true} />
+            <Line type="monotone" dataKey="Onshore" stroke="#3DAA6E" strokeWidth={1.75} dot={true} connectNulls={true} strokeDasharray="5 5" />
           </LineChart>
         </ResponsiveContainer>
       </div>
@@ -129,12 +162,12 @@ function DKPrices({ area }) {
         <ResponsiveContainer width="100%" height={320}>
           <LineChart data={captureData}>
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-            <XAxis dataKey="month" tick={{ fontSize: 11 }} interval={2} />
+            <XAxis dataKey="month" tick={{ fontSize: 11 }} />
             <YAxis tick={{ fontSize: 12 }} label={{ value: "%", angle: -90, position: "insideLeft", fontSize: 12 }} />
             <Tooltip /><Legend />
-            <Line type="monotone" dataKey="Solar" stroke="#F4A927" strokeWidth={1.75} dot={false} />
-            <Line type="monotone" dataKey="Offshore" stroke="#1A7BB9" strokeWidth={1.75} dot={false} />
-            <Line type="monotone" dataKey="Onshore" stroke="#3DAA6E" strokeWidth={1.75} dot={false} strokeDasharray="5 5" />
+            <Line type="monotone" dataKey="Solar" stroke="#F4A927" strokeWidth={1.75} dot={true} connectNulls={true} />
+            <Line type="monotone" dataKey="Offshore" stroke="#1A7BB9" strokeWidth={1.75} dot={true} connectNulls={true} />
+            <Line type="monotone" dataKey="Onshore" stroke="#3DAA6E" strokeWidth={1.75} dot={true} connectNulls={true} strokeDasharray="5 5" />
           </LineChart>
         </ResponsiveContainer>
       </div>
