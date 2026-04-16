@@ -105,10 +105,12 @@ function groupByDayOfYear(data, valueKey) {
     const row = { day: doy, monthLabel: MONTH_NAMES[i] };
 
     years.forEach(yr => {
-      // Filtrer 2026: vis ikke måneder vi ikke har data for
       if (yr === currentYear) {
-        const dataMonth = today.getMonth() + 1; // sidste fulde måned
-        if (month > dataMonth - 1) { row[yr] = null; return; }
+        const dayOfMonth = today.getDate();
+        const currentMonth = today.getMonth() + 1;
+        // Vis foregående måned hvis vi er 14+ dage inde i nuværende måned
+        const cutoff = dayOfMonth >= 14 ? currentMonth : currentMonth - 1;
+        if (month > cutoff) { row[yr] = null; return; }
       }
       row[yr] = lookup[yr][month] ?? null;
     });
@@ -132,24 +134,6 @@ function DKProductionChart({ data, valueKey, title, yLabel }) {
 
   // 7-punkters rolling average (over de 12 måneds-punkter svarer til ~2 måneder — 
   // men da vi kun har 12 punkter er window=3 måneder mere meningsfuldt visuelt)
-  const WINDOW = 3;
-  function rollingAvg(arr, key) {
-    return arr.map((row, i) => {
-      const slice = arr.slice(Math.max(0, i - WINDOW + 1), i + 1).map(r => r[key]).filter(v => v != null);
-      return slice.length > 0 ? slice.reduce((a, b) => a + b, 0) / slice.length : null;
-    });
-  }
-
-  const smoothed = byDay.map((row, i) => {
-    const newRow = { day: row.day, monthLabel: row.monthLabel };
-    years.forEach(yr => {
-      const vals = byDay.slice(Math.max(0, i - WINDOW + 1), i + 1).map(r => r[yr]).filter(v => v != null);
-      newRow[yr] = vals.length > 0 ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
-    });
-    const medVals = byDay.slice(Math.max(0, i - WINDOW + 1), i + 1).map(r => r["Median"]).filter(v => v != null);
-    newRow["Median"] = medVals.length > 0 ? medVals.reduce((a, b) => a + b, 0) / medVals.length : null;
-    return newRow;
-  });
 
   return (
     <div className="chart-box">
