@@ -129,31 +129,33 @@ function groupByDayOfYear(data, valueKey) {
 }
 
 function DKProductionChart({ data, valueKey, title, yLabel }) {
-  const currentYear = new Date().getFullYear();
   const { years, byDay } = groupByDayOfYear(data, valueKey);
+
+  // Månedsnavne til X-aksen
+  const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "Maj", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dec"];
+  
+  // Vi definerer hvor på aksen (1-365) hver måned skal stå (ca. midt i måneden)
+  const monthTicks = [15, 45, 75, 105, 135, 165, 195, 225, 255, 285, 315, 345];
 
   return (
     <div className="chart-box">
       <h3>{title}</h3>
       <ResponsiveContainer width="100%" height={320}>
-        {/* VIGTIGT: Vi bruger byDay her, da 'smoothed' ikke findes */}
-        <LineChart data={byDay}>
+        <LineChart data={byDay} margin={{ bottom: 20 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-
+          
           <XAxis 
-            dataKey="month" 
-            interval={0} // Dette tvinger Recharts til at vise ALLE måneder i stedet for at springe hver anden over
-            tickFormatter={(tick) => {
-              // Hvis din data er "1", "2" osv. eller "2024-01"
-              const monthNumber = typeof tick === 'string' && tick.includes('-') 
-                ? parseInt(tick.split('-')[1]) 
-                : parseInt(tick);
-
-              const months = ["Jan", "Feb", "Mar", "Apr", "Maj", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dec"];
-              return months[monthNumber - 1] || tick;
-          }}
-          style={{ fontSize: '12px' }}
-        />
+            dataKey="day"               // Bruger dag-nummeret fra din byDay data
+            type="number" 
+            domain={[0, 365]} 
+            ticks={monthTicks}          // Tvinger labels til at stå ved hver måned
+            interval={0}                // Viser alle labels
+            tickFormatter={(day) => {
+              const monthIdx = Math.floor(day / 30.5);
+              return MONTH_NAMES[monthIdx] || "";
+            }}
+            tick={{ fontSize: 11, fill: '#2C3E50' }}
+          />
           
           <YAxis
             tick={{ fontSize: 12 }}
@@ -161,41 +163,31 @@ function DKProductionChart({ data, valueKey, title, yLabel }) {
           />
 
           <Tooltip
-            labelFormatter={(doy) => {
-              const idx = MONTH_DAY_STARTS.reduce((best, start, i) => doy >= start ? i : best, 0);
-              return MONTH_NAMES[idx];
+            labelFormatter={(day) => {
+              const monthIdx = Math.floor(day / 30.5);
+              return `Måned: ${MONTH_NAMES[monthIdx] || "Dec"}`;
             }}
           />
-          <Legend />
           
-          {/* Zoom (Brush) er fjernet herfra for et rent look */}
+          <Legend wrapperStyle={{ paddingTop: '10px' }} />
           
-          {years.map((year, i) => (
+          {years.map((year, index) => (
             <Line
               key={year}
               type="monotone"
-              dataKey={year}
-              stroke={YEAR_COLORS[i % YEAR_COLORS.length]}
-              strokeWidth={year === currentYear ? 3 : 1.25}
-              dot={year === currentYear} 
-              connectNulls={false} 
+              dataKey={year.toString()} // Sørger for at matche key fra byDay
+              name={year.toString()}
+              stroke={index === years.length - 1 ? "#E74C3C" : `hsl(${index * 50}, 60%, 60%)`}
+              strokeWidth={index === years.length - 1 ? 3 : 1.5}
+              dot={false}
+              connectNulls={true} // Tegner linjen selvom der mangler data for enkelte dage
             />
           ))}
-          <Line
-            type="monotone"
-            dataKey="Median"
-            stroke="#000000"
-            strokeWidth={2}
-            strokeDasharray="6 3"
-            dot={false}
-            connectNulls={true}
-          />
         </LineChart>
       </ResponsiveContainer>
     </div>
   );
 }
-
 function YearlyLineChart({ data, valueKey, title, yLabel, showMedian = true }) {
   const currentYear = new Date().getFullYear();
   const { years, byMonth } = groupByYear(data, valueKey);
