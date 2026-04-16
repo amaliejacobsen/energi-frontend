@@ -132,14 +132,12 @@ function DKProductionChart({ data, valueKey, title, yLabel }) {
   const currentYear = new Date().getFullYear();
   const { years, byDay } = groupByDayOfYear(data, valueKey);
 
-  // 7-punkters rolling average (over de 12 måneds-punkter svarer til ~2 måneder — 
-  // men da vi kun har 12 punkter er window=3 måneder mere meningsfuldt visuelt)
-
   return (
     <div className="chart-box">
       <h3>{title}</h3>
       <ResponsiveContainer width="100%" height={320}>
-        <LineChart data={smoothed}>
+        {/* VIGTIGT: Vi bruger byDay her, da 'smoothed' ikke findes */}
+        <LineChart data={byDay}>
           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
 
           <XAxis
@@ -162,7 +160,9 @@ function DKProductionChart({ data, valueKey, title, yLabel }) {
               return MONTH_NAMES[idx];
             }}
           />
-         <Legend />
+          <Legend />
+          
+          {/* Zoom (Brush) er fjernet herfra for et rent look */}
           
           {years.map((year, i) => (
             <Line
@@ -171,8 +171,8 @@ function DKProductionChart({ data, valueKey, title, yLabel }) {
               dataKey={year}
               stroke={YEAR_COLORS[i % YEAR_COLORS.length]}
               strokeWidth={year === currentYear ? 3 : 1.25}
-              dot={false}
-              connectNulls={false}
+              dot={year === currentYear} 
+              connectNulls={false} 
             />
           ))}
           <Line
@@ -182,7 +182,7 @@ function DKProductionChart({ data, valueKey, title, yLabel }) {
             strokeWidth={2}
             strokeDasharray="6 3"
             dot={false}
-            connectNulls={false}
+            connectNulls={true}
           />
         </LineChart>
       </ResponsiveContainer>
