@@ -140,15 +140,20 @@ function DKProductionChart({ data, valueKey, title, yLabel }) {
         <LineChart data={byDay}>
           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
 
-          <XAxis
-            dataKey="day"
-            ticks={MONTH_DAY_STARTS}
-            tickFormatter={(doy) => {
-              const idx = MONTH_DAY_STARTS.indexOf(Number(doy));
-              return idx >= 0 ? MONTH_NAMES[idx] : "";
-            }}
-            tick={{ fontSize: 11 }}
-          />
+          <XAxis 
+            dataKey="month" 
+            interval={0} // Dette tvinger Recharts til at vise ALLE måneder i stedet for at springe hver anden over
+            tickFormatter={(tick) => {
+              // Hvis din data er "1", "2" osv. eller "2024-01"
+              const monthNumber = typeof tick === 'string' && tick.includes('-') 
+                ? parseInt(tick.split('-')[1]) 
+                : parseInt(tick);
+
+              const months = ["Jan", "Feb", "Mar", "Apr", "Maj", "Jun", "Jul", "Aug", "Sep", "Okt", "Nov", "Dec"];
+              return months[monthNumber - 1] || tick;
+          }}
+          style={{ fontSize: '12px' }}
+        />
           
           <YAxis
             tick={{ fontSize: 12 }}
