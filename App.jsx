@@ -157,13 +157,12 @@ function DKProductionChart({ data, valueKey, title, yLabel }) {
       <ResponsiveContainer width="100%" height={320}>
         <LineChart data={smoothed}>
           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+
           <XAxis
             dataKey="day"
-            type="number"
-            domain={[1, 365]}
             ticks={MONTH_DAY_STARTS}
             tickFormatter={(doy) => {
-              const idx = MONTH_DAY_STARTS.indexOf(doy);
+              const idx = MONTH_DAY_STARTS.indexOf(Number(doy));
               return idx >= 0 ? MONTH_NAMES[idx] : "";
             }}
             tick={{ fontSize: 11 }}
