@@ -268,69 +268,70 @@ function DKPrices({ area }) {
       .catch(console.error);
   }, [area]);
 
-  // Sorter data efter måned
-  const sortedData = [...data].sort((a, b) => {
-    const m1 = String(a.month).includes('-') ? parseInt(a.month.split('-')[1]) : a.month;
-    const m2 = String(b.month).includes('-') ? parseInt(b.month.split('-')[1]) : b.month;
-    return m1 - m2;
-  });
+  // Sorter data kronologisk (først år, så måned)
+  const sortedData = [...data]
+    .map(d => {
+      const year = d.year || parseInt(String(d.month).split('-')[0]);
+      const month = String(d.month).includes('-') ? parseInt(d.month.split('-')[1]) : d.month;
+      return { ...d, _sortKey: year * 100 + month, displayDate: `${MONTH_NAMES[month-1]} ${year}` };
+    })
+    .sort((a, b) => a._sortKey - b._sortKey);
 
-  const chartData = sortedData.map((d) => {
-    const mIdx = String(d.month).includes('-') ? parseInt(d.month.split('-')[1]) : d.month;
-    return {
-      month: MONTH_NAMES[mIdx - 1],
-      Spotpris: d.spot_price,
-      Solar: d.solar_weighted,
-      Offshore: d.offshore_weighted,
-      Onshore: d.onshore_weighted,
-      // Vi tager capture rates med herind for nemhedens skyld
-      SolarCapture: d.solar_capture_rate,
-      OffshoreCapture: d.offshore_capture_rate,
-      OnshoreCapture: d.onshore_capture_rate
-    };
-  });
+  const chartData = sortedData.map((d) => ({
+    displayDate: d.displayDate,
+    Spotpris: d.spot_price,
+    Solar: d.solar_weighted,
+    Offshore: d.offshore_weighted,
+    Onshore: d.onshore_weighted,
+    SolarCapture: d.solar_capture_rate,
+    OffshoreCapture: d.offshore_capture_rate,
+    OnshoreCapture: d.onshore_capture_rate
+  }));
 
   return (
     <div>
-      {/* 1. SPOTPRIS GRAF MED ZOOM */}
+      {/* SPOTPRIS & VÆGTEDE PRISER 2020-2026 */}
       <div className="chart-box">
-        <h3>{area} – Spotpris og vægtet gennemsnit (2026)</h3>
+        <h3>{area} – Prisudvikling 2020-2026 (DKK/MWh)</h3>
         <ResponsiveContainer width="100%" height={400}>
           <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-            <XAxis dataKey="month" tick={{ fontSize: 11 }} />
+            <XAxis 
+              dataKey="displayDate" 
+              tick={{ fontSize: 10 }} 
+              minTickGap={30} // Sikrer at årstal/måneder ikke overlapper
+            />
             <YAxis tick={{ fontSize: 12 }} label={{ value: "DKK/MWh", angle: -90, position: 'insideLeft', offset: -10 }} />
             <Tooltip />
             <Legend verticalAlign="top" height={36} />
             
-            <Line type="monotone" dataKey="Spotpris" stroke="#2C3E50" strokeWidth={2.5} dot={true} />
-            <Line type="monotone" dataKey="Solar" stroke="#F4A927" strokeWidth={1.75} dot={true} />
-            <Line type="monotone" dataKey="Offshore" stroke="#1A7BB9" strokeWidth={1.75} dot={true} />
-            <Line type="monotone" dataKey="Onshore" stroke="#3DAA6E" strokeWidth={1.75} dot={true} strokeDasharray="5 5" />
+            <Line type="monotone" dataKey="Spotpris" stroke="#2C3E50" strokeWidth={2} dot={false} />
+            <Line type="monotone" dataKey="Solar" stroke="#F4A927" strokeWidth={1.5} dot={false} />
+            <Line type="monotone" dataKey="Offshore" stroke="#1A7BB9" strokeWidth={1.5} dot={false} />
+            <Line type="monotone" dataKey="Onshore" stroke="#3DAA6E" strokeWidth={1.5} dot={false} strokeDasharray="5 5" />
             
-            {/* HER ER SLIDEREN */}
-            <Brush dataKey="month" height={30} stroke="#2C3E50" fill="#f0f0f0" />
+            {/* ZOOM SLIDER - Gør det muligt at se de enkelte år tættere på */}
+            <Brush dataKey="displayDate" height={30} stroke="#2C3E50" fill="#f0f0f0" />
           </LineChart>
         </ResponsiveContainer>
       </div>
 
-      {/* 2. CAPTURE RATE GRAF MED ZOOM */}
+      {/* CAPTURE RATE UDVIKLING */}
       <div className="chart-box">
-        <h3>{area} – Capture rate (%)</h3>
+        <h3>{area} – Capture rate udvikling (%)</h3>
         <ResponsiveContainer width="100%" height={400}>
           <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-            <XAxis dataKey="month" tick={{ fontSize: 11 }} />
+            <XAxis dataKey="displayDate" tick={{ fontSize: 10 }} minTickGap={30} />
             <YAxis tick={{ fontSize: 12 }} label={{ value: "Capture Rate %", angle: -90, position: 'insideLeft', offset: -10 }} />
             <Tooltip />
             <Legend verticalAlign="top" height={36} />
             
-            <Line type="monotone" dataKey="SolarCapture" name="Solar" stroke="#F4A927" strokeWidth={1.75} dot={true} />
-            <Line type="monotone" dataKey="OffshoreCapture" name="Offshore" stroke="#1A7BB9" strokeWidth={1.75} dot={true} />
-            <Line type="monotone" dataKey="OnshoreCapture" name="Onshore" stroke="#3DAA6E" strokeWidth={1.75} dot={true} strokeDasharray="5 5" />
+            <Line type="monotone" dataKey="SolarCapture" name="Solar" stroke="#F4A927" strokeWidth={1.5} dot={false} />
+            <Line type="monotone" dataKey="OffshoreCapture" name="Offshore" stroke="#1A7BB9" strokeWidth={1.5} dot={false} />
+            <Line type="monotone" dataKey="OnshoreCapture" name="Onshore" stroke="#3DAA6E" strokeWidth={1.5} dot={false} strokeDasharray="5 5" />
             
-            {/* HER ER SLIDEREN */}
-            <Brush dataKey="month" height={30} stroke="#1A7BB9" fill="#f0f0f0" />
+            <Brush dataKey="displayDate" height={30} stroke="#1A7BB9" fill="#f0f0f0" />
           </LineChart>
         </ResponsiveContainer>
       </div>
