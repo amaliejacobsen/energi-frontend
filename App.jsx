@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Brush } from "recharts";
 
 const API = "https://energi-backend-production.up.railway.app/api";
 const YEAR_COLORS = ["#2C3E50","#E74C3C","#3498DB","#2ECC71","#9B59B6","#F39C12","#1ABC9C","#E67E22","#95A5A6","#D35400"];
@@ -172,13 +172,26 @@ function DKProductionChart({ data, valueKey, title, yLabel }) {
             tick={{ fontSize: 12 }}
             label={{ value: yLabel, angle: -90, position: "insideLeft", fontSize: 12 }}
           />
+
           <Tooltip
             labelFormatter={(doy) => {
               const idx = MONTH_DAY_STARTS.reduce((best, start, i) => doy >= start ? i : best, 0);
               return MONTH_NAMES[idx];
             }}
           />
+          {/* TILFØJ DISSE LINJER: */}
+          <Brush
+            dataKey="day"
+            height={24}
+            stroke="#2C3E50"
+            travellerWidth={8}
+            tickFormatter={(doy) => {
+              const idx = MONTH_DAY_STARTS.reduce((best, start, i) => doy >= start ? i : best, 0);
+              return MONTH_NAMES[idx];
+            }}
+          />
           <Legend />
+          
           {years.map((year, i) => (
             <Line
               key={year}
