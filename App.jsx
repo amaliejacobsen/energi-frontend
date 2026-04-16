@@ -178,18 +178,7 @@ function DKProductionChart({ data, valueKey, title, yLabel }) {
               return MONTH_NAMES[idx];
             }}
           />
-          {/* TILFØJ DISSE LINJER: */}
-          <Brush
-            dataKey="day"
-            height={24}
-            stroke="#2C3E50"
-            travellerWidth={8}
-            tickFormatter={(doy) => {
-              const idx = MONTH_DAY_STARTS.reduce((best, start, i) => doy >= start ? i : best, 0);
-              return MONTH_NAMES[idx];
-            }}
-          />
-          <Legend />
+         <Legend />
           
           {years.map((year, i) => (
             <Line
