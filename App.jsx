@@ -149,6 +149,7 @@ function DKProductionChart({ data, valueKey, title, yLabel }) {
             }}
             tick={{ fontSize: 11 }}
           />
+          
           <YAxis
             tick={{ fontSize: 12 }}
             label={{ value: yLabel, angle: -90, position: "insideLeft", fontSize: 12 }}
@@ -201,9 +202,8 @@ function YearlyLineChart({ data, valueKey, title, yLabel, showMedian = true }) {
         <LineChart data={byMonth} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
           <XAxis 
-            dataKey="month" 
-            tickFormatter={(m) => MONTH_NAMES[m - 1]} // Omdanner 1 til "Jan", 2 til "Feb" osv.
-            interval={0} 
+            dataKey="month" // Her kommer "Jan", "Feb" osv. fra groupByYear
+            interval={0}    // Viser alle måneder
             tick={{ fontSize: 12, fill: '#2C3E50' }}
             height={50}
           />
