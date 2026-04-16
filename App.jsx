@@ -67,6 +67,143 @@ function groupHourlyByYear(data) {
   });
   return { years, byHour };
 }
+// Måneds-start dage (ikke-skudår) for X-akse labels
+const MONTH_DAY_STARTS = [1, 32, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335];
+
+function dayOfYear(year, month, day = 15) {
+  const start = new Date(year, 0, 0);
+  const date = new Date(year, month - 1, day);
+  return Math.floor((date - start) / 86400000);
+}
+
+function groupByDayOfYear(data, valueKey) {
+  if (!data || data.length === 0) return { years: [], byDay: [] };
+
+  const currentYear = new Date().getFullYear();
+  const today = new Date();
+  const todayDOY = dayOfYear(today.getFullYear(), today.getMonth() + 1, today.getDate());
+
+  // Find unikke år
+  const years = [...new Set(data.map(d => d.year || parseInt(String(d.month).split('-')[0])))].sort();
+
+  // Byg lookup: { year: { month: value } }
+  const lookup = {};
+  years.forEach(y => { lookup[y] = {}; });
+  data.forEach(d => {
+    const yr = d.year || parseInt(String(d.month).split('-')[0]);
+    const mo = d.month ? (String(d.month).includes('-') ? parseInt(d.month.split('-')[1]) : d.month) : null;
+    if (yr && mo && d[valueKey] != null) lookup[yr][mo] = d[valueKey];
+  });
+
+  // Lav 365 datapunkter (én pr. dag, men vi har kun månedsdata → interpolér til dagsniveau)
+  // Byg pr. måned → konvertér til dag-punkt (brug midten af måneden som dag)
+  // Derefter rolling average på tværs af måneder er ikke meningsfuld med måneds-granularitet.
+  // Vi bruger måneds-midtpunkter som diskrete punkter på dag-aksen.
+  const byDay = Array.from({ length: 12 }, (_, i) => {
+    const month = i + 1;
+    const doy = dayOfYear(2024, month, 15); // brug ikke-skudår som reference
+    const row = { day: doy, monthLabel: MONTH_NAMES[i] };
+
+    years.forEach(yr => {
+      // Filtrer 2026: vis ikke måneder vi ikke har data for
+      if (yr === currentYear) {
+        const dataMonth = today.getMonth() + 1; // sidste fulde måned
+        if (month > dataMonth - 1) { row[yr] = null; return; }
+      }
+      row[yr] = lookup[yr][month] ?? null;
+    });
+
+    // Median (historiske år)
+    const historicVals = years
+      .filter(y => y < currentYear)
+      .map(y => row[y])
+      .filter(v => v != null && v > 0);
+    row["Median"] = calcMedian(historicVals);
+
+    return row;
+  });
+
+  return { years, byDay };
+}
+
+function DKProductionChart({ data, valueKey, title, yLabel }) {
+  const currentYear = new Date().getFullYear();
+  const { years, byDay } = groupByDayOfYear(data, valueKey);
+
+  // 7-punkters rolling average (over de 12 måneds-punkter svarer til ~2 måneder — 
+  // men da vi kun har 12 punkter er window=3 måneder mere meningsfuldt visuelt)
+  const WINDOW = 3;
+  function rollingAvg(arr, key) {
+    return arr.map((row, i) => {
+      const slice = arr.slice(Math.max(0, i - WINDOW + 1), i + 1).map(r => r[key]).filter(v => v != null);
+      return slice.length > 0 ? slice.reduce((a, b) => a + b, 0) / slice.length : null;
+    });
+  }
+
+  const smoothed = byDay.map((row, i) => {
+    const newRow = { day: row.day, monthLabel: row.monthLabel };
+    years.forEach(yr => {
+      const vals = byDay.slice(Math.max(0, i - WINDOW + 1), i + 1).map(r => r[yr]).filter(v => v != null);
+      newRow[yr] = vals.length > 0 ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+    });
+    const medVals = byDay.slice(Math.max(0, i - WINDOW + 1), i + 1).map(r => r["Median"]).filter(v => v != null);
+    newRow["Median"] = medVals.length > 0 ? medVals.reduce((a, b) => a + b, 0) / medVals.length : null;
+    return newRow;
+  });
+
+  return (
+    <div className="chart-box">
+      <h3>{title}</h3>
+      <ResponsiveContainer width="100%" height={320}>
+        <LineChart data={smoothed}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+          <XAxis
+            dataKey="day"
+            type="number"
+            domain={[1, 365]}
+            ticks={MONTH_DAY_STARTS}
+            tickFormatter={(doy) => {
+              const idx = MONTH_DAY_STARTS.indexOf(doy);
+              return idx >= 0 ? MONTH_NAMES[idx] : "";
+            }}
+            tick={{ fontSize: 11 }}
+          />
+          <YAxis
+            tick={{ fontSize: 12 }}
+            label={{ value: yLabel, angle: -90, position: "insideLeft", fontSize: 12 }}
+          />
+          <Tooltip
+            labelFormatter={(doy) => {
+              const idx = MONTH_DAY_STARTS.reduce((best, start, i) => doy >= start ? i : best, 0);
+              return MONTH_NAMES[idx];
+            }}
+          />
+          <Legend />
+          {years.map((year, i) => (
+            <Line
+              key={year}
+              type="monotone"
+              dataKey={year}
+              stroke={YEAR_COLORS[i % YEAR_COLORS.length]}
+              strokeWidth={year === currentYear ? 3 : 1.25}
+              dot={false}
+              connectNulls={false}
+            />
+          ))}
+          <Line
+            type="monotone"
+            dataKey="Median"
+            stroke="#000000"
+            strokeWidth={2}
+            strokeDasharray="6 3"
+            dot={false}
+            connectNulls={false}
+          />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
 
 function YearlyLineChart({ data, valueKey, title, yLabel, showMedian = true }) {
   const currentYear = new Date().getFullYear();
@@ -199,9 +336,9 @@ function DKProduction({ area }) {
 
   return (
     <div>
-      <YearlyLineChart data={solar} valueKey="value_mwh" title={`${area} – Sol produktion (MWh)`} yLabel="MWh" />
-      <YearlyLineChart data={offshore} valueKey="value_mwh" title={`${area} – Offshore vind produktion (MWh)`} yLabel="MWh" />
-      <YearlyLineChart data={onshore} valueKey="value_mwh" title={`${area} – Onshore vind produktion (MWh)`} yLabel="MWh" />
+      <DKProductionChart data={solar}    valueKey="value_mwh" title={`${area} – Sol produktion (MWh)`}             yLabel="MWh" />
+      <DKProductionChart data={offshore} valueKey="value_mwh" title={`${area} – Offshore vind produktion (MWh)`}  yLabel="MWh" />
+      <DKProductionChart data={onshore}  valueKey="value_mwh" title={`${area} – Onshore vind produktion (MWh)`}   yLabel="MWh" />
     </div>
   );
 }
