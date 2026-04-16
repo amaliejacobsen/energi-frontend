@@ -6,7 +6,6 @@ const YEAR_COLORS = ["#2C3E50","#E74C3C","#3498DB","#2ECC71","#9B59B6","#F39C12"
 const MONTH_NAMES = ["Jan","Feb","Mar","Apr","Maj","Jun","Jul","Aug","Sep","Okt","Nov","Dec"];
 const HOUR_LABELS = Array.from({length: 24}, (_, h) => `${String(h).padStart(2,'0')}:00`);
 
-// --- HJÆLPEFUNKTIONER ---
 function calcMedian(values) {
   if (!values || !values.length) return null;
   const sorted = [...values].sort((a, b) => a - b);
@@ -16,31 +15,36 @@ function calcMedian(values) {
 
 function groupByYear(data, valueKey) {
   if (!data || data.length === 0) return { years: [], byMonth: [] };
+  
   const currentYear = new Date().getFullYear();
 
+  // 1. Find unikke år ved at kigge i "2026-03" strengen
   const years = [...new Set(data.map(d => {
-    if (d.year) return d.year;
-    return parseInt(String(d.month).split('-')[0]);
+    if (d.year) return d.year; // Hvis year findes separat
+    return parseInt(String(d.month).split('-')[0]); // Ellers snup "2026" fra "2026-03"
   }))].sort();
   
   const byMonth = MONTH_NAMES.map((name, i) => {
     const monthNum = i + 1;
-    const row = { month: name }; // X-aksen bruger nu navnet direkte
+    const row = { month: name };
     
     years.forEach(year => {
+      // 2. Vi skal matche både år og måned korrekt
       const found = data.find(d => {
         const dMonth = String(d.month).includes('-') 
           ? parseInt(d.month.split('-')[1]) 
           : d.month;
         const dYear = d.year || parseInt(d.month.split('-')[0]);
+        
         return dYear === year && dMonth === monthNum;
       });
       row[year] = found ? found[valueKey] : null;
     });
 
+    // 3. Beregn median for historiske år (alt før 2026)
     const historicVals = years
       .filter(y => y < currentYear)
-      .map(year => row[year])
+      .map(year => row[year]) // Vi har allerede fundet værdien ovenfor
       .filter(v => v !== null && v !== undefined && v > 0);
       
     row["Median"] = calcMedian(historicVals);
@@ -63,7 +67,7 @@ function groupHourlyByYear(data) {
   });
   return { years, byHour };
 }
-
+// Måneds-start dage (ikke-skudår) for X-akse labels
 const MONTH_DAY_STARTS = [1, 32, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335];
 
 function dayOfYear(year, month, day = 15) {
@@ -74,10 +78,15 @@ function dayOfYear(year, month, day = 15) {
 
 function groupByDayOfYear(data, valueKey) {
   if (!data || data.length === 0) return { years: [], byDay: [] };
+
   const currentYear = new Date().getFullYear();
   const today = new Date();
+  const todayDOY = dayOfYear(today.getFullYear(), today.getMonth() + 1, today.getDate());
+
+  // Find unikke år
   const years = [...new Set(data.map(d => d.year || parseInt(String(d.month).split('-')[0])))].sort();
 
+  // Byg lookup: { year: { month: value } }
   const lookup = {};
   years.forEach(y => { lookup[y] = {}; });
   data.forEach(d => {
@@ -86,21 +95,27 @@ function groupByDayOfYear(data, valueKey) {
     if (yr && mo && d[valueKey] != null) lookup[yr][mo] = d[valueKey];
   });
 
+  // Lav 365 datapunkter (én pr. dag, men vi har kun månedsdata → interpolér til dagsniveau)
+  // Byg pr. måned → konvertér til dag-punkt (brug midten af måneden som dag)
+  // Derefter rolling average på tværs af måneder er ikke meningsfuld med måneds-granularitet.
+  // Vi bruger måneds-midtpunkter som diskrete punkter på dag-aksen.
   const byDay = Array.from({ length: 12 }, (_, i) => {
     const month = i + 1;
-    const doy = dayOfYear(2024, month, 15); 
+    const doy = dayOfYear(2024, month, 15); // brug ikke-skudår som reference
     const row = { day: doy, monthLabel: MONTH_NAMES[i] };
 
     years.forEach(yr => {
       if (yr === currentYear) {
         const dayOfMonth = today.getDate();
         const currentMonth = today.getMonth() + 1;
+        // Vis foregående måned hvis vi er 14+ dage inde i nuværende måned
         const cutoff = dayOfMonth >= 14 ? currentMonth : currentMonth - 1;
         if (month > cutoff) { row[yr] = null; return; }
       }
       row[yr] = lookup[yr][month] ?? null;
     });
 
+    // Median (historiske år)
     const historicVals = years
       .filter(y => y < currentYear)
       .map(y => row[y])
@@ -113,8 +128,6 @@ function groupByDayOfYear(data, valueKey) {
   return { years, byDay };
 }
 
-// --- KOMPONENTER ---
-
 function DKProductionChart({ data, valueKey, title, yLabel }) {
   const currentYear = new Date().getFullYear();
   const { years, byDay } = groupByDayOfYear(data, valueKey);
@@ -123,8 +136,10 @@ function DKProductionChart({ data, valueKey, title, yLabel }) {
     <div className="chart-box">
       <h3>{title}</h3>
       <ResponsiveContainer width="100%" height={320}>
+        {/* VIGTIGT: Vi bruger byDay her, da 'smoothed' ikke findes */}
         <LineChart data={byDay}>
           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+
           <XAxis
             dataKey="day"
             ticks={MONTH_DAY_STARTS}
@@ -134,17 +149,41 @@ function DKProductionChart({ data, valueKey, title, yLabel }) {
             }}
             tick={{ fontSize: 11 }}
           />
-          <YAxis tick={{ fontSize: 12 }} label={{ value: yLabel, angle: -90, position: "insideLeft", fontSize: 12 }} />
-          <Tooltip labelFormatter={(doy) => {
-            const idx = MONTH_DAY_STARTS.reduce((best, start, i) => doy >= start ? i : best, 0);
-            return MONTH_NAMES[idx];
-          }} />
+          <YAxis
+            tick={{ fontSize: 12 }}
+            label={{ value: yLabel, angle: -90, position: "insideLeft", fontSize: 12 }}
+          />
+
+          <Tooltip
+            labelFormatter={(doy) => {
+              const idx = MONTH_DAY_STARTS.reduce((best, start, i) => doy >= start ? i : best, 0);
+              return MONTH_NAMES[idx];
+            }}
+          />
           <Legend />
+          
+          {/* Zoom (Brush) er fjernet herfra for et rent look */}
+          
           {years.map((year, i) => (
-            <Line key={year} type="monotone" dataKey={year} stroke={YEAR_COLORS[i % YEAR_COLORS.length]}
-              strokeWidth={year === currentYear ? 3 : 1.25} dot={year === currentYear} connectNulls={false} />
+            <Line
+              key={year}
+              type="monotone"
+              dataKey={year}
+              stroke={YEAR_COLORS[i % YEAR_COLORS.length]}
+              strokeWidth={year === currentYear ? 3 : 1.25}
+              dot={year === currentYear} 
+              connectNulls={false} 
+            />
           ))}
-          <Line type="monotone" dataKey="Median" stroke="#000000" strokeWidth={2} strokeDasharray="6 3" dot={false} connectNulls={true} />
+          <Line
+            type="monotone"
+            dataKey="Median"
+            stroke="#000000"
+            strokeWidth={2}
+            strokeDasharray="6 3"
+            dot={false}
+            connectNulls={true}
+          />
         </LineChart>
       </ResponsiveContainer>
     </div>
@@ -162,20 +201,32 @@ function YearlyLineChart({ data, valueKey, title, yLabel, showMedian = true }) {
         <LineChart data={byMonth} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
           <XAxis 
-            dataKey="month" // Dette er nu "Jan", "Feb" osv. fra groupByYear
+            dataKey="month" 
+            tickFormatter={(m) => MONTH_NAMES[m - 1]} // Omdanner 1 til "Jan", 2 til "Feb" osv.
             interval={0} 
             tick={{ fontSize: 12, fill: '#2C3E50' }}
             height={50}
           />
-          <YAxis tick={{ fontSize: 12 }} label={{ value: yLabel, angle: -90, position: 'insideLeft', offset: -10 }} />
+          <YAxis 
+            tick={{ fontSize: 12 }} 
+            label={{ value: yLabel, angle: -90, position: 'insideLeft', offset: -10, style: { textAnchor: 'middle', fontSize: 13, fontWeight: 500 } }} 
+          />
           <Tooltip />
           <Legend verticalAlign="top" height={36}/>
           {years.map((year, i) => (
-            <Line key={year} type="monotone" dataKey={year} stroke={YEAR_COLORS[i % YEAR_COLORS.length]}
-              strokeWidth={year === currentYear ? 3 : 1.25} dot={year === currentYear} connectNulls={false} />
+            <Line 
+              key={year} 
+              type="monotone" 
+              dataKey={year}
+              stroke={YEAR_COLORS[i % YEAR_COLORS.length]}
+              strokeWidth={year === currentYear ? 3 : 1.25}
+              dot={year === currentYear} 
+              connectNulls={false} 
+            />
           ))}
           {showMedian && (
-            <Line type="monotone" dataKey="Median" stroke="#000000" strokeWidth={2} strokeDasharray="6 3" dot={false} connectNulls={true} />
+            <Line type="monotone" dataKey="Median" stroke="#000000"
+              strokeWidth={2} strokeDasharray="6 3" dot={false} connectNulls={true} />
           )}
         </LineChart>
       </ResponsiveContainer>
@@ -196,8 +247,10 @@ function HourlyLineChart({ data, title }) {
           <YAxis tick={{ fontSize: 12 }} label={{ value: "MWh", angle: -90, position: "insideLeft", fontSize: 12 }} />
           <Tooltip /><Legend />
           {years.map((year, i) => (
-            <Line key={year} type="monotone" dataKey={year} stroke={YEAR_COLORS[i % YEAR_COLORS.length]}
-              strokeWidth={year === currentYear ? 2.5 : 1.25} dot={false} connectNulls={true} />
+            <Line key={year} type="monotone" dataKey={year}
+              stroke={YEAR_COLORS[i % YEAR_COLORS.length]}
+              strokeWidth={year === currentYear ? 2.5 : 1.25}
+              dot={false} connectNulls={true} />
           ))}
         </LineChart>
       </ResponsiveContainer>
@@ -211,32 +264,22 @@ function DKPrices({ area }) {
     fetch(`${API}/dk-prices/${area}`).then(r => r.json()).then(setData).catch(console.error);
   }, [area]);
 
-  const sortedData = [...data].sort((a,b) => {
-    const m1 = String(a.month).includes('-') ? parseInt(a.month.split('-')[1]) : a.month;
-    const m2 = String(b.month).includes('-') ? parseInt(b.month.split('-')[1]) : b.month;
-    return m1 - m2;
-  });
+  const sortedData = [...data].sort((a,b) => a.month - b.month);
 
-  const chartData = sortedData.map(d => {
-    const mIdx = String(d.month).includes('-') ? parseInt(d.month.split('-')[1]) : d.month;
-    return {
-      month: MONTH_NAMES[mIdx - 1], 
-      Spotpris: d.spot_price, 
-      Solar: d.solar_weighted, 
-      Offshore: d.offshore_weighted, 
-      Onshore: d.onshore_weighted 
-    };
-  });
+  const chartData = sortedData.map(d => ({ 
+    month: MONTH_NAMES[d.month - 1], 
+    Spotpris: d.spot_price, 
+    Solar: d.solar_weighted, 
+    Offshore: d.offshore_weighted, 
+    Onshore: d.onshore_weighted 
+  }));
   
-  const captureData = sortedData.map(d => {
-    const mIdx = String(d.month).includes('-') ? parseInt(d.month.split('-')[1]) : d.month;
-    return {
-      month: MONTH_NAMES[mIdx - 1], 
-      Solar: d.solar_capture_rate, 
-      Offshore: d.offshore_capture_rate, 
-      Onshore: d.onshore_capture_rate 
-    };
-  });
+  const captureData = sortedData.map(d => ({ 
+    month: MONTH_NAMES[d.month - 1], 
+    Solar: d.solar_capture_rate, 
+    Offshore: d.offshore_capture_rate, 
+    Onshore: d.onshore_capture_rate 
+  }));
 
   return (
     <div>
@@ -246,7 +289,10 @@ function DKPrices({ area }) {
           <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
             <XAxis dataKey="month" tick={{ fontSize: 11 }} />
-            <YAxis tick={{ fontSize: 12 }} label={{ value: "DKK/MWh", angle: -90, position: 'insideLeft', offset: -10 }} />
+            <YAxis 
+              tick={{ fontSize: 12 }} 
+              label={{ value: "DKK/MWh", angle: -90, position: 'insideLeft', offset: -10 }} 
+            />
             <Tooltip /><Legend verticalAlign="top" height={36}/>
             <Line type="monotone" dataKey="Spotpris" stroke="#2C3E50" strokeWidth={2.5} dot={true} connectNulls={true} />
             <Line type="monotone" dataKey="Solar" stroke="#F4A927" strokeWidth={1.75} dot={true} connectNulls={true} />
@@ -255,13 +301,17 @@ function DKPrices({ area }) {
           </LineChart>
         </ResponsiveContainer>
       </div>
+      
       <div className="chart-box">
         <h3>{area} – Capture rate (%)</h3>
         <ResponsiveContainer width="100%" height={320}>
           <LineChart data={captureData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
             <XAxis dataKey="month" tick={{ fontSize: 11 }} />
-            <YAxis tick={{ fontSize: 12 }} label={{ value: "Capture Rate %", angle: -90, position: 'insideLeft', offset: -10 }} />
+            <YAxis 
+              tick={{ fontSize: 12 }} 
+              label={{ value: "Capture Rate %", angle: -90, position: 'insideLeft', offset: -10 }} 
+            />
             <Tooltip /><Legend verticalAlign="top" height={36}/>
             <Line type="monotone" dataKey="Solar" stroke="#F4A927" strokeWidth={1.75} dot={true} connectNulls={true} />
             <Line type="monotone" dataKey="Offshore" stroke="#1A7BB9" strokeWidth={1.75} dot={true} connectNulls={true} />
@@ -286,9 +336,9 @@ function DKProduction({ area }) {
 
   return (
     <div>
-      <DKProductionChart data={solar} valueKey="value_mwh" title={`${area} – Sol produktion (MWh)`} yLabel="MWh" />
-      <DKProductionChart data={offshore} valueKey="value_mwh" title={`${area} – Offshore vind produktion (MWh)`} yLabel="MWh" />
-      <DKProductionChart data={onshore} valueKey="value_mwh" title={`${area} – Onshore vind produktion (MWh)`} yLabel="MWh" />
+      <DKProductionChart data={solar}    valueKey="value_mwh" title={`${area} – Sol produktion (MWh)`}             yLabel="MWh" />
+      <DKProductionChart data={offshore} valueKey="value_mwh" title={`${area} – Offshore vind produktion (MWh)`}  yLabel="MWh" />
+      <DKProductionChart data={onshore}  valueKey="value_mwh" title={`${area} – Onshore vind produktion (MWh)`}   yLabel="MWh" />
     </div>
   );
 }
@@ -296,6 +346,7 @@ function DKProduction({ area }) {
 function HydroSection({ country, zones }) {
   const [selected, setSelected] = useState(zones[0]);
   const [data, setData] = useState([]);
+
   useEffect(() => {
     fetch(`${API}/hydro/${country}/${selected}`).then(r => r.json()).then(setData);
   }, [country, selected]);
@@ -315,6 +366,7 @@ function HydroSection({ country, zones }) {
 function GasStorage() {
   const areas = ["EU", "Tyskland", "Holland"];
   const [data, setData] = useState({});
+
   useEffect(() => {
     areas.forEach(area => {
       fetch(`${API}/gas/${area}`).then(r => r.json()).then(d => {
@@ -326,7 +378,8 @@ function GasStorage() {
   return (
     <div>
       {areas.map(area => (
-        <YearlyLineChart key={area} data={data[area] || []} valueKey="full_pct" title={`Gas storage – ${area} (% kapacitet)`} yLabel="%" />
+        <YearlyLineChart key={area} data={data[area] || []} valueKey="full_pct"
+          title={`Gas storage – ${area} (% kapacitet)`} yLabel="%" />
       ))}
     </div>
   );
@@ -381,10 +434,15 @@ function Consumption() {
   const zones = ["DK1", "DK2", "Tyskland"];
   const [monthly, setMonthly] = useState({});
   const [hourly, setHourly] = useState({});
+
   useEffect(() => {
     zones.forEach(zone => {
-      fetch(`${API}/consumption/${zone}`).then(r => r.json()).then(d => setMonthly(prev => ({ ...prev, [zone]: d })));
-      fetch(`${API}/consumption-hourly/${zone}`).then(r => r.json()).then(d => setHourly(prev => ({ ...prev, [zone]: d })));
+      fetch(`${API}/consumption/${zone}`)
+        .then(r => r.json())
+        .then(d => setMonthly(prev => ({ ...prev, [zone]: d })));
+      fetch(`${API}/consumption-hourly/${zone}`)
+        .then(r => r.json())
+        .then(d => setHourly(prev => ({ ...prev, [zone]: d })));
     });
   }, []);
 
@@ -392,8 +450,17 @@ function Consumption() {
     <div>
       {zones.map(zone => (
         <div key={zone}>
-          <YearlyLineChart data={monthly[zone] || []} valueKey="value_mwh" title={`Forbrug – ${zone} månedligt gennemsnit (MWh)`} yLabel="MWh" showMedian={false} />
-          <HourlyLineChart data={hourly[zone] || []} title={`Forbrug – ${zone} timesgennemsnit (MWh)`} />
+          <YearlyLineChart
+            data={monthly[zone] || []}
+            valueKey="value_mwh"
+            title={`Forbrug – ${zone} månedligt gennemsnit (MWh)`}
+            yLabel="MWh"
+            showMedian={false}
+          />
+          <HourlyLineChart
+            data={hourly[zone] || []}
+            title={`Forbrug – ${zone} timesgennemsnit (MWh)`}
+          />
         </div>
       ))}
     </div>
