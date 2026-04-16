@@ -310,6 +310,7 @@ function DKPrices({ area }) {
             <XAxis dataKey="month" tick={{ fontSize: 11 }} />
             <YAxis tick={{ fontSize: 12 }} label={{ value: "DKK/MWh", angle: -90, position: "insideLeft", fontSize: 12 }} />
             <Tooltip /><Legend />
+            <Brush dataKey="month" height={24} stroke="#2C3E50" travellerWidth={8} />
             <Line type="monotone" dataKey="Spotpris" stroke="#2C3E50" strokeWidth={2.5} dot={true} connectNulls={true} />
             <Line type="monotone" dataKey="Solar" stroke="#F4A927" strokeWidth={1.75} dot={true} connectNulls={true} />
             <Line type="monotone" dataKey="Offshore" stroke="#1A7BB9" strokeWidth={1.75} dot={true} connectNulls={true} />
@@ -325,6 +326,7 @@ function DKPrices({ area }) {
             <XAxis dataKey="month" tick={{ fontSize: 11 }} />
             <YAxis tick={{ fontSize: 12 }} label={{ value: "%", angle: -90, position: "insideLeft", fontSize: 12 }} />
             <Tooltip /><Legend />
+            <Brush dataKey="month" height={24} stroke="#2C3E50" travellerWidth={8} />
             <Line type="monotone" dataKey="Solar" stroke="#F4A927" strokeWidth={1.75} dot={true} connectNulls={true} />
             <Line type="monotone" dataKey="Offshore" stroke="#1A7BB9" strokeWidth={1.75} dot={true} connectNulls={true} />
             <Line type="monotone" dataKey="Onshore" stroke="#3DAA6E" strokeWidth={1.75} dot={true} connectNulls={true} strokeDasharray="5 5" />
