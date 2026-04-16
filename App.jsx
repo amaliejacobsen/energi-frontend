@@ -331,7 +331,7 @@ function DKPrices({ area }) {
             <Line type="monotone" dataKey="OffshoreCapture" name="Offshore" stroke="#1A7BB9" strokeWidth={1.5} dot={false} />
             <Line type="monotone" dataKey="OnshoreCapture" name="Onshore" stroke="#3DAA6E" strokeWidth={1.5} dot={false} strokeDasharray="5 5" />
             
-            <Brush dataKey="displayDate" height={30} stroke="#1A7BB9" fill="#f0f0f0" />
+            <Brush dataKey="displayDate" height={30} stroke="#2C3E50" fill="#f0f0f0" />
           </LineChart>
         </ResponsiveContainer>
       </div>
