@@ -198,12 +198,15 @@ function YearlyLineChart({ data, valueKey, title, yLabel, showMedian = true }) {
     <div className="chart-box">
       <h3>{title}</h3>
       <ResponsiveContainer width="100%" height={320}>
-        <LineChart data={byMonth}>
+        <LineChart data={byMonth} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
           <XAxis dataKey="month" tick={{ fontSize: 12 }} />
-          <YAxis tick={{ fontSize: 12 }} label={{ value: yLabel, angle: -90, position: "insideLeft", fontSize: 12 }} />
+          <YAxis 
+            tick={{ fontSize: 12 }} 
+            label={{ value: yLabel, angle: -90, position: 'insideLeft', offset: -10, style: { textAnchor: 'middle', fontSize: 13, fontWeight: 500 } }} 
+          />
           <Tooltip />
-          <Legend />
+          <Legend verticalAlign="top" height={36}/>
           {years.map((year, i) => (
             <Line 
               key={year} 
@@ -212,7 +215,7 @@ function YearlyLineChart({ data, valueKey, title, yLabel, showMedian = true }) {
               stroke={YEAR_COLORS[i % YEAR_COLORS.length]}
               strokeWidth={year === currentYear ? 3 : 1.25}
               dot={year === currentYear} 
-              connectNulls={true} 
+              connectNulls={false} 
             />
           ))}
           {showMedian && (
@@ -255,7 +258,6 @@ function DKPrices({ area }) {
     fetch(`${API}/dk-prices/${area}`).then(r => r.json()).then(setData).catch(console.error);
   }, [area]);
 
-  // Sørg for at data er sorteret efter måned så grafen ikke hopper
   const sortedData = [...data].sort((a,b) => a.month - b.month);
 
   const chartData = sortedData.map(d => ({ 
@@ -278,12 +280,14 @@ function DKPrices({ area }) {
       <div className="chart-box">
         <h3>{area} – Spotpris og vægtet gennemsnit (2026)</h3>
         <ResponsiveContainer width="100%" height={320}>
-          <LineChart data={chartData}>
+          <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
             <XAxis dataKey="month" tick={{ fontSize: 11 }} />
-            <YAxis tick={{ fontSize: 12 }} label={{ value: "DKK/MWh", angle: -90, position: "insideLeft", fontSize: 12 }} />
-            <Tooltip /><Legend />
-            <Brush dataKey="month" height={24} stroke="#2C3E50" travellerWidth={8} />
+            <YAxis 
+              tick={{ fontSize: 12 }} 
+              label={{ value: "DKK/MWh", angle: -90, position: 'insideLeft', offset: -10 }} 
+            />
+            <Tooltip /><Legend verticalAlign="top" height={36}/>
             <Line type="monotone" dataKey="Spotpris" stroke="#2C3E50" strokeWidth={2.5} dot={true} connectNulls={true} />
             <Line type="monotone" dataKey="Solar" stroke="#F4A927" strokeWidth={1.75} dot={true} connectNulls={true} />
             <Line type="monotone" dataKey="Offshore" stroke="#1A7BB9" strokeWidth={1.75} dot={true} connectNulls={true} />
@@ -291,15 +295,18 @@ function DKPrices({ area }) {
           </LineChart>
         </ResponsiveContainer>
       </div>
+      
       <div className="chart-box">
         <h3>{area} – Capture rate (%)</h3>
         <ResponsiveContainer width="100%" height={320}>
-          <LineChart data={captureData}>
+          <LineChart data={captureData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
             <XAxis dataKey="month" tick={{ fontSize: 11 }} />
-            <YAxis tick={{ fontSize: 12 }} label={{ value: "%", angle: -90, position: "insideLeft", fontSize: 12 }} />
-            <Tooltip /><Legend />
-            <Brush dataKey="month" height={24} stroke="#2C3E50" travellerWidth={8} />
+            <YAxis 
+              tick={{ fontSize: 12 }} 
+              label={{ value: "Capture Rate %", angle: -90, position: 'insideLeft', offset: -10 }} 
+            />
+            <Tooltip /><Legend verticalAlign="top" height={36}/>
             <Line type="monotone" dataKey="Solar" stroke="#F4A927" strokeWidth={1.75} dot={true} connectNulls={true} />
             <Line type="monotone" dataKey="Offshore" stroke="#1A7BB9" strokeWidth={1.75} dot={true} connectNulls={true} />
             <Line type="monotone" dataKey="Onshore" stroke="#3DAA6E" strokeWidth={1.75} dot={true} connectNulls={true} strokeDasharray="5 5" />
