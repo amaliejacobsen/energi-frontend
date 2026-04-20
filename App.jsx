@@ -314,7 +314,7 @@ function Consumption() {
   const [hourly, setHourly] = useState({});
   useEffect(() => {
     zones.forEach(zone => {
-      supabase.from("consumption_monthly").select("*").eq("zone", zone).order("year").order("month").then(({ data }) => setMonthly(prev => ({ ...prev, [zone]: data || [] })));
+      supabase.from("consumption").select("*").eq("zone", zone).order("year").order("month").then(({ data }) => setMonthly(prev => ({ ...prev, [zone]: data || [] })));
       supabase.from("consumption_hourly").select("*").eq("zone", zone).order("year").order("hour").then(({ data }) => setHourly(prev => ({ ...prev, [zone]: data || [] })));
     });
   }, []);
