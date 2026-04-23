@@ -271,12 +271,14 @@ function GasStorage() {
 }
 
 function InstalledCapacity() {
-  const countries = ["Danmark","Norge","Sverige","Finland","Holland","Frankrig"];
+  const countries = ["Danmark","Norge","Sverige","Finland","Holland","Frankrig","Tyskland"];
   const [selected, setSelected] = useState("Danmark");
   const [data, setData] = useState([]);
+
   useEffect(() => {
     supabase.from("installed_capacity").select("*").eq("country", selected).order("year").then(({ data }) => setData(data || []));
   }, [selected]);
+
   const years = [...new Set(data.map(d => d.year))].sort();
   const psrTypes = [...new Set(data.map(d => d.psr_name))];
   const chartData = psrTypes.map(psr => {
@@ -287,20 +289,25 @@ function InstalledCapacity() {
     });
     return row;
   });
+
   return (
     <div>
       <div className="tab-row">
-        {countries.map(c => <button key={c} className={selected === c ? "tab active" : "tab"} onClick={() => setSelected(c)}>{c}</button>)}
+        {countries.map(c => (
+          <button key={c} className={selected === c ? "tab active" : "tab"} onClick={() => setSelected(c)}>{c}</button>
+        ))}
       </div>
       <div className="chart-box">
         <h3>{selected} – Installed Capacity (MW)</h3>
-        <ResponsiveContainer width="100%" height={400}>
+        <ResponsiveContainer width="100%" height={Math.max(400, psrTypes.length * 45)}>
           <BarChart data={chartData} layout="vertical">
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
             <XAxis type="number" tick={{ fontSize: 12 }} />
             <YAxis type="category" dataKey="psr" width={200} tick={{ fontSize: 11 }} />
             <Tooltip /><Legend />
-            {years.map((year, i) => <Bar key={year} dataKey={year} stackId="a" fill={YEAR_COLORS[i % YEAR_COLORS.length]} />)}
+            {years.map((year, i) => (
+              <Bar key={year} dataKey={year} stackId="a" fill={YEAR_COLORS[i % YEAR_COLORS.length]} />
+            ))}
           </BarChart>
         </ResponsiveContainer>
       </div>
