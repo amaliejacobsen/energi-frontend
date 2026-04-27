@@ -273,14 +273,15 @@ function GasStorage() {
 function InstalledCapacity() {
   const countries = ["Danmark","Norge","Sverige","Finland","Holland","Frankrig","Tyskland"];
   const dkZones = ["DK1", "DK2"];
+  const noZones = ["NO1", "NO2", "NO3", "NO4", "NO5"];
   const [selected, setSelected] = useState("Danmark");
-  const [dkZone, setDkZone] = useState(null);
+  const [subZone, setSubZone] = useState(null);
   const [data, setData] = useState([]);
 
   useEffect(() => {
-    const country = dkZone || selected;
+    const country = subZone || selected;
     supabase.from("installed_capacity").select("*").eq("country", country).order("year").then(({ data }) => setData(data || []));
-  }, [selected, dkZone]);
+  }, [selected, subZone]);
 
   const years = [...new Set(data.map(d => d.year))].sort();
   const psrTypes = [...new Set(data.map(d => d.psr_name))];
@@ -298,22 +299,30 @@ function InstalledCapacity() {
       <div className="tab-row">
         {countries.map(c => (
           <button key={c}
-            className={selected === c && !dkZone ? "tab active" : "tab"}
-            onClick={() => { setSelected(c); setDkZone(null); }}>
+            className={selected === c && !subZone ? "tab active" : "tab"}
+            onClick={() => { setSelected(c); setSubZone(null); }}>
             {c}
           </button>
         ))}
       </div>
       {selected === "Danmark" && (
         <div className="tab-row" style={{ marginLeft: "16px", borderLeft: "3px solid #1A7BB9", paddingLeft: "12px" }}>
-          <button className={!dkZone ? "tab active" : "tab"} onClick={() => setDkZone(null)}>Samlet</button>
+          <button className={!subZone ? "tab active" : "tab"} onClick={() => setSubZone(null)}>Samlet</button>
           {dkZones.map(z => (
-            <button key={z} className={dkZone === z ? "tab active" : "tab"} onClick={() => setDkZone(z)}>{z}</button>
+            <button key={z} className={subZone === z ? "tab active" : "tab"} onClick={() => setSubZone(z)}>{z}</button>
+          ))}
+        </div>
+      )}
+      {selected === "Norge" && (
+        <div className="tab-row" style={{ marginLeft: "16px", borderLeft: "3px solid #1A7BB9", paddingLeft: "12px" }}>
+          <button className={!subZone ? "tab active" : "tab"} onClick={() => setSubZone(null)}>Samlet</button>
+          {noZones.map(z => (
+            <button key={z} className={subZone === z ? "tab active" : "tab"} onClick={() => setSubZone(z)}>{z}</button>
           ))}
         </div>
       )}
       <div className="chart-box">
-        <h3>{dkZone || selected} – Installed Capacity (MW)</h3>
+        <h3>{subZone || selected} – Installed Capacity (MW)</h3>
         <ResponsiveContainer width="100%" height={Math.max(400, psrTypes.length * 45)}>
           <BarChart data={chartData} layout="vertical">
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
@@ -326,28 +335,6 @@ function InstalledCapacity() {
           </BarChart>
         </ResponsiveContainer>
       </div>
-    </div>
-  );
-}
-
-function Consumption() {
-  const zones = ["DK1", "DK2", "Tyskland"];
-  const [monthly, setMonthly] = useState({});
-  const [hourly, setHourly] = useState({});
-  useEffect(() => {
-    zones.forEach(zone => {
-      supabase.from("consumption").select("*").eq("zone", zone).order("year").order("month").then(({ data }) => setMonthly(prev => ({ ...prev, [zone]: data || [] })));
-      supabase.from("consumption_hourly").select("*").eq("zone", zone).order("year").order("hour").then(({ data }) => setHourly(prev => ({ ...prev, [zone]: data || [] })));
-    });
-  }, []);
-  return (
-    <div>
-      {zones.map(zone => (
-        <div key={zone}>
-          <YearlyLineChart data={monthly[zone] || []} valueKey="value_mwh" title={`Forbrug – ${zone} månedligt gennemsnit (MWh)`} yLabel="MWh" showMedian={false} />
-          <HourlyLineChart data={hourly[zone] || []} title={`Forbrug – ${zone} timesgennemsnit (MWh)`} />
-        </div>
-      ))}
     </div>
   );
 }
