@@ -272,12 +272,15 @@ function GasStorage() {
 
 function InstalledCapacity() {
   const countries = ["Danmark","Norge","Sverige","Finland","Holland","Frankrig","Tyskland"];
+  const dkZones = ["DK1", "DK2"];
   const [selected, setSelected] = useState("Danmark");
+  const [dkZone, setDkZone] = useState(null);
   const [data, setData] = useState([]);
 
   useEffect(() => {
-    supabase.from("installed_capacity").select("*").eq("country", selected).order("year").then(({ data }) => setData(data || []));
-  }, [selected]);
+    const country = dkZone || selected;
+    supabase.from("installed_capacity").select("*").eq("country", country).order("year").then(({ data }) => setData(data || []));
+  }, [selected, dkZone]);
 
   const years = [...new Set(data.map(d => d.year))].sort();
   const psrTypes = [...new Set(data.map(d => d.psr_name))];
@@ -294,11 +297,23 @@ function InstalledCapacity() {
     <div>
       <div className="tab-row">
         {countries.map(c => (
-          <button key={c} className={selected === c ? "tab active" : "tab"} onClick={() => setSelected(c)}>{c}</button>
+          <button key={c}
+            className={selected === c && !dkZone ? "tab active" : "tab"}
+            onClick={() => { setSelected(c); setDkZone(null); }}>
+            {c}
+          </button>
         ))}
       </div>
+      {selected === "Danmark" && (
+        <div className="tab-row" style={{ marginLeft: "16px", borderLeft: "3px solid #1A7BB9", paddingLeft: "12px" }}>
+          <button className={!dkZone ? "tab active" : "tab"} onClick={() => setDkZone(null)}>Samlet</button>
+          {dkZones.map(z => (
+            <button key={z} className={dkZone === z ? "tab active" : "tab"} onClick={() => setDkZone(z)}>{z}</button>
+          ))}
+        </div>
+      )}
       <div className="chart-box">
-        <h3>{selected} – Installed Capacity (MW)</h3>
+        <h3>{dkZone || selected} – Installed Capacity (MW)</h3>
         <ResponsiveContainer width="100%" height={Math.max(400, psrTypes.length * 45)}>
           <BarChart data={chartData} layout="vertical">
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
