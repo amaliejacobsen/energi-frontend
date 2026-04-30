@@ -338,7 +338,27 @@ function InstalledCapacity() {
     </div>
   );
 }
-
+function Consumption() {
+  const zones = ["DK1", "DK2", "Tyskland"];
+  const [monthly, setMonthly] = useState({});
+  const [hourly, setHourly] = useState({});
+  useEffect(() => {
+    zones.forEach(zone => {
+      supabase.from("consumption").select("*").eq("zone", zone).order("year").order("month").then(({ data }) => setMonthly(prev => ({ ...prev, [zone]: data || [] })));
+      supabase.from("consumption_hourly").select("*").eq("zone", zone).order("year").order("hour").then(({ data }) => setHourly(prev => ({ ...prev, [zone]: data || [] })));
+    });
+  }, []);
+  return (
+    <div>
+      {zones.map(zone => (
+        <div key={zone}>
+          <YearlyLineChart data={monthly[zone] || []} valueKey="value_mwh" title={`Forbrug – ${zone} månedligt gennemsnit (MWh)`} yLabel="MWh" showMedian={false} />
+          <HourlyLineChart data={hourly[zone] || []} title={`Forbrug – ${zone} timesgennemsnit (MWh)`} />
+        </div>
+      ))}
+    </div>
+  );
+}
 const TABS = ["DK1 Priser","DK2 Priser","DK1 Produktion","DK2 Produktion","Norge Hydro","Sverige Hydro","Gas Storage","Installed Capacity","Forbrug"];
 
 export default function App() {
