@@ -444,7 +444,7 @@ function GasStorage() {
 }
 
 function InstalledCapacity() {
-  const countries = ["Danmark", "Norge", "Sverige", "Finland", "Holland", "Frankrig", "Tyskland"];
+  const countries = ["Danmark", "Norge", "Finland", "Holland", "Frankrig", "Tyskland"];
   const dkZones = ["DK1", "DK2"];
   const noZones = ["NO1", "NO2", "NO3", "NO4", "NO5"];
   const [selected, setSelected] = useState("Danmark");
