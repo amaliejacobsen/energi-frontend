@@ -450,6 +450,8 @@ function InstalledCapacity() {
   const [selected, setSelected] = useState("Danmark");
   const [subZone, setSubZone] = useState(null);
   const [data, setData] = useState([]);
+  const [visibleYears, setVisibleYears] = useState([]);
+  const [visibleTypes, setVisibleTypes] = useState([]);
 
   // Henter data fra Supabase
   useEffect(() => {
@@ -469,88 +471,106 @@ function InstalledCapacity() {
   const [visibleYears, setVisibleYears] = useState([]);
 
   // NYT: Sørger for at alle år er tændt som standard når data lander
+ 
   useEffect(() => {
     if (years.length > 0) {
       setVisibleYears(years);
     }
-  }, [years.join(',')]);
+    // NYT: Tænd alle teknologityper som standard
+    if (psrTypes.length > 0) {
+      setVisibleTypes(psrTypes);
+    }
+  }, [years.join(','), psrTypes.join(',')]);
 
-  // Formaterer data til Recharts
-  const chartData = psrTypes.map(psr => {
-    const row = { psr };
-    years.forEach(year => {
-      const found = data.find(d => d.psr_name === psr && d.year === year);
-      row[year] = found ? found.value_mw : 0;
+  // Den ENESTE korrekte definition af chartData:
+ 
+  const chartData = psrTypes
+    .filter(psr => visibleTypes.includes(psr))
+    .map(psr => {
+      const row = { psr };
+      years.forEach(year => {
+        const found = data.find(d => d.psr_name === psr && d.year === year);
+        row[year] = found ? found.value_mw : 0;
+      });
+      return row;
     });
-    return row;
-  });
 
+  // NU starter din return (kun én gang!)
   return (
-    <div>
-      <div className="tab-row">
+    <div style={{ background: '#fff', padding: '20px', borderRadius: '8px', border: '1px solid #eee' }}>
+      {/* 1. LAND-VÆLGER */}
+      <div className="tab-row" style={{ display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' }}>
         {countries.map(c => (
-          <button key={c}
+          <button 
+            key={c}
             className={selected === c && !subZone ? "tab active" : "tab"}
-            onClick={() => { setSelected(c); setSubZone(null); }}>
+            onClick={() => { setSelected(c); setSubZone(null); }}
+            style={{
+              padding: '8px 16px',
+              border: 'none',
+              background: (selected === c && !subZone) ? '#444' : '#f5f5f5',
+              color: (selected === c && !subZone) ? '#fff' : '#666',
+              cursor: 'pointer',
+              borderRadius: '4px'
+            }}
+          >
             {c}
           </button>
         ))}
       </div>
-      {(selected === "Danmark" || selected === "Norge") && (
-        <div className="tab-row" style={{ marginLeft: "16px", borderLeft: "3px solid #1A7BB9", paddingLeft: "12px" }}>
-          <button className={!subZone ? "tab active" : "tab"} onClick={() => setSubZone(null)}>Samlet</button>
-          {(selected === "Danmark" ? dkZones : noZones).map(z => (
-            <button key={z} className={subZone === z ? "tab active" : "tab"} onClick={() => setSubZone(z)}>{z}</button>
+
+      {/* 2. TEKNOLOGI-VÆLGER (DE NYE KNAPPER) */}
+      <div style={{ marginBottom: '25px', padding: '15px', background: '#fafafa', borderRadius: '6px' }}>
+        <p style={{ fontSize: '12px', fontWeight: 'bold', color: '#555', marginBottom: '10px', textTransform: 'uppercase' }}>
+          Vælg kapaciteter der skal vises:
+        </p>
+        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+          {psrTypes.map(type => (
+            <button
+              key={type}
+              onClick={() => {
+                setVisibleTypes(prev => 
+                  prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]
+                );
+              }}
+              style={{
+                padding: '5px 12px',
+                fontSize: '11px',
+                borderRadius: '20px',
+                cursor: 'pointer',
+                border: '1px solid ' + (visibleTypes.includes(type) ? '#444' : '#ccc'),
+                backgroundColor: visibleTypes.includes(type) ? '#444' : '#fff',
+                color: visibleTypes.includes(type) ? '#fff' : '#666',
+                transition: 'all 0.1s ease'
+              }}
+            >
+              {type}
+            </button>
           ))}
         </div>
-      )}
+      </div>
 
-      <div className="chart-box">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-          <h3 style={{ margin: 0 }}>{subZone || selected} – Installed Capacity (MW)</h3>
-          
-          {/* NYT: Knapper til at vælge årstal */}
-          <div style={{ display: 'flex', gap: '5px' }}>
-            {years.map((year, i) => (
-              <button
-                key={year}
-                onClick={() => {
-                  setVisibleYears(prev => prev.includes(year) ? prev.filter(y => y !== year) : [...prev, year]);
-                }}
-                className={`toggle-btn ${visibleYears.includes(year) ? 'active' : ''}`}
-                style={{
-                  padding: '4px 8px', fontSize: '11px', borderRadius: '4px', border: 'none', cursor: 'pointer',
-                  backgroundColor: visibleYears.includes(year) ? YEAR_COLORS[i % YEAR_COLORS.length] : '#e0e0e0',
-                  color: visibleYears.includes(year) ? '#fff' : '#666'
-                }}
-              >
-                {year}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <ResponsiveContainer width="100%" height={Math.max(400, psrTypes.length * 45)}>
-          <BarChart data={chartData} layout="vertical" barGap={2} barCategoryGap="15%"> 
-            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-            <XAxis type="number" tick={{ fontSize: 12 }} />
-            <YAxis type="category" dataKey="psr" width={200} tick={{ fontSize: 11 }} />
-            <Tooltip />
-            <Legend />
-            {/* OPDATER DENNE DEL: */}
+      {/* 3. GRAFEN */}
+      <div style={{ marginTop: '10px' }}>
+        <ResponsiveContainer width="100%" height={Math.max(450, visibleTypes.length * (visibleYears.length * 22))}>
+          <BarChart data={chartData} layout="vertical" barGap={2} barCategoryGap="15%">
+            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" horizontal={false} />
+            <XAxis type="number" tick={{ fontSize: 12 }} unit=" MW" />
+            <YAxis type="category" dataKey="psr" width={150} tick={{ fontSize: 11 }} />
+            <Tooltip cursor={{ fill: '#f9f9f9' }} />
+            <Legend verticalAlign="top" height={36}/>
             {years.map((year, i) => (
               visibleYears.includes(year) && (
                 <Bar 
                   key={year} 
                   dataKey={year} 
                   fill={YEAR_COLORS[i % YEAR_COLORS.length]} 
-                  radius={[0, 4, 4, 0]} // Gør enderne lidt bløde
-                  // stackId="a"  <-- FJERN ELLER KOMMENTER DENNE LINJE UD
+                  radius={[0, 4, 4, 0]}
                 />
-             )
-           ))}
-        </BarChart>
-        <ResponsiveContainer width="100%" height={Math.max(500, psrTypes.length * (visibleYears.length * 20))}>
+              )
+            ))}
+          </BarChart>
+        </ResponsiveContainer>
       </div>
     </div>
   );
