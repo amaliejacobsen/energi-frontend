@@ -236,36 +236,49 @@ function DKProduction({ area }) {
 }
 
 function HydroSection({ country, zones }) {
-  const [selected, setSelected] = useState(zones[0]);
+  const [selected, setSelected] = useState("Total");
   const [data, setData] = useState([]);
+
   useEffect(() => {
-    supabase.from("hydro_production").select("*").eq("country", country).eq("zone", selected).order("year").order("month").then(({ data }) => setData(data || []));
+    if (selected === "Total") {
+      // Hent alle zoner og læg dem sammen
+      Promise.all(
+        zones.map(z =>
+          supabase.from("hydro_production").select("*")
+            .eq("country", country).eq("zone", z)
+            .order("year").order("month")
+            .then(({ data }) => data || [])
+        )
+      ).then(allZoneData => {
+        // Læg alle zoner sammen per år og måned
+        const combined = {};
+        allZoneData.flat().forEach(d => {
+          const key = `${d.year}-${d.month}`;
+          if (!combined[key]) {
+            combined[key] = { ...d };
+          } else {
+            combined[key].value_mwh += d.value_mwh;
+          }
+        });
+        setData(Object.values(combined));
+      });
+    } else {
+      supabase.from("hydro_production").select("*")
+        .eq("country", country).eq("zone", selected)
+        .order("year").order("month")
+        .then(({ data }) => setData(data || []));
+    }
   }, [country, selected]);
+
   return (
     <div>
       <div className="tab-row">
-        {zones.map(z => <button key={z} className={selected === z ? "tab active" : "tab"} onClick={() => setSelected(z)}>{z}</button>)}
+        <button className={selected === "Total" ? "tab active" : "tab"} onClick={() => setSelected("Total")}>Total</button>
+        {zones.map(z => (
+          <button key={z} className={selected === z ? "tab active" : "tab"} onClick={() => setSelected(z)}>{z}</button>
+        ))}
       </div>
       <YearlyLineChart data={data} valueKey="value_mwh" title={`${country} – ${selected} Hydro (MWh)`} yLabel="MWh" />
-    </div>
-  );
-}
-
-function GasStorage() {
-  const areas = ["EU", "Tyskland", "Holland"];
-  const [data, setData] = useState({});
-  useEffect(() => {
-    areas.forEach(area => {
-      supabase.from("gas_storage").select("*").eq("area", area).order("year").order("month").then(({ data: d }) => {
-        setData(prev => ({ ...prev, [area]: d || [] }));
-      });
-    });
-  }, []);
-  return (
-    <div>
-      {areas.map(area => (
-        <YearlyLineChart key={area} data={data[area] || []} valueKey="full_pct" title={`Gas storage – ${area} (% kapacitet)`} yLabel="%" />
-      ))}
     </div>
   );
 }
