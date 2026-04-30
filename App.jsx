@@ -94,9 +94,14 @@ function DKProductionChart({ data, valueKey, title, yLabel }) {
   const { years, byDay } = groupByDayOfYear(data, valueKey);
   const monthTicks = [15, 45, 75, 105, 135, 165, 195, 225, 255, 285, 315, 345];
   
-  // Tilføj state her
-  const [visibleYears, setVisibleYears] = useState(years);
-  useEffect(() => { setVisibleYears(years); }, [data]);
+  // Tilføj denne state og useEffect
+  const [visibleYears, setVisibleYears] = useState([]);
+
+  useEffect(() => {
+    if (years.length > 0) {
+      setVisibleYears(years);
+    }
+  }, [years.join(',')]);
 
   const toggleYear = (year) => {
     setVisibleYears(prev => prev.includes(year) ? prev.filter(y => y !== year) : [...prev, year]);
@@ -149,11 +154,17 @@ function YearlyLineChart({ data, valueKey, title, yLabel }) {
   const currentYear = new Date().getFullYear();
   const { years, byMonth } = groupByYear(data, valueKey);
   
-  // State til at styre hvilke år der er synlige, og om medianen er på
-  const [visibleYears, setVisibleYears] = useState(years);
+  // State starter tom
+  const [visibleYears, setVisibleYears] = useState([]);
   const [showMedian, setShowMedian] = useState(true);
 
-  // Funktion til at tænde/slukke for et år
+  // Sørger for at tænde alle år når data er indlæst
+  useEffect(() => {
+    if (years.length > 0) {
+      setVisibleYears(years);
+    }
+  }, [years.join(',')]);
+
   const toggleYear = (year) => {
     setVisibleYears(prev => 
       prev.includes(year) ? prev.filter(y => y !== year) : [...prev, year]
@@ -238,8 +249,15 @@ function YearlyLineChart({ data, valueKey, title, yLabel }) {
 function HourlyLineChart({ data, title }) {
   const currentYear = new Date().getFullYear();
   const { years, byHour } = groupHourlyByYear(data);
-  const [visibleYears, setVisibleYears] = useState(years);
-  useEffect(() => { setVisibleYears(years); }, [data]);
+  
+  // Tilføj denne state og useEffect
+  const [visibleYears, setVisibleYears] = useState([]);
+
+  useEffect(() => {
+    if (years.length > 0) {
+      setVisibleYears(years);
+    }
+  }, [years.join(',')]);
 
   const toggleYear = (year) => {
     setVisibleYears(prev => prev.includes(year) ? prev.filter(y => y !== year) : [...prev, year]);
@@ -426,20 +444,38 @@ function GasStorage() {
 }
 
 function InstalledCapacity() {
-  const countries = ["Danmark","Norge","Sverige","Finland","Holland","Frankrig","Tyskland"];
+  const countries = ["Danmark", "Norge", "Sverige", "Finland", "Holland", "Frankrig", "Tyskland"];
   const dkZones = ["DK1", "DK2"];
   const noZones = ["NO1", "NO2", "NO3", "NO4", "NO5"];
   const [selected, setSelected] = useState("Danmark");
   const [subZone, setSubZone] = useState(null);
   const [data, setData] = useState([]);
 
+  // Henter data fra Supabase
   useEffect(() => {
     const country = subZone || selected;
-    supabase.from("installed_capacity").select("*").eq("country", country).order("year").then(({ data }) => setData(data || []));
+    supabase.from("installed_capacity")
+      .select("*")
+      .eq("country", country)
+      .order("year")
+      .then(({ data }) => setData(data || []));
   }, [selected, subZone]);
 
+  // Finder unikke år og teknologier (PSR)
   const years = [...new Set(data.map(d => d.year))].sort();
   const psrTypes = [...new Set(data.map(d => d.psr_name))];
+
+  // NYT: State til at styre hvilke år der er synlige (knapperne)
+  const [visibleYears, setVisibleYears] = useState([]);
+
+  // NYT: Sørger for at alle år er tændt som standard når data lander
+  useEffect(() => {
+    if (years.length > 0) {
+      setVisibleYears(years);
+    }
+  }, [years.join(',')]);
+
+  // Formaterer data til Recharts
   const chartData = psrTypes.map(psr => {
     const row = { psr };
     years.forEach(year => {
@@ -450,47 +486,69 @@ function InstalledCapacity() {
   });
 
   return (
-  <div>
-    {/* ... dine eksisterende tab-rows ... */}
-    
-    <div className="chart-box">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-        <h3 style={{ margin: 0 }}>{subZone || selected} – Installed Capacity (MW)</h3>
-        <div style={{ display: 'flex', gap: '5px' }}>
-          {years.map((year, i) => (
-            <button
-              key={year}
-              onClick={() => {
-                setVisibleYears(prev => prev.includes(year) ? prev.filter(y => y !== year) : [...prev, year]);
-              }}
-              className={`toggle-btn ${visibleYears.includes(year) ? 'active' : ''}`}
-              style={{
-                padding: '4px 8px', fontSize: '11px', borderRadius: '4px', border: 'none', cursor: 'pointer',
-                backgroundColor: visibleYears.includes(year) ? YEAR_COLORS[i % YEAR_COLORS.length] : '#e0e0e0',
-                color: visibleYears.includes(year) ? '#fff' : '#666'
-              }}
-            >
-              {year}
-            </button>
+    <div>
+      <div className="tab-row">
+        {countries.map(c => (
+          <button key={c}
+            className={selected === c && !subZone ? "tab active" : "tab"}
+            onClick={() => { setSelected(c); setSubZone(null); }}>
+            {c}
+          </button>
+        ))}
+      </div>
+      {(selected === "Danmark" || selected === "Norge") && (
+        <div className="tab-row" style={{ marginLeft: "16px", borderLeft: "3px solid #1A7BB9", paddingLeft: "12px" }}>
+          <button className={!subZone ? "tab active" : "tab"} onClick={() => setSubZone(null)}>Samlet</button>
+          {(selected === "Danmark" ? dkZones : noZones).map(z => (
+            <button key={z} className={subZone === z ? "tab active" : "tab"} onClick={() => setSubZone(z)}>{z}</button>
           ))}
         </div>
+      )}
+
+      <div className="chart-box">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <h3 style={{ margin: 0 }}>{subZone || selected} – Installed Capacity (MW)</h3>
+          
+          {/* NYT: Knapper til at vælge årstal */}
+          <div style={{ display: 'flex', gap: '5px' }}>
+            {years.map((year, i) => (
+              <button
+                key={year}
+                onClick={() => {
+                  setVisibleYears(prev => prev.includes(year) ? prev.filter(y => y !== year) : [...prev, year]);
+                }}
+                className={`toggle-btn ${visibleYears.includes(year) ? 'active' : ''}`}
+                style={{
+                  padding: '4px 8px', fontSize: '11px', borderRadius: '4px', border: 'none', cursor: 'pointer',
+                  backgroundColor: visibleYears.includes(year) ? YEAR_COLORS[i % YEAR_COLORS.length] : '#e0e0e0',
+                  color: visibleYears.includes(year) ? '#fff' : '#666'
+                }}
+              >
+                {year}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <ResponsiveContainer width="100%" height={Math.max(400, psrTypes.length * 45)}>
+          <BarChart data={chartData} layout="vertical">
+            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+            <XAxis type="number" tick={{ fontSize: 12 }} />
+            <YAxis type="category" dataKey="psr" width={200} tick={{ fontSize: 11 }} />
+            <Tooltip />
+            <Legend />
+            {/* NYT: Vi mapper kun de Bar-elementer der er i visibleYears */}
+            {years.map((year, i) => (
+              visibleYears.includes(year) && (
+                <Bar key={year} dataKey={year} stackId="a" fill={YEAR_COLORS[i % YEAR_COLORS.length]} />
+              )
+            ))}
+          </BarChart>
+        </ResponsiveContainer>
       </div>
-      <ResponsiveContainer width="100%" height={Math.max(400, psrTypes.length * 45)}>
-        <BarChart data={chartData} layout="vertical">
-          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-          <XAxis type="number" tick={{ fontSize: 12 }} />
-          <YAxis type="category" dataKey="psr" width={200} tick={{ fontSize: 11 }} />
-          <Tooltip /><Legend />
-          {years.map((year, i) => (
-            visibleYears.includes(year) && (
-              <Bar key={year} dataKey={year} stackId="a" fill={YEAR_COLORS[i % YEAR_COLORS.length]} />
-            )
-          ))}
-        </BarChart>
-      </ResponsiveContainer>
     </div>
-  </div>
-);
+  );
+}
 
 function Consumption() {
   const zones = ["DK1", "DK2", "Tyskland"];
