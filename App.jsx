@@ -116,23 +116,90 @@ function DKProductionChart({ data, valueKey, title, yLabel }) {
   );
 }
 
-function YearlyLineChart({ data, valueKey, title, yLabel, showMedian = true }) {
+function YearlyLineChart({ data, valueKey, title, yLabel }) {
   const currentYear = new Date().getFullYear();
   const { years, byMonth } = groupByYear(data, valueKey);
+  
+  // State til at styre hvilke år der er synlige, og om medianen er på
+  const [visibleYears, setVisibleYears] = useState(years);
+  const [showMedian, setShowMedian] = useState(true);
+
+  // Funktion til at tænde/slukke for et år
+  const toggleYear = (year) => {
+    setVisibleYears(prev => 
+      prev.includes(year) ? prev.filter(y => y !== year) : [...prev, year]
+    );
+  };
+
   return (
     <div className="chart-box">
-      <h3>{title}</h3>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+        <h3>{title}</h3>
+        
+        {/* Årsvælger menu */}
+        <div className="chart-controls" style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
+          {years.map((year, i) => (
+            <button
+              key={year}
+              onClick={() => toggleYear(year)}
+              className={`toggle-btn ${visibleYears.includes(year) ? 'active' : ''}`}
+              style={{
+                padding: '4px 8px',
+                fontSize: '11px',
+                borderRadius: '4px',
+                border: '1px solid #ddd',
+                cursor: 'pointer',
+                backgroundColor: visibleYears.includes(year) ? YEAR_COLORS[i % YEAR_COLORS.length] : '#fff',
+                color: visibleYears.includes(year) ? '#fff' : '#333'
+              }}
+            >
+              {year}
+            </button>
+          ))}
+          <button
+            onClick={() => setShowMedian(!showMedian)}
+            className={`toggle-btn ${showMedian ? 'active' : ''}`}
+            style={{
+              padding: '4px 8px',
+              fontSize: '11px',
+              borderRadius: '4px',
+              border: '1px solid #333',
+              cursor: 'pointer',
+              backgroundColor: showMedian ? '#333' : '#fff',
+              color: showMedian ? '#fff' : '#333',
+              marginLeft: '10px'
+            }}
+          >
+            Median
+          </button>
+        </div>
+      </div>
+
       <ResponsiveContainer width="100%" height={320}>
         <LineChart data={byMonth} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
           <XAxis dataKey="month" interval={0} tick={{ fontSize: 12, fill: '#2C3E50' }} height={50} />
-          <YAxis tick={{ fontSize: 12 }} label={{ value: yLabel, angle: -90, position: 'insideLeft', offset: -10, style: { textAnchor: 'middle', fontSize: 13, fontWeight: 500 } }} />
-          <Tooltip /><Legend verticalAlign="top" height={36}/>
+          <YAxis tick={{ fontSize: 12 }} label={{ value: yLabel, angle: -90, position: 'insideLeft', offset: -10 }} />
+          <Tooltip />
+          <Legend verticalAlign="top" height={36}/>
+          
           {years.map((year, i) => (
-            <Line key={year} type="monotone" dataKey={year} stroke={YEAR_COLORS[i % YEAR_COLORS.length]}
-              strokeWidth={year === currentYear ? 3 : 1.25} dot={year === currentYear} connectNulls={false} />
+            visibleYears.includes(year) && (
+              <Line 
+                key={year} 
+                type="monotone" 
+                dataKey={year} 
+                stroke={YEAR_COLORS[i % YEAR_COLORS.length]}
+                strokeWidth={year === currentYear ? 3 : 1.25} 
+                dot={year === currentYear} 
+                connectNulls={false} 
+              />
+            )
           ))}
-          {showMedian && <Line type="monotone" dataKey="Median" stroke="#000000" strokeWidth={2} strokeDasharray="6 3" dot={false} connectNulls={true} />}
+          
+          {showMedian && (
+            <Line type="monotone" dataKey="Median" stroke="#000000" strokeWidth={2} strokeDasharray="6 3" dot={false} connectNulls={true} />
+          )}
         </LineChart>
       </ResponsiveContainer>
     </div>
@@ -427,6 +494,17 @@ export default function App() {
         .tab-row { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
         .tab { padding: 6px 12px; border: 1px solid #d0d7de; background: #fff; border-radius: 5px; cursor: pointer; font-size: 13px; }
         .tab.active { background: #1A7BB9; color: #fff; border-color: #1A7BB9; }
+        .toggle-btn {
+        transition: all 0.2s ease;
+        font-weight: 500;
+        }
+        .toggle-btn:hover {
+        opacity: 0.8;
+        transform: translateY(-1px);
+        }
+        .toggle-btn.active {
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }     
       `}</style>
     </div>
   );
