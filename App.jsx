@@ -283,6 +283,38 @@ function HydroSection({ country, zones }) {
   );
 }
 
+function GasStorage() {
+  const [data, setData] = useState([]);
+
+  useEffect(() => {
+    // Vi henter data fra 'gas_storage' tabellen
+    supabase
+      .from("gas_storage")
+      .select("*")
+      .order("year", { ascending: true })
+      .order("month", { ascending: true })
+      .then(({ data, error }) => {
+        if (error) {
+          console.error("Fejl ved hentning af gasdata:", error);
+        } else {
+          setData(data || []);
+        }
+      });
+  }, []);
+
+  return (
+    <div>
+      <YearlyLineChart 
+        data={data} 
+        valueKey="full_pct" 
+        title="EU Gaslager – Fyldningsgrad (%)" 
+        yLabel="Fyldning %" 
+        showMedian={true} 
+      />
+    </div>
+  );
+}
+
 function InstalledCapacity() {
   const countries = ["Danmark","Norge","Sverige","Finland","Holland","Frankrig","Tyskland"];
   const dkZones = ["DK1", "DK2"];
