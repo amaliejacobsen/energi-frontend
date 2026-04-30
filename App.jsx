@@ -531,20 +531,26 @@ function InstalledCapacity() {
         </div>
 
         <ResponsiveContainer width="100%" height={Math.max(400, psrTypes.length * 45)}>
-          <BarChart data={chartData} layout="vertical">
+          <BarChart data={chartData} layout="vertical" barGap={2} barCategoryGap="15%"> 
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
             <XAxis type="number" tick={{ fontSize: 12 }} />
             <YAxis type="category" dataKey="psr" width={200} tick={{ fontSize: 11 }} />
             <Tooltip />
             <Legend />
-            {/* NYT: Vi mapper kun de Bar-elementer der er i visibleYears */}
+            {/* OPDATER DENNE DEL: */}
             {years.map((year, i) => (
               visibleYears.includes(year) && (
-                <Bar key={year} dataKey={year} stackId="a" fill={YEAR_COLORS[i % YEAR_COLORS.length]} />
-              )
-            ))}
-          </BarChart>
-        </ResponsiveContainer>
+                <Bar 
+                  key={year} 
+                  dataKey={year} 
+                  fill={YEAR_COLORS[i % YEAR_COLORS.length]} 
+                  radius={[0, 4, 4, 0]} // Gør enderne lidt bløde
+                  // stackId="a"  <-- FJERN ELLER KOMMENTER DENNE LINJE UD
+                />
+             )
+           ))}
+        </BarChart>
+        <ResponsiveContainer width="100%" height={Math.max(500, psrTypes.length * (visibleYears.length * 20))}>
       </div>
     </div>
   );
