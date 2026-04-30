@@ -90,43 +90,39 @@ function groupByDayOfYear(data, valueKey) {
   return { years, byDay };
 }
 
+function YearToggleButtons({ years, visibleYears, setVisibleYears, showMedian, setShowMedian }) {
+  return (
+    <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
+      {years.map((year, i) => (
+        <button key={year} onClick={() => setVisibleYears(prev => prev.includes(year) ? prev.filter(y => y !== year) : [...prev, year])}
+          style={{ padding: '4px 8px', fontSize: '11px', borderRadius: '4px', border: '1px solid #ddd', cursor: 'pointer',
+            backgroundColor: visibleYears.includes(year) ? YEAR_COLORS[i % YEAR_COLORS.length] : '#fff',
+            color: visibleYears.includes(year) ? '#fff' : '#333' }}>
+          {year}
+        </button>
+      ))}
+      {setShowMedian && (
+        <button onClick={() => setShowMedian(!showMedian)}
+          style={{ padding: '4px 8px', fontSize: '11px', borderRadius: '4px', border: '1px solid #333', cursor: 'pointer',
+            backgroundColor: showMedian ? '#333' : '#fff', color: showMedian ? '#fff' : '#333', marginLeft: '10px' }}>
+          Median
+        </button>
+      )}
+    </div>
+  );
+}
+
 function DKProductionChart({ data, valueKey, title, yLabel }) {
   const { years, byDay } = groupByDayOfYear(data, valueKey);
   const monthTicks = [15, 45, 75, 105, 135, 165, 195, 225, 255, 285, 315, 345];
-  
-  // Tilføj denne state og useEffect
   const [visibleYears, setVisibleYears] = useState([]);
-
-  useEffect(() => {
-    if (years.length > 0) {
-      setVisibleYears(years);
-    }
-  }, [years.join(',')]);
-
-  const toggleYear = (year) => {
-    setVisibleYears(prev => prev.includes(year) ? prev.filter(y => y !== year) : [...prev, year]);
-  };
+  useEffect(() => { if (years.length > 0) setVisibleYears(years); }, [years.join(',')]);
 
   return (
     <div className="chart-box">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
         <h3 style={{ margin: 0 }}>{title}</h3>
-        <div style={{ display: 'flex', gap: '5px' }}>
-          {years.map((year, i) => (
-            <button
-              key={year}
-              onClick={() => toggleYear(year)}
-              className={`toggle-btn ${visibleYears.includes(year) ? 'active' : ''}`}
-              style={{
-                padding: '4px 8px', fontSize: '11px', borderRadius: '4px', border: 'none', cursor: 'pointer',
-                backgroundColor: visibleYears.includes(year) ? YEAR_COLORS[i % YEAR_COLORS.length] : '#e0e0e0',
-                color: visibleYears.includes(year) ? '#fff' : '#666'
-              }}
-            >
-              {year}
-            </button>
-          ))}
-        </div>
+        <YearToggleButtons years={years} visibleYears={visibleYears} setVisibleYears={setVisibleYears} />
       </div>
       <ResponsiveContainer width="100%" height={320}>
         <LineChart data={byDay} margin={{ bottom: 20 }}>
@@ -137,12 +133,10 @@ function DKProductionChart({ data, valueKey, title, yLabel }) {
           <YAxis tick={{ fontSize: 12 }} label={{ value: yLabel, angle: -90, position: "insideLeft", fontSize: 12 }} />
           <Tooltip labelFormatter={(day) => { const monthIdx = Math.floor(day / 30.5); return `Måned: ${MONTH_NAMES[monthIdx] || "Dec"}`; }} />
           <Legend />
-          {years.map((year, i) => (
-            visibleYears.includes(year) && (
-              <Line key={year} type="monotone" dataKey={year.toString()} name={year.toString()}
-                stroke={YEAR_COLORS[i % YEAR_COLORS.length]}
-                strokeWidth={i === years.length - 1 ? 3 : 1.5} dot={false} connectNulls={true} />
-            )
+          {years.map((year, i) => visibleYears.includes(year) && (
+            <Line key={year} type="monotone" dataKey={year.toString()} name={year.toString()}
+              stroke={YEAR_COLORS[i % YEAR_COLORS.length]}
+              strokeWidth={i === years.length - 1 ? 3 : 1.5} dot={false} connectNulls={true} />
           ))}
         </LineChart>
       </ResponsiveContainer>
@@ -153,93 +147,27 @@ function DKProductionChart({ data, valueKey, title, yLabel }) {
 function YearlyLineChart({ data, valueKey, title, yLabel }) {
   const currentYear = new Date().getFullYear();
   const { years, byMonth } = groupByYear(data, valueKey);
-  
-  // State starter tom
   const [visibleYears, setVisibleYears] = useState([]);
   const [showMedian, setShowMedian] = useState(true);
-
-  // Sørger for at tænde alle år når data er indlæst
-  useEffect(() => {
-    if (years.length > 0) {
-      setVisibleYears(years);
-    }
-  }, [years.join(',')]);
-
-  const toggleYear = (year) => {
-    setVisibleYears(prev => 
-      prev.includes(year) ? prev.filter(y => y !== year) : [...prev, year]
-    );
-  };
+  useEffect(() => { if (years.length > 0) setVisibleYears(years); }, [years.join(',')]);
 
   return (
     <div className="chart-box">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
         <h3>{title}</h3>
-        
-        {/* Årsvælger menu */}
-        <div className="chart-controls" style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
-          {years.map((year, i) => (
-            <button
-              key={year}
-              onClick={() => toggleYear(year)}
-              className={`toggle-btn ${visibleYears.includes(year) ? 'active' : ''}`}
-              style={{
-                padding: '4px 8px',
-                fontSize: '11px',
-                borderRadius: '4px',
-                border: '1px solid #ddd',
-                cursor: 'pointer',
-                backgroundColor: visibleYears.includes(year) ? YEAR_COLORS[i % YEAR_COLORS.length] : '#fff',
-                color: visibleYears.includes(year) ? '#fff' : '#333'
-              }}
-            >
-              {year}
-            </button>
-          ))}
-          <button
-            onClick={() => setShowMedian(!showMedian)}
-            className={`toggle-btn ${showMedian ? 'active' : ''}`}
-            style={{
-              padding: '4px 8px',
-              fontSize: '11px',
-              borderRadius: '4px',
-              border: '1px solid #333',
-              cursor: 'pointer',
-              backgroundColor: showMedian ? '#333' : '#fff',
-              color: showMedian ? '#fff' : '#333',
-              marginLeft: '10px'
-            }}
-          >
-            Median
-          </button>
-        </div>
+        <YearToggleButtons years={years} visibleYears={visibleYears} setVisibleYears={setVisibleYears} showMedian={showMedian} setShowMedian={setShowMedian} />
       </div>
-
       <ResponsiveContainer width="100%" height={320}>
         <LineChart data={byMonth} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
           <XAxis dataKey="month" interval={0} tick={{ fontSize: 12, fill: '#2C3E50' }} height={50} />
           <YAxis tick={{ fontSize: 12 }} label={{ value: yLabel, angle: -90, position: 'insideLeft', offset: -10 }} />
-          <Tooltip />
-          <Legend verticalAlign="top" height={36}/>
-          
-          {years.map((year, i) => (
-            visibleYears.includes(year) && (
-              <Line 
-                key={year} 
-                type="monotone" 
-                dataKey={year} 
-                stroke={YEAR_COLORS[i % YEAR_COLORS.length]}
-                strokeWidth={year === currentYear ? 3 : 1.25} 
-                dot={year === currentYear} 
-                connectNulls={false} 
-              />
-            )
+          <Tooltip /><Legend verticalAlign="top" height={36} />
+          {years.map((year, i) => visibleYears.includes(year) && (
+            <Line key={year} type="monotone" dataKey={year} stroke={YEAR_COLORS[i % YEAR_COLORS.length]}
+              strokeWidth={year === currentYear ? 3 : 1.25} dot={year === currentYear} connectNulls={false} />
           ))}
-          
-          {showMedian && (
-            <Line type="monotone" dataKey="Median" stroke="#000000" strokeWidth={2} strokeDasharray="6 3" dot={false} connectNulls={true} />
-          )}
+          {showMedian && <Line type="monotone" dataKey="Median" stroke="#000000" strokeWidth={2} strokeDasharray="6 3" dot={false} connectNulls={true} />}
         </LineChart>
       </ResponsiveContainer>
     </div>
@@ -249,40 +177,14 @@ function YearlyLineChart({ data, valueKey, title, yLabel }) {
 function HourlyLineChart({ data, title }) {
   const currentYear = new Date().getFullYear();
   const { years, byHour } = groupHourlyByYear(data);
-  
-  // Tilføj denne state og useEffect
   const [visibleYears, setVisibleYears] = useState([]);
-
-  useEffect(() => {
-    if (years.length > 0) {
-      setVisibleYears(years);
-    }
-  }, [years.join(',')]);
-
-  const toggleYear = (year) => {
-    setVisibleYears(prev => prev.includes(year) ? prev.filter(y => y !== year) : [...prev, year]);
-  };
+  useEffect(() => { if (years.length > 0) setVisibleYears(years); }, [years.join(',')]);
 
   return (
     <div className="chart-box">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
         <h3 style={{ margin: 0 }}>{title}</h3>
-        <div style={{ display: 'flex', gap: '5px' }}>
-          {years.map((year, i) => (
-            <button
-              key={year}
-              onClick={() => toggleYear(year)}
-              className={`toggle-btn ${visibleYears.includes(year) ? 'active' : ''}`}
-              style={{
-                padding: '4px 8px', fontSize: '11px', borderRadius: '4px', border: 'none', cursor: 'pointer',
-                backgroundColor: visibleYears.includes(year) ? YEAR_COLORS[i % YEAR_COLORS.length] : '#e0e0e0',
-                color: visibleYears.includes(year) ? '#fff' : '#666'
-              }}
-            >
-              {year}
-            </button>
-          ))}
-        </div>
+        <YearToggleButtons years={years} visibleYears={visibleYears} setVisibleYears={setVisibleYears} />
       </div>
       <ResponsiveContainer width="100%" height={320}>
         <LineChart data={byHour}>
@@ -290,11 +192,9 @@ function HourlyLineChart({ data, title }) {
           <XAxis dataKey="hour" tick={{ fontSize: 11 }} interval={2} />
           <YAxis tick={{ fontSize: 12 }} label={{ value: "MWh", angle: -90, position: "insideLeft", fontSize: 12 }} />
           <Tooltip /><Legend />
-          {years.map((year, i) => (
-            visibleYears.includes(year) && (
-              <Line key={year} type="monotone" dataKey={year} stroke={YEAR_COLORS[i % YEAR_COLORS.length]}
-                strokeWidth={year === currentYear ? 2.5 : 1.25} dot={false} connectNulls={true} />
-            )
+          {years.map((year, i) => visibleYears.includes(year) && (
+            <Line key={year} type="monotone" dataKey={year} stroke={YEAR_COLORS[i % YEAR_COLORS.length]}
+              strokeWidth={year === currentYear ? 2.5 : 1.25} dot={false} connectNulls={true} />
           ))}
         </LineChart>
       </ResponsiveContainer>
@@ -382,7 +282,6 @@ function HydroSection({ country, zones }) {
 
   useEffect(() => {
     if (selected === "Total") {
-      // Hent alle zoner og læg dem sammen
       Promise.all(
         zones.map(z =>
           supabase.from("hydro_production").select("*")
@@ -391,15 +290,11 @@ function HydroSection({ country, zones }) {
             .then(({ data }) => data || [])
         )
       ).then(allZoneData => {
-        // Læg alle zoner sammen per år og måned
         const combined = {};
         allZoneData.flat().forEach(d => {
           const key = `${d.year}-${d.month}`;
-          if (!combined[key]) {
-            combined[key] = { ...d };
-          } else {
-            combined[key].value_mwh += d.value_mwh;
-          }
+          if (!combined[key]) combined[key] = { ...d };
+          else combined[key].value_mwh += d.value_mwh;
         });
         setData(Object.values(combined));
       });
@@ -443,131 +338,92 @@ function GasStorage() {
   );
 }
 
+function NuclearProduction() {
+  const countries = ["Holland", "Finland", "Frankrig"];
+  const [selected, setSelected] = useState("Holland");
+  const [data, setData] = useState([]);
+
+  useEffect(() => {
+    supabase.from("installed_capacity")
+      .select("*")
+      .eq("country", selected)
+      .eq("psr_type", "B16")
+      .order("year")
+      .then(({ data }) => setData(data || []));
+  }, [selected]);
+
+  return (
+    <div>
+      <div className="tab-row">
+        {countries.map(c => (
+          <button key={c} className={selected === c ? "tab active" : "tab"} onClick={() => setSelected(c)}>{c}</button>
+        ))}
+      </div>
+      <YearlyLineChart data={data} valueKey="value_mw" title={`Kernekraft installeret kapacitet – ${selected} (MW)`} yLabel="MW" />
+    </div>
+  );
+}
+
 function InstalledCapacity() {
-  const countries = ["Danmark", "Norge", "Finland", "Holland", "Frankrig", "Tyskland"];
-  const dkZones = ["DK1", "DK2"];
-  const noZones = ["NO1", "NO2", "NO3", "NO4", "NO5"];
+  const countries = ["Danmark", "DK1", "DK2", "Norge", "NO1", "NO2", "NO3", "NO4", "NO5", "Finland", "Holland", "Frankrig", "Tyskland"];
   const [selected, setSelected] = useState("Danmark");
-  const [subZone, setSubZone] = useState(null);
   const [data, setData] = useState([]);
   const [visibleYears, setVisibleYears] = useState([]);
   const [visibleTypes, setVisibleTypes] = useState([]);
 
-  // Henter data fra Supabase
   useEffect(() => {
-    const country = subZone || selected;
-    supabase.from("installed_capacity")
-      .select("*")
-      .eq("country", country)
-      .order("year")
+    supabase.from("installed_capacity").select("*").eq("country", selected).order("year")
       .then(({ data }) => setData(data || []));
-  }, [selected, subZone]);
+  }, [selected]);
 
-  // Finder unikke år og teknologier (PSR)
   const years = [...new Set(data.map(d => d.year))].sort();
   const psrTypes = [...new Set(data.map(d => d.psr_name))];
 
-  // NYT: State til at styre hvilke år der er synlige (knapperne)
-  const [visibleYears, setVisibleYears] = useState([]);
-
-  // NYT: Sørger for at alle år er tændt som standard når data lander
- 
   useEffect(() => {
-    if (years.length > 0) {
-      setVisibleYears(years);
-    }
-    // NYT: Tænd alle teknologityper som standard
-    if (psrTypes.length > 0) {
-      setVisibleTypes(psrTypes);
-    }
+    if (years.length > 0) setVisibleYears(years);
+    if (psrTypes.length > 0) setVisibleTypes(psrTypes);
   }, [years.join(','), psrTypes.join(',')]);
 
-  // Den ENESTE korrekte definition af chartData:
- 
-  const chartData = psrTypes
-    .filter(psr => visibleTypes.includes(psr))
-    .map(psr => {
-      const row = { psr };
-      years.forEach(year => {
-        const found = data.find(d => d.psr_name === psr && d.year === year);
-        row[year] = found ? found.value_mw : 0;
-      });
-      return row;
+  const chartData = psrTypes.filter(psr => visibleTypes.includes(psr)).map(psr => {
+    const row = { psr };
+    years.forEach(year => {
+      const found = data.find(d => d.psr_name === psr && d.year === year);
+      row[year] = found ? found.value_mw : 0;
     });
+    return row;
+  });
 
-  // NU starter din return (kun én gang!)
   return (
-    <div style={{ background: '#fff', padding: '20px', borderRadius: '8px', border: '1px solid #eee' }}>
-      {/* 1. LAND-VÆLGER */}
-      <div className="tab-row" style={{ display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' }}>
+    <div>
+      <div className="tab-row">
         {countries.map(c => (
-          <button 
-            key={c}
-            className={selected === c && !subZone ? "tab active" : "tab"}
-            onClick={() => { setSelected(c); setSubZone(null); }}
-            style={{
-              padding: '8px 16px',
-              border: 'none',
-              background: (selected === c && !subZone) ? '#444' : '#f5f5f5',
-              color: (selected === c && !subZone) ? '#fff' : '#666',
-              cursor: 'pointer',
-              borderRadius: '4px'
-            }}
-          >
-            {c}
+          <button key={c} className={selected === c ? "tab active" : "tab"} onClick={() => setSelected(c)}>{c}</button>
+        ))}
+      </div>
+      <div style={{ marginBottom: '15px', display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+        {psrTypes.map(type => (
+          <button key={type} onClick={() => setVisibleTypes(prev => prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type])}
+            style={{ padding: '5px 12px', fontSize: '11px', borderRadius: '20px', cursor: 'pointer',
+              border: '1px solid ' + (visibleTypes.includes(type) ? '#444' : '#ccc'),
+              backgroundColor: visibleTypes.includes(type) ? '#444' : '#fff',
+              color: visibleTypes.includes(type) ? '#fff' : '#666' }}>
+            {type}
           </button>
         ))}
       </div>
-
-      {/* 2. TEKNOLOGI-VÆLGER (DE NYE KNAPPER) */}
-      <div style={{ marginBottom: '25px', padding: '15px', background: '#fafafa', borderRadius: '6px' }}>
-        <p style={{ fontSize: '12px', fontWeight: 'bold', color: '#555', marginBottom: '10px', textTransform: 'uppercase' }}>
-          Vælg kapaciteter der skal vises:
-        </p>
-        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-          {psrTypes.map(type => (
-            <button
-              key={type}
-              onClick={() => {
-                setVisibleTypes(prev => 
-                  prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]
-                );
-              }}
-              style={{
-                padding: '5px 12px',
-                fontSize: '11px',
-                borderRadius: '20px',
-                cursor: 'pointer',
-                border: '1px solid ' + (visibleTypes.includes(type) ? '#444' : '#ccc'),
-                backgroundColor: visibleTypes.includes(type) ? '#444' : '#fff',
-                color: visibleTypes.includes(type) ? '#fff' : '#666',
-                transition: 'all 0.1s ease'
-              }}
-            >
-              {type}
-            </button>
-          ))}
+      <div className="chart-box">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+          <h3>{selected} – Installed Capacity (MW)</h3>
+          <YearToggleButtons years={years} visibleYears={visibleYears} setVisibleYears={setVisibleYears} />
         </div>
-      </div>
-
-      {/* 3. GRAFEN */}
-      <div style={{ marginTop: '10px' }}>
-        <ResponsiveContainer width="100%" height={Math.max(450, visibleTypes.length * (visibleYears.length * 22))}>
-          <BarChart data={chartData} layout="vertical" barGap={2} barCategoryGap="15%">
-            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" horizontal={false} />
-            <XAxis type="number" tick={{ fontSize: 12 }} unit=" MW" />
-            <YAxis type="category" dataKey="psr" width={150} tick={{ fontSize: 11 }} />
-            <Tooltip cursor={{ fill: '#f9f9f9' }} />
-            <Legend verticalAlign="top" height={36}/>
-            {years.map((year, i) => (
-              visibleYears.includes(year) && (
-                <Bar 
-                  key={year} 
-                  dataKey={year} 
-                  fill={YEAR_COLORS[i % YEAR_COLORS.length]} 
-                  radius={[0, 4, 4, 0]}
-                />
-              )
+        <ResponsiveContainer width="100%" height={Math.max(400, visibleTypes.length * 45)}>
+          <BarChart data={chartData} layout="vertical">
+            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+            <XAxis type="number" tick={{ fontSize: 12 }} />
+            <YAxis type="category" dataKey="psr" width={200} tick={{ fontSize: 11 }} />
+            <Tooltip /><Legend />
+            {years.map((year, i) => visibleYears.includes(year) && (
+              <Bar key={year} dataKey={year} stackId="a" fill={YEAR_COLORS[i % YEAR_COLORS.length]} />
             ))}
           </BarChart>
         </ResponsiveContainer>
@@ -590,14 +446,15 @@ function Consumption() {
     <div>
       {zones.map(zone => (
         <div key={zone}>
-          <YearlyLineChart data={monthly[zone] || []} valueKey="value_mwh" title={`Forbrug – ${zone} månedligt gennemsnit (MWh)`} yLabel="MWh" showMedian={false} />
+          <YearlyLineChart data={monthly[zone] || []} valueKey="value_mwh" title={`Forbrug – ${zone} månedligt gennemsnit (MWh)`} yLabel="MWh" />
           <HourlyLineChart data={hourly[zone] || []} title={`Forbrug – ${zone} timesgennemsnit (MWh)`} />
         </div>
       ))}
     </div>
   );
 }
-const TABS = ["DK1 Priser","DK2 Priser","DK1 Produktion","DK2 Produktion","Norge Hydro","Sverige Hydro","Gas Storage","Installed Capacity","Forbrug"];
+
+const TABS = ["DK1 Priser","DK2 Priser","DK1 Produktion","DK2 Produktion","Norge Hydro","Sverige Hydro","Gas Storage","Installed Capacity","Kernekraft","Forbrug"];
 
 export default function App() {
   const [tab, setTab] = useState(TABS[0]);
@@ -616,6 +473,7 @@ export default function App() {
         {tab === "Sverige Hydro" && <HydroSection country="Sverige" zones={["SE1","SE2","SE3","SE4"]} />}
         {tab === "Gas Storage" && <GasStorage />}
         {tab === "Installed Capacity" && <InstalledCapacity />}
+        {tab === "Kernekraft" && <NuclearProduction />}
         {tab === "Forbrug" && <Consumption />}
       </main>
       <style>{`
@@ -633,17 +491,6 @@ export default function App() {
         .tab-row { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
         .tab { padding: 6px 12px; border: 1px solid #d0d7de; background: #fff; border-radius: 5px; cursor: pointer; font-size: 13px; }
         .tab.active { background: #1A7BB9; color: #fff; border-color: #1A7BB9; }
-        .toggle-btn {
-        transition: all 0.2s ease;
-        font-weight: 500;
-        }
-        .toggle-btn:hover {
-        opacity: 0.8;
-        transform: translateY(-1px);
-        }
-        .toggle-btn.active {
-        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        }     
       `}</style>
     </div>
   );
