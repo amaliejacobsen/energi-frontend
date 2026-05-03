@@ -340,35 +340,26 @@ function GasStorage() {
 
 function NuclearProduction() {
   const countries = ["Finland", "Frankrig"];
-  const [data, setData] = useState({});
+  const [selected, setSelected] = useState("Finland");
+  const [data, setData] = useState([]);
 
   useEffect(() => {
-    countries.forEach(country => {
-      supabase.from("installed_capacity")
-        .select("*")
-        .eq("country", country)
-        .eq("psr_type", "B16")
-        .order("year")
-        .then(({ data: d }) => setData(prev => ({ ...prev, [country]: d || [] })));
-    });
-  }, []);
+    supabase.from("installed_capacity")
+      .select("*")
+      .eq("country", selected)
+      .eq("psr_type", "B16")
+      .order("year")
+      .then(({ data }) => setData(data || []));
+  }, [selected]);
 
   return (
     <div>
-      {countries.map(country => (
-        <div key={country} className="chart-box">
-          <h3>Kernekraft installeret kapacitet – {country} (MW)</h3>
-          <ResponsiveContainer width="100%" height={280}>
-            <BarChart data={data[country] || []}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="year" tick={{ fontSize: 12 }} />
-              <YAxis tick={{ fontSize: 12 }} label={{ value: "MW", angle: -90, position: "insideLeft", fontSize: 12 }} />
-              <Tooltip />
-              <Bar dataKey="value_mw" name="Kapacitet (MW)" fill="#2C3E50" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      ))}
+      <div className="tab-row">
+        {countries.map(c => (
+          <button key={c} className={selected === c ? "tab active" : "tab"} onClick={() => setSelected(c)}>{c}</button>
+        ))}
+      </div>
+      <YearlyLineChart data={data} valueKey="value_mw" title={`Kernekraft installeret kapacitet – ${selected} (MW)`} yLabel="MW" />
     </div>
   );
 }
