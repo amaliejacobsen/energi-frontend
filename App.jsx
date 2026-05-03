@@ -374,16 +374,23 @@ function NuclearProduction() {
 }
 
 function InstalledCapacity() {
-  const countries = ["Danmark", "DK1", "DK2", "Norge", "NO1", "NO2", "NO3", "NO4", "NO5", "Finland", "Holland", "Frankrig", "Tyskland"];
+  const countries = ["Danmark", "Norge", "Finland", "Holland", "Frankrig", "Tyskland"];
+  const subZones = {
+    "Danmark": ["DK1", "DK2"],
+    "Norge": ["NO1", "NO2", "NO3", "NO4", "NO5"],
+  };
+
   const [selected, setSelected] = useState("Danmark");
+  const [subSelected, setSubSelected] = useState(null);
   const [data, setData] = useState([]);
   const [visibleYears, setVisibleYears] = useState([]);
   const [visibleTypes, setVisibleTypes] = useState([]);
 
   useEffect(() => {
-    supabase.from("installed_capacity").select("*").eq("country", selected).order("year")
+    const country = subSelected || selected;
+    supabase.from("installed_capacity").select("*").eq("country", country).order("year")
       .then(({ data }) => setData(data || []));
-  }, [selected]);
+  }, [selected, subSelected]);
 
   const years = [...new Set(data.map(d => d.year))].sort();
   const psrTypes = [...new Set(data.map(d => d.psr_name))];
@@ -404,14 +411,40 @@ function InstalledCapacity() {
 
   return (
     <div>
+      {/* Hovedlande */}
       <div className="tab-row">
         {countries.map(c => (
-          <button key={c} className={selected === c ? "tab active" : "tab"} onClick={() => setSelected(c)}>{c}</button>
+          <button key={c}
+            className={selected === c && !subSelected ? "tab active" : "tab"}
+            onClick={() => { setSelected(c); setSubSelected(null); }}>
+            {c}
+          </button>
         ))}
       </div>
+
+      {/* Subzoner hvis landet har dem */}
+      {subZones[selected] && (
+        <div className="tab-row" style={{ marginBottom: '16px' }}>
+          <button
+            className={!subSelected ? "tab active" : "tab"}
+            onClick={() => setSubSelected(null)}>
+            Total
+          </button>
+          {subZones[selected].map(z => (
+            <button key={z}
+              className={subSelected === z ? "tab active" : "tab"}
+              onClick={() => setSubSelected(z)}>
+              {z}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Teknologi-filter */}
       <div style={{ marginBottom: '15px', display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
         {psrTypes.map(type => (
-          <button key={type} onClick={() => setVisibleTypes(prev => prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type])}
+          <button key={type}
+            onClick={() => setVisibleTypes(prev => prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type])}
             style={{ padding: '5px 12px', fontSize: '11px', borderRadius: '20px', cursor: 'pointer',
               border: '1px solid ' + (visibleTypes.includes(type) ? '#444' : '#ccc'),
               backgroundColor: visibleTypes.includes(type) ? '#444' : '#fff',
@@ -420,9 +453,11 @@ function InstalledCapacity() {
           </button>
         ))}
       </div>
+
+      {/* Graf */}
       <div className="chart-box">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-          <h3>{selected} – Installed Capacity (MW)</h3>
+          <h3>{subSelected || selected} – Installed Capacity (MW)</h3>
           <YearToggleButtons years={years} visibleYears={visibleYears} setVisibleYears={setVisibleYears} />
         </div>
         <ResponsiveContainer width="100%" height={Math.max(400, visibleTypes.length * 45)}>
