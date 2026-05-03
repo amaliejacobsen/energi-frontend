@@ -411,7 +411,6 @@ function InstalledCapacity() {
 
   return (
     <div>
-      {/* Hovedlande */}
       <div className="tab-row">
         {countries.map(c => (
           <button key={c}
@@ -422,25 +421,19 @@ function InstalledCapacity() {
         ))}
       </div>
 
-      {/* Subzoner hvis landet har dem */}
       {subZones[selected] && (
         <div className="tab-row" style={{ marginBottom: '16px' }}>
-          <button
-            className={!subSelected ? "tab active" : "tab"}
-            onClick={() => setSubSelected(null)}>
+          <button className={!subSelected ? "tab active" : "tab"} onClick={() => setSubSelected(null)}>
             Total
           </button>
           {subZones[selected].map(z => (
-            <button key={z}
-              className={subSelected === z ? "tab active" : "tab"}
-              onClick={() => setSubSelected(z)}>
+            <button key={z} className={subSelected === z ? "tab active" : "tab"} onClick={() => setSubSelected(z)}>
               {z}
             </button>
           ))}
         </div>
       )}
 
-      {/* Teknologi-filter */}
       <div style={{ marginBottom: '15px', display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
         {psrTypes.map(type => (
           <button key={type}
@@ -454,20 +447,19 @@ function InstalledCapacity() {
         ))}
       </div>
 
-      {/* Graf */}
       <div className="chart-box">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
           <h3>{subSelected || selected} – Installed Capacity (MW)</h3>
           <YearToggleButtons years={years} visibleYears={visibleYears} setVisibleYears={setVisibleYears} />
         </div>
-        <ResponsiveContainer width="100%" height={Math.max(400, visibleTypes.length * 45)}>
-          <BarChart data={chartData} layout="vertical">
+        <ResponsiveContainer width="100%" height={Math.max(400, visibleTypes.length * years.length * 25)}>
+          <BarChart data={chartData} layout="vertical" barGap={2} barCategoryGap="20%">
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
             <XAxis type="number" tick={{ fontSize: 12 }} />
             <YAxis type="category" dataKey="psr" width={200} tick={{ fontSize: 11 }} />
             <Tooltip /><Legend />
             {years.map((year, i) => visibleYears.includes(year) && (
-              <Bar key={year} dataKey={year} stackId="a" fill={YEAR_COLORS[i % YEAR_COLORS.length]} />
+              <Bar key={year} dataKey={year} fill={YEAR_COLORS[i % YEAR_COLORS.length]} />
             ))}
           </BarChart>
         </ResponsiveContainer>
