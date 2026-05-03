@@ -339,40 +339,36 @@ function GasStorage() {
 }
 
 function NuclearProduction() {
-  const countries = ["Holland", "Finland", "Frankrig"];
-  const [selected, setSelected] = useState("Holland");
-  const [data, setData] = useState([]);
+  const countries = ["Finland", "Frankrig"];
+  const [data, setData] = useState({});
 
   useEffect(() => {
-    supabase.from("installed_capacity")
-      .select("*")
-      .eq("country", selected)
-      .eq("psr_type", "B16")
-      .order("year")
-      .then(({ data }) => setData(data || []));
-  }, [selected]);
-
-  const chartData = data.map(d => ({ year: d.year, value_mw: d.value_mw }));
+    countries.forEach(country => {
+      supabase.from("installed_capacity")
+        .select("*")
+        .eq("country", country)
+        .eq("psr_type", "B16")
+        .order("year")
+        .then(({ data: d }) => setData(prev => ({ ...prev, [country]: d || [] })));
+    });
+  }, []);
 
   return (
     <div>
-      <div className="tab-row">
-        {countries.map(c => (
-          <button key={c} className={selected === c ? "tab active" : "tab"} onClick={() => setSelected(c)}>{c}</button>
-        ))}
-      </div>
-      <div className="chart-box">
-        <h3>Kernekraft installeret kapacitet – {selected} (MW)</h3>
-        <ResponsiveContainer width="100%" height={320}>
-          <BarChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-            <XAxis dataKey="year" tick={{ fontSize: 12 }} />
-            <YAxis tick={{ fontSize: 12 }} label={{ value: "MW", angle: -90, position: "insideLeft", fontSize: 12 }} />
-            <Tooltip />
-            <Bar dataKey="value_mw" name="Kapacitet (MW)" fill="#2C3E50" />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
+      {countries.map(country => (
+        <div key={country} className="chart-box">
+          <h3>Kernekraft installeret kapacitet – {country} (MW)</h3>
+          <ResponsiveContainer width="100%" height={280}>
+            <BarChart data={data[country] || []}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+              <XAxis dataKey="year" tick={{ fontSize: 12 }} />
+              <YAxis tick={{ fontSize: 12 }} label={{ value: "MW", angle: -90, position: "insideLeft", fontSize: 12 }} />
+              <Tooltip />
+              <Bar dataKey="value_mw" name="Kapacitet (MW)" fill="#2C3E50" />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      ))}
     </div>
   );
 }
