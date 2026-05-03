@@ -352,6 +352,8 @@ function NuclearProduction() {
       .then(({ data }) => setData(data || []));
   }, [selected]);
 
+  const chartData = data.map(d => ({ year: d.year, value_mw: d.value_mw }));
+
   return (
     <div>
       <div className="tab-row">
@@ -359,7 +361,18 @@ function NuclearProduction() {
           <button key={c} className={selected === c ? "tab active" : "tab"} onClick={() => setSelected(c)}>{c}</button>
         ))}
       </div>
-      <YearlyLineChart data={data} valueKey="value_mw" title={`Kernekraft installeret kapacitet – ${selected} (MW)`} yLabel="MW" />
+      <div className="chart-box">
+        <h3>Kernekraft installeret kapacitet – {selected} (MW)</h3>
+        <ResponsiveContainer width="100%" height={320}>
+          <BarChart data={chartData}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+            <XAxis dataKey="year" tick={{ fontSize: 12 }} />
+            <YAxis tick={{ fontSize: 12 }} label={{ value: "MW", angle: -90, position: "insideLeft", fontSize: 12 }} />
+            <Tooltip />
+            <Bar dataKey="value_mw" name="Kapacitet (MW)" fill="#2C3E50" />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
     </div>
   );
 }
