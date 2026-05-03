@@ -443,7 +443,7 @@ function InstalledCapacity() {
           <h3>{subSelected || selected} – Installed Capacity (MW)</h3>
           <YearToggleButtons years={years} visibleYears={visibleYears} setVisibleYears={setVisibleYears} />
         </div>
-        <ResponsiveContainer width="100%" height={Math.max(300, visibleTypes.length * years.length * 15)}>
+        <ResponsiveContainer width="100%" height={Math.max(200, visibleTypes.length * years.length * 10)}>
           <BarChart data={chartData} layout="vertical" barGap={2} barCategoryGap="20%">
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
             <XAxis type="number" tick={{ fontSize: 12 }} />
