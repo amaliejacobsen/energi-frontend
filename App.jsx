@@ -352,18 +352,12 @@ function NuclearProduction() {
       .then(({ data }) => setData(data || []));
   }, [selected]);
 
-  const { years, byMonth } = groupByYear(data, "value_mwh");
-
   return (
     <div>
       <div className="tab-row">
         {countries.map(c => (
           <button key={c} className={selected === c ? "tab active" : "tab"} onClick={() => setSelected(c)}>{c}</button>
         ))}
-      </div>
-      <div className="chart-box">
-        <p>Data rækker: {data.length}</p>
-        <p>År: {years.join(", ")}</p>
       </div>
       <YearlyLineChart data={data} valueKey="value_mwh" title={`Kernekraft produktion – ${selected} (MWh)`} yLabel="MWh" />
     </div>
