@@ -391,6 +391,7 @@ function InstalledCapacity() {
     if (psrTypes.length > 0) setVisibleTypes(psrTypes);
   }, [years.join(','), psrTypes.join(',')]);
 
+  const latestYear = Math.max(...years);
   const chartData = psrTypes.filter(psr => visibleTypes.includes(psr)).map(psr => {
     const row = { psr };
     years.forEach(year => {
@@ -398,7 +399,7 @@ function InstalledCapacity() {
       row[year] = found ? found.value_mw : 0;
     });
     return row;
-  });
+  }).sort((a, b) => (b[latestYear] || 0) - (a[latestYear] || 0));
 
   return (
     <div>
