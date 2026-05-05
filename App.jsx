@@ -230,7 +230,7 @@ function DKPrices({ area }) {
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
             <XAxis dataKey="displayDate" tick={{ fontSize: 10 }} minTickGap={30} />
             <YAxis tick={{ fontSize: 12 }} label={{ value: "DKK/MWh", angle: -90, position: 'insideLeft', offset: -10 }} />
-            <Tooltip formatter={(value) => value !== null ? [Number(value).toFixed(2)] : [null]} />
+            <Tooltip /><Legend verticalAlign="top" height={36} />
             <Line type="monotone" dataKey="Spotpris" stroke="#2C3E50" strokeWidth={2} dot={false} />
             <Line type="monotone" dataKey="Solar" stroke="#F4A927" strokeWidth={1.5} dot={false} />
             <Line type="monotone" dataKey="Offshore" stroke="#1A7BB9" strokeWidth={1.5} dot={false} />
@@ -246,7 +246,7 @@ function DKPrices({ area }) {
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
             <XAxis dataKey="displayDate" tick={{ fontSize: 10 }} minTickGap={30} />
             <YAxis tick={{ fontSize: 12 }} label={{ value: "Capture Rate %", angle: -90, position: 'insideLeft', offset: -10 }} />
-            <Tooltip formatter={(value) => value !== null ? [Number(value).toFixed(2)] : [null]} />
+            <Tooltip /><Legend verticalAlign="top" height={36} />
             <Line type="monotone" dataKey="SolarCapture" name="Solar" stroke="#F4A927" strokeWidth={1.5} dot={false} />
             <Line type="monotone" dataKey="OffshoreCapture" name="Offshore" stroke="#1A7BB9" strokeWidth={1.5} dot={false} />
             <Line type="monotone" dataKey="OnshoreCapture" name="Onshore" stroke="#3DAA6E" strokeWidth={1.5} dot={false} strokeDasharray="5 5" />
