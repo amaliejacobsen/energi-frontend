@@ -648,7 +648,25 @@ function DanmarkSamlet() {
   );
 }
 
-const TABS = ["Danmark","DK1 Priser","DK2 Priser","DK1 Produktion","DK2 Produktion","DK Timesdata","Norge Hydro","Sverige Hydro","Gas Storage","Installed Capacity","Kernekraft","Forbrug"];
+function Hydro() {
+  const [country, setCountry] = useState("Norge");
+  const zones = {
+    "Norge": ["NO1","NO2","NO3","NO4","NO5"],
+    "Sverige": ["SE1","SE2","SE3","SE4"],
+  };
+  return (
+    <div>
+      <div className="tab-row">
+        {["Norge","Sverige"].map(c => (
+          <button key={c} className={country === c ? "tab active" : "tab"} onClick={() => setCountry(c)}>{c}</button>
+        ))}
+      </div>
+      <HydroSection country={country} zones={zones[country]} />
+    </div>
+  );
+}
+
+const TABS = ["Danmark","DK1 Priser","DK2 Priser","DK1 Produktion","DK2 Produktion","DK Timesdata","Hydro","Gas Storage","Installed Capacity","Kernekraft","Forbrug"];
 
 export default function App() {
   const [tab, setTab] = useState(TABS[0]);
@@ -665,8 +683,7 @@ export default function App() {
         {tab === "DK2 Produktion" && <DKProduction area="DK2" />}
         {tab === "Danmark" && <DanmarkSamlet />
         {tab === "DK Timesdata" && <DKHourly />}
-        {tab === "Norge Hydro" && <HydroSection country="Norge" zones={["NO1","NO2","NO3","NO4","NO5"]} />}
-        {tab === "Sverige Hydro" && <HydroSection country="Sverige" zones={["SE1","SE2","SE3","SE4"]} />}
+        {tab === "Hydro" && <Hydro />}
         {tab === "Gas Storage" && <GasStorage />}
         {tab === "Installed Capacity" && <InstalledCapacity />}
         {tab === "Kernekraft" && <NuclearProduction />}
