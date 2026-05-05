@@ -630,7 +630,25 @@ function DKHourly() {
   );
 }
 
-const TABS = ["DK1 Priser","DK2 Priser","DK1 Produktion","DK2 Produktion","DK Timesdata","Norge Hydro","Sverige Hydro","Gas Storage","Installed Capacity","Kernekraft","Forbrug"];
+function DanmarkSamlet() {
+  return (
+    <div>
+      <div className="chart-box" style={{ padding: '12px 16px', marginBottom: '16px', background: '#f8f9fa' }}>
+        <h2 style={{ fontSize: '1.1rem', color: '#2C3E50', margin: 0 }}>Danmark – Samlet oversigt</h2>
+      </div>
+
+      <h3 style={{ color: '#2C3E50', marginBottom: '12px', fontSize: '1rem' }}>── DK1 ──</h3>
+      <DKPrices area="DK1" />
+      <DKProduction area="DK1" />
+
+      <h3 style={{ color: '#2C3E50', margin: '24px 0 12px', fontSize: '1rem' }}>── DK2 ──</h3>
+      <DKPrices area="DK2" />
+      <DKProduction area="DK2" />
+    </div>
+  );
+}
+
+const TABS = ["Danmark","DK1 Priser","DK2 Priser","DK1 Produktion","DK2 Produktion","DK Timesdata","Norge Hydro","Sverige Hydro","Gas Storage","Installed Capacity","Kernekraft","Forbrug"];
 
 export default function App() {
   const [tab, setTab] = useState(TABS[0]);
@@ -645,6 +663,7 @@ export default function App() {
         {tab === "DK2 Priser" && <DKPrices area="DK2" />}
         {tab === "DK1 Produktion" && <DKProduction area="DK1" />}
         {tab === "DK2 Produktion" && <DKProduction area="DK2" />}
+        {tab === "Danmark" && <DanmarkSamlet />
         {tab === "DK Timesdata" && <DKHourly />}
         {tab === "Norge Hydro" && <HydroSection country="Norge" zones={["NO1","NO2","NO3","NO4","NO5"]} />}
         {tab === "Sverige Hydro" && <HydroSection country="Sverige" zones={["SE1","SE2","SE3","SE4"]} />}
