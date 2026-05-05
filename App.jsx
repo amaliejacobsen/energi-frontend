@@ -131,7 +131,7 @@ function DKProductionChart({ data, valueKey, title, yLabel }) {
             tickFormatter={(day) => { const monthIdx = Math.floor(day / 30.5); return MONTH_NAMES[monthIdx] || ""; }}
             tick={{ fontSize: 11, fill: '#2C3E50' }} />
           <YAxis tick={{ fontSize: 12 }} label={{ value: yLabel, angle: -90, position: "insideLeft", fontSize: 12 }} />
-          <Tooltip labelFormatter={(day) => { const monthIdx = Math.floor(day / 30.5); return `Måned: ${MONTH_NAMES[monthIdx] || "Dec"}`; }} />
+          <Tooltip labelFormatter={(day) => { const monthIdx = Math.floor(day / 30.5); return `Måned: ${MONTH_NAMES[monthIdx] || "Dec"}`; }} formatter={(value) => value !== null ? [Number(value).toFixed(2)] : [null]} />
           <Legend />
           {years.map((year, i) => visibleYears.includes(year) && (
             <Line key={year} type="monotone" dataKey={year.toString()} name={year.toString()}
@@ -162,7 +162,7 @@ function YearlyLineChart({ data, valueKey, title, yLabel }) {
           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
           <XAxis dataKey="month" interval={0} tick={{ fontSize: 12, fill: '#2C3E50' }} height={50} />
           <YAxis tick={{ fontSize: 12 }} label={{ value: yLabel, angle: -90, position: 'insideLeft', offset: -10 }} />
-          <Tooltip /><Legend verticalAlign="top" height={36} />
+          <Tooltip formatter={(value) => value !== null ? [Number(value).toFixed(2)] : [null]} />
           {years.map((year, i) => visibleYears.includes(year) && (
             <Line key={year} type="monotone" dataKey={year} stroke={YEAR_COLORS[i % YEAR_COLORS.length]}
               strokeWidth={year === currentYear ? 3 : 1.25} dot={year === currentYear} connectNulls={false} />
@@ -230,7 +230,7 @@ function DKPrices({ area }) {
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
             <XAxis dataKey="displayDate" tick={{ fontSize: 10 }} minTickGap={30} />
             <YAxis tick={{ fontSize: 12 }} label={{ value: "DKK/MWh", angle: -90, position: 'insideLeft', offset: -10 }} />
-            <Tooltip /><Legend verticalAlign="top" height={36} />
+            <Tooltip formatter={(value) => value !== null ? [Number(value).toFixed(2)] : [null]} />
             <Line type="monotone" dataKey="Spotpris" stroke="#2C3E50" strokeWidth={2} dot={false} />
             <Line type="monotone" dataKey="Solar" stroke="#F4A927" strokeWidth={1.5} dot={false} />
             <Line type="monotone" dataKey="Offshore" stroke="#1A7BB9" strokeWidth={1.5} dot={false} />
@@ -246,7 +246,7 @@ function DKPrices({ area }) {
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
             <XAxis dataKey="displayDate" tick={{ fontSize: 10 }} minTickGap={30} />
             <YAxis tick={{ fontSize: 12 }} label={{ value: "Capture Rate %", angle: -90, position: 'insideLeft', offset: -10 }} />
-            <Tooltip /><Legend verticalAlign="top" height={36} />
+            <Tooltip formatter={(value) => value !== null ? [Number(value).toFixed(2)] : [null]} />
             <Line type="monotone" dataKey="SolarCapture" name="Solar" stroke="#F4A927" strokeWidth={1.5} dot={false} />
             <Line type="monotone" dataKey="OffshoreCapture" name="Offshore" stroke="#1A7BB9" strokeWidth={1.5} dot={false} />
             <Line type="monotone" dataKey="OnshoreCapture" name="Onshore" stroke="#3DAA6E" strokeWidth={1.5} dot={false} strokeDasharray="5 5" />
@@ -449,7 +449,7 @@ function InstalledCapacity() {
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
             <XAxis type="number" tick={{ fontSize: 12 }} />
             <YAxis type="category" dataKey="psr" width={200} tick={{ fontSize: 11 }} />
-            <Tooltip /><Legend />
+            <Tooltip formatter={(value) => value !== null ? [Number(value).toFixed(2)] : [null]} /><Legend />
             {years.map((year, i) => visibleYears.includes(year) && (
               <Bar key={year} dataKey={year} fill={YEAR_COLORS[i % YEAR_COLORS.length]} />
             ))}
