@@ -631,19 +631,21 @@ function DKHourly() {
 }
 
 function DanmarkSamlet() {
+  const [view, setView] = useState("DK1 Priser");
+  const views = ["DK1 Priser", "DK1 Produktion", "DK2 Priser", "DK2 Produktion", "Timesdata"];
+
   return (
     <div>
-      <div className="chart-box" style={{ padding: '12px 16px', marginBottom: '16px', background: '#f8f9fa' }}>
-        <h2 style={{ fontSize: '1.1rem', color: '#2C3E50', margin: 0 }}>Danmark – Samlet oversigt</h2>
+      <div className="tab-row">
+        {views.map(v => (
+          <button key={v} className={view === v ? "tab active" : "tab"} onClick={() => setView(v)}>{v}</button>
+        ))}
       </div>
-
-      <h3 style={{ color: '#2C3E50', marginBottom: '12px', fontSize: '1rem' }}>── DK1 ──</h3>
-      <DKPrices area="DK1" />
-      <DKProduction area="DK1" />
-
-      <h3 style={{ color: '#2C3E50', margin: '24px 0 12px', fontSize: '1rem' }}>── DK2 ──</h3>
-      <DKPrices area="DK2" />
-      <DKProduction area="DK2" />
+      {view === "DK1 Priser"      && <DKPrices area="DK1" />}
+      {view === "DK1 Produktion"  && <DKProduction area="DK1" />}
+      {view === "DK2 Priser"      && <DKPrices area="DK2" />}
+      {view === "DK2 Produktion"  && <DKProduction area="DK2" />}
+      {view === "Timesdata"       && <DKHourly />}
     </div>
   );
 }
@@ -666,7 +668,7 @@ function Hydro() {
   );
 }
 
-const TABS = ["Danmark","DK1 Priser","DK2 Priser","DK1 Produktion","DK2 Produktion","DK Timesdata","Hydro","Gas Storage","Installed Capacity","Kernekraft","Forbrug"];
+const TABS = ["Danmark","Hydro","Gas Storage","Installed Capacity","Kernekraft","Forbrug"];
 
 export default function App() {
   const [tab, setTab] = useState(TABS[0]);
@@ -677,12 +679,7 @@ export default function App() {
         {TABS.map(t => <button key={t} className={tab === t ? "nav-tab active" : "nav-tab"} onClick={() => setTab(t)}>{t}</button>)}
       </nav>
       <main>
-        {tab === "DK1 Priser" && <DKPrices area="DK1" />}
-        {tab === "DK2 Priser" && <DKPrices area="DK2" />}
-        {tab === "DK1 Produktion" && <DKProduction area="DK1" />}
-        {tab === "DK2 Produktion" && <DKProduction area="DK2" />}
         {tab === "Danmark" && <DanmarkSamlet />
-        {tab === "DK Timesdata" && <DKHourly />}
         {tab === "Hydro" && <Hydro />}
         {tab === "Gas Storage" && <GasStorage />}
         {tab === "Installed Capacity" && <InstalledCapacity />}
