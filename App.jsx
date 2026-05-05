@@ -38,6 +38,34 @@ function groupByYear(data, valueKey) {
   return { years, byMonth };
 }
 
+export default function App() {
+  const [tab, setTab] = useState(TABS[0]);
+  const [darkMode, setDarkMode] = useState(() => {
+    return localStorage.getItem('darkMode') === 'true';
+  });
+
+  const toggleDarkMode = () => {
+    setDarkMode(prev => {
+      const next = !prev;
+      localStorage.setItem('darkMode', String(next));
+      return next;
+    });
+  };
+
+  return (
+    <div className="app" data-theme={darkMode ? "dark" : "light"}>
+      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h1>⚡ Energianalyse</h1>
+        <button onClick={toggleDarkMode} style={{
+          padding: '6px 14px', borderRadius: '20px', border: 'none', cursor: 'pointer',
+          backgroundColor: darkMode ? '#F39C12' : '#2C3E50',
+          color: '#fff', fontSize: '13px', fontWeight: '600'
+        }}>
+          {darkMode ? '☀️ Lys' : '🌙 Mørk'}
+        </button>
+      </header>
+      ...
+
 function groupHourlyByYear(data) {
   if (!data) return { years: [], byHour: [] };
   const years = [...new Set(data.map(d => d.year))].sort();
@@ -687,20 +715,54 @@ export default function App() {
         {tab === "Forbrug" && <Consumption />}
       </main>
       <style>{`
+        :root {
+          --bg: #f5f7fa;
+          --surface: #ffffff;
+          --border: #e0e6ed;
+          --text: #2C3E50;
+          --text-muted: #888;
+          --tab-bg: #ffffff;
+          --tab-border: #d0d7de;
+          --tab-text: #444;
+          --nav-active-bg: #2C3E50;
+          --nav-active-text: #ffffff;
+          --tab-active-bg: #1A7BB9;
+          --tab-active-text: #ffffff;
+          --chart-grid: #f0f0f0;
+          --shadow: 0 1px 4px rgba(0,0,0,0.08);
+          --fafafa: #fafafa;
+        }
+        [data-theme="dark"] {
+          --bg: #0f1117;
+          --surface: #1a1d27;
+          --border: #2d3141;
+          --text: #e8eaf0;
+          --text-muted: #6b7280;
+          --tab-bg: #1a1d27;
+          --tab-border: #2d3141;
+          --tab-text: #b0b8c8;
+          --nav-active-bg: #3498DB;
+          --nav-active-text: #ffffff;
+          --tab-active-bg: #3498DB;
+          --tab-active-text: #ffffff;
+          --chart-grid: #2d3141;
+          --shadow: 0 1px 4px rgba(0,0,0,0.4);
+          --fafafa: #13161f;
+        }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f7fa; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); transition: background 0.2s, color 0.2s; }
         .app { max-width: 1400px; margin: 0 auto; padding: 0 20px 40px; }
-        header { padding: 24px 0 16px; border-bottom: 2px solid #e0e6ed; margin-bottom: 16px; }
-        h1 { font-size: 1.6rem; color: #2C3E50; }
+        header { padding: 24px 0 16px; border-bottom: 2px solid var(--border); margin-bottom: 16px; }
+        h1 { font-size: 1.6rem; color: var(--text); }
         .nav-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 24px; }
-        .nav-tab { padding: 8px 14px; border: 1px solid #d0d7de; background: #fff; border-radius: 6px; cursor: pointer; font-size: 13px; color: #444; transition: all 0.15s; }
-        .nav-tab:hover { background: #f0f4f8; }
-        .nav-tab.active { background: #2C3E50; color: #fff; border-color: #2C3E50; }
-        .chart-box { background: #fff; border-radius: 10px; padding: 20px 16px; margin-bottom: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
-        .chart-box h3 { font-size: 1rem; color: #2C3E50; margin-bottom: 16px; }
+        .nav-tab { padding: 8px 14px; border: 1px solid var(--tab-border); background: var(--tab-bg); border-radius: 6px; cursor: pointer; font-size: 13px; color: var(--tab-text); transition: all 0.15s; }
+        .nav-tab:hover { opacity: 0.8; }
+        .nav-tab.active { background: var(--nav-active-bg); color: var(--nav-active-text); border-color: var(--nav-active-bg); }
+        .chart-box { background: var(--surface); border-radius: 10px; padding: 20px 16px; margin-bottom: 20px; box-shadow: var(--shadow); border: 1px solid var(--border); }
+        .chart-box h3 { font-size: 1rem; color: var(--text); margin-bottom: 16px; }
         .tab-row { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
-        .tab { padding: 6px 12px; border: 1px solid #d0d7de; background: #fff; border-radius: 5px; cursor: pointer; font-size: 13px; }
-        .tab.active { background: #1A7BB9; color: #fff; border-color: #1A7BB9; }
+       .tab { padding: 6px 12px; border: 1px solid var(--tab-border); background: var(--tab-bg); border-radius: 5px; cursor: pointer; font-size: 13px; color: var(--tab-text); }
+        .tab.active { background: var(--tab-active-bg); color: var(--tab-active-text); border-color: var(--tab-active-bg); }
       `}</style>
     </div>
   );
