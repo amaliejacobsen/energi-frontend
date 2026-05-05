@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Brush } from "recharts";
+import { LineChart, Line, BarChart, Bar, ComposedChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Brush } from "recharts";
 import { supabase } from "./src/supabaseClient";
 
 const YEAR_COLORS = ["#2C3E50","#E74C3C","#3498DB","#2ECC71","#9B59B6","#F39C12","#1ABC9C","#E67E22","#95A5A6","#D35400"];
@@ -482,7 +482,145 @@ function Consumption() {
   );
 }
 
-const TABS = ["DK1 Priser","DK2 Priser","DK1 Produktion","DK2 Produktion","Norge Hydro","Sverige Hydro","Gas Storage","Installed Capacity","Kernekraft","Forbrug"];
+function DKHourly() {
+  const [area, setArea] = useState("DK1");
+  const [days, setDays] = useState(7);
+  const [prices, setPrices] = useState([]);
+  const [production, setProduction] = useState([]);
+  const [consumption, setConsumption] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    const from = new Date();
+    from.setDate(from.getDate() - days);
+    const fromIso = from.toISOString();
+
+    Promise.all([
+      supabase.from("dk_prices_hourly").select("*")
+        .eq("area", area).gte("datetime", fromIso)
+        .order("datetime"),
+      supabase.from("dk_production_hourly").select("*")
+        .eq("area", area).gte("datetime", fromIso)
+        .order("datetime"),
+      supabase.from("consumption_hourly").select("*")
+        .eq("zone", area).order("year").order("hour"),
+    ]).then(([priceRes, prodRes, consRes]) => {
+      setPrices(priceRes.data || []);
+      setProduction(prodRes.data || []);
+      setConsumption(consRes.data || []);
+      setLoading(false);
+    });
+  }, [area, days]);
+
+  // Byg kombineret datasæt per datetime
+  const chartData = (() => {
+    const map = {};
+    prices.forEach(r => {
+      map[r.datetime] = { datetime: r.datetime, price: r.price_dkk };
+    });
+    production.forEach(r => {
+      if (!map[r.datetime]) map[r.datetime] = { datetime: r.datetime };
+      map[r.datetime][r.source] = r.value_mwh;
+    });
+
+    return Object.values(map)
+      .sort((a, b) => a.datetime.localeCompare(b.datetime))
+      .map(r => {
+        const solar    = r.solar    || 0;
+        const offshore = r.offshore || 0;
+        const onshore  = r.onshore  || 0;
+        const renewables = solar + offshore + onshore;
+        // Formater datetime til læsbar label
+        const dt = new Date(r.datetime);
+        const label = `${dt.getDate()}/${dt.getMonth()+1} ${String(dt.getHours()).padStart(2,'0')}:00`;
+        return {
+          ...r,
+          label,
+          solar,
+          offshore,
+          onshore,
+          renewables,
+          residual: null, // placeholder — kan beregnes hvis forbrugsdata er time-specifikt
+        };
+      });
+  })();
+
+  const totalPoints = chartData.length;
+  const tickInterval = Math.max(1, Math.floor(totalPoints / 24));
+
+  return (
+    <div>
+      {/* Kontroller */}
+      <div style={{ display: 'flex', gap: '12px', marginBottom: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
+        <div className="tab-row" style={{ margin: 0 }}>
+          {["DK1", "DK2"].map(a => (
+            <button key={a} className={area === a ? "tab active" : "tab"} onClick={() => setArea(a)}>{a}</button>
+          ))}
+        </div>
+        <div className="tab-row" style={{ margin: 0 }}>
+          {[1, 3, 7, 14, 30].map(d => (
+            <button key={d} className={days === d ? "tab active" : "tab"} onClick={() => setDays(d)}>{d}d</button>
+          ))}
+        </div>
+      </div>
+
+      {loading ? <p style={{ padding: '20px' }}>Henter data...</p> : (
+        <>
+          {/* Produktions- og prisgraf */}
+          <div className="chart-box">
+            <h3>{area} – Produktion & Spotpris (seneste {days} dage)</h3>
+            <ResponsiveContainer width="100%" height={420}>
+              <ComposedChart data={chartData} margin={{ top: 5, right: 60, left: 20, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis dataKey="label" interval={tickInterval} tick={{ fontSize: 10 }} />
+                <YAxis yAxisId="left" tick={{ fontSize: 11 }}
+                  label={{ value: "MWh", angle: -90, position: 'insideLeft', offset: -5, fontSize: 12 }} />
+                <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11 }}
+                  label={{ value: "DKK/MWh", angle: 90, position: 'insideRight', offset: 10, fontSize: 12 }} />
+                <Tooltip
+                  formatter={(value, name) => {
+                    if (name === "Spotpris") return [`${Math.round(value)} DKK/MWh`, name];
+                    return [`${Math.round(value)} MWh`, name];
+                  }}
+                  labelFormatter={(label) => `🕐 ${label}`}
+                />
+                <Legend verticalAlign="top" height={36} />
+                <Area yAxisId="left" type="monotone" dataKey="offshore" name="Offshore vind"
+                  stackId="prod" fill="#1A3A5C" stroke="#1A3A5C" fillOpacity={0.85} />
+                <Area yAxisId="left" type="monotone" dataKey="onshore" name="Onshore vind"
+                  stackId="prod" fill="#3498DB" stroke="#3498DB" fillOpacity={0.85} />
+                <Area yAxisId="left" type="monotone" dataKey="solar" name="Sol"
+                  stackId="prod" fill="#F4A927" stroke="#F4A927" fillOpacity={0.9} />
+                <Line yAxisId="right" type="stepAfter" dataKey="price" name="Spotpris"
+                  stroke="#2ECC71" strokeWidth={2} dot={false} />
+                <Brush dataKey="label" height={25} stroke="#2C3E50" fill="#f0f0f0" travellerWidth={6} />
+              </ComposedChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Statistik-kort */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px', marginBottom: '20px' }}>
+            {[
+              { label: "Gns. Spotpris", value: chartData.length ? `${Math.round(chartData.reduce((s,r) => s + (r.price||0), 0) / chartData.filter(r=>r.price).length)} DKK/MWh` : "—" },
+              { label: "Gns. Sol", value: chartData.length ? `${Math.round(chartData.reduce((s,r) => s + r.solar, 0) / chartData.length)} MWh/t` : "—" },
+              { label: "Gns. Offshore", value: chartData.length ? `${Math.round(chartData.reduce((s,r) => s + r.offshore, 0) / chartData.length)} MWh/t` : "—" },
+              { label: "Gns. Onshore", value: chartData.length ? `${Math.round(chartData.reduce((s,r) => s + r.onshore, 0) / chartData.length)} MWh/t` : "—" },
+              { label: "Gns. VE total", value: chartData.length ? `${Math.round(chartData.reduce((s,r) => s + r.renewables, 0) / chartData.length)} MWh/t` : "—" },
+            ].map(({ label, value }) => (
+              <div key={label} className="chart-box" style={{ padding: '14px 16px', marginBottom: 0 }}>
+                <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px' }}>{label}</div>
+                <div style={{ fontSize: '20px', fontWeight: '700', color: '#2C3E50' }}>{value}</div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+const TABS = ["DK1 Priser","DK2 Priser","DK1 Produktion","DK2 Produktion","DK Timesdata","Norge Hydro","Sverige Hydro","Gas Storage","Installed Capacity","Kernekraft","Forbrug"];
 
 export default function App() {
   const [tab, setTab] = useState(TABS[0]);
@@ -497,6 +635,7 @@ export default function App() {
         {tab === "DK2 Priser" && <DKPrices area="DK2" />}
         {tab === "DK1 Produktion" && <DKProduction area="DK1" />}
         {tab === "DK2 Produktion" && <DKProduction area="DK2" />}
+        {tab === "DK Timesdata" && <DKHourly />}
         {tab === "Norge Hydro" && <HydroSection country="Norge" zones={["NO1","NO2","NO3","NO4","NO5"]} />}
         {tab === "Sverige Hydro" && <HydroSection country="Sverige" zones={["SE1","SE2","SE3","SE4"]} />}
         {tab === "Gas Storage" && <GasStorage />}
