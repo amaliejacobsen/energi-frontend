@@ -344,13 +344,15 @@ function NuclearProduction() {
   const [data, setData] = useState([]);
 
   useEffect(() => {
-    supabase.from("installed_capacity")
+    supabase.from("nuclear_production")
       .select("*")
       .eq("country", selected)
-      .eq("psr_type", "B16")
       .order("year")
+      .order("month")
       .then(({ data }) => setData(data || []));
   }, [selected]);
+
+  const { years, byMonth } = groupByYear(data, "value_mwh");
 
   return (
     <div>
@@ -359,7 +361,11 @@ function NuclearProduction() {
           <button key={c} className={selected === c ? "tab active" : "tab"} onClick={() => setSelected(c)}>{c}</button>
         ))}
       </div>
-      <YearlyLineChart data={data} valueKey="value_mw" title={`Kernekraft installeret kapacitet – ${selected} (MW)`} yLabel="MW" />
+      <div className="chart-box">
+        <p>Data rækker: {data.length}</p>
+        <p>År: {years.join(", ")}</p>
+      </div>
+      <YearlyLineChart data={data} valueKey="value_mwh" title={`Kernekraft produktion – ${selected} (MWh)`} yLabel="MWh" />
     </div>
   );
 }
