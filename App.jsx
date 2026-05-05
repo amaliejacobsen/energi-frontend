@@ -487,7 +487,6 @@ function DKHourly() {
   const [days, setDays] = useState(7);
   const [prices, setPrices] = useState([]);
   const [production, setProduction] = useState([]);
-  const [consumption, setConsumption] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -503,17 +502,13 @@ function DKHourly() {
       supabase.from("dk_production_hourly").select("*")
         .eq("area", area).gte("datetime", fromIso)
         .order("datetime"),
-      supabase.from("consumption_hourly").select("*")
-        .eq("zone", area).order("year").order("hour"),
-    ]).then(([priceRes, prodRes, consRes]) => {
+    ]).then(([priceRes, prodRes]) => {
       setPrices(priceRes.data || []);
       setProduction(prodRes.data || []);
-      setConsumption(consRes.data || []);
       setLoading(false);
     });
   }, [area, days]);
 
-  // Byg kombineret datasæt per datetime
   const chartData = (() => {
     const map = {};
     prices.forEach(r => {
@@ -530,28 +525,31 @@ function DKHourly() {
         const solar    = r.solar    || 0;
         const offshore = r.offshore || 0;
         const onshore  = r.onshore  || 0;
-        const renewables = solar + offshore + onshore;
-        // Formater datetime til læsbar label
         const dt = new Date(r.datetime);
-        const label = `${dt.getDate()}/${dt.getMonth()+1} ${String(dt.getHours()).padStart(2,'0')}:00`;
+        // X-akse label: vis dato ved midnat, ellers kun klokkeslæt
+        const isNewDay = dt.getHours() === 0;
+        const dateLabel = isNewDay
+          ? `${dt.getDate()}/${dt.getMonth()+1}`
+          : `${String(dt.getHours()).padStart(2,'0')}:00`;
         return {
           ...r,
-          label,
+          label: dateLabel,
+          fullLabel: `${dt.getDate()}/${dt.getMonth()+1} ${String(dt.getHours()).padStart(2,'0')}:00`,
           solar,
           offshore,
           onshore,
-          renewables,
-          residual: null, // placeholder — kan beregnes hvis forbrugsdata er time-specifikt
+          renewables: solar + offshore + onshore,
         };
       });
   })();
 
-  const totalPoints = chartData.length;
-  const tickInterval = Math.max(1, Math.floor(totalPoints / 24));
+  // Vis kun hver 6. time som tick for ikke at overfylde x-aksen
+  const visibleTicks = chartData
+    .filter((_, i) => i % 6 === 0)
+    .map(r => r.label);
 
   return (
     <div>
-      {/* Kontroller */}
       <div style={{ display: 'flex', gap: '12px', marginBottom: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
         <div className="tab-row" style={{ margin: 0 }}>
           {["DK1", "DK2"].map(a => (
@@ -565,25 +563,38 @@ function DKHourly() {
         </div>
       </div>
 
-      {loading ? <p style={{ padding: '20px' }}>Henter data...</p> : (
+      {loading ? <p style={{ padding: '20px' }}>Henter data...</p> : chartData.length === 0 ? (
+        <div className="chart-box">
+          <p style={{ color: '#888' }}>Ingen timedata tilgængelig for de seneste {days} dage. Kør collector scriptet for at hente nyeste data.</p>
+        </div>
+      ) : (
         <>
-          {/* Produktions- og prisgraf */}
           <div className="chart-box">
             <h3>{area} – Produktion & Spotpris (seneste {days} dage)</h3>
-            <ResponsiveContainer width="100%" height={420}>
-              <ComposedChart data={chartData} margin={{ top: 5, right: 60, left: 20, bottom: 5 }}>
+            <ResponsiveContainer width="100%" height={440}>
+              <ComposedChart data={chartData} margin={{ top: 5, right: 70, left: 20, bottom: 30 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="label" interval={tickInterval} tick={{ fontSize: 10 }} />
+                <XAxis
+                  dataKey="label"
+                  interval={5}
+                  tick={{ fontSize: 10, fill: '#2C3E50' }}
+                  angle={-35}
+                  textAnchor="end"
+                  height={55}
+                />
                 <YAxis yAxisId="left" tick={{ fontSize: 11 }}
                   label={{ value: "MWh", angle: -90, position: 'insideLeft', offset: -5, fontSize: 12 }} />
                 <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11 }}
-                  label={{ value: "DKK/MWh", angle: 90, position: 'insideRight', offset: 10, fontSize: 12 }} />
+                  label={{ value: "DKK/MWh", angle: 90, position: 'insideRight', offset: 15, fontSize: 12 }} />
                 <Tooltip
+                  labelFormatter={(_, payload) => {
+                    if (payload && payload[0]) return `🕐 ${payload[0].payload.fullLabel}`;
+                    return '';
+                  }}
                   formatter={(value, name) => {
                     if (name === "Spotpris") return [`${Math.round(value)} DKK/MWh`, name];
                     return [`${Math.round(value)} MWh`, name];
                   }}
-                  labelFormatter={(label) => `🕐 ${label}`}
                 />
                 <Legend verticalAlign="top" height={36} />
                 <Area yAxisId="left" type="monotone" dataKey="offshore" name="Offshore vind"
@@ -593,20 +604,19 @@ function DKHourly() {
                 <Area yAxisId="left" type="monotone" dataKey="solar" name="Sol"
                   stackId="prod" fill="#F4A927" stroke="#F4A927" fillOpacity={0.9} />
                 <Line yAxisId="right" type="stepAfter" dataKey="price" name="Spotpris"
-                  stroke="#2ECC71" strokeWidth={2} dot={false} />
+                  stroke="#2ECC71" strokeWidth={2} dot={false} connectNulls />
                 <Brush dataKey="label" height={25} stroke="#2C3E50" fill="#f0f0f0" travellerWidth={6} />
               </ComposedChart>
             </ResponsiveContainer>
           </div>
 
-          {/* Statistik-kort */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px', marginBottom: '20px' }}>
             {[
-              { label: "Gns. Spotpris", value: chartData.length ? `${Math.round(chartData.reduce((s,r) => s + (r.price||0), 0) / chartData.filter(r=>r.price).length)} DKK/MWh` : "—" },
-              { label: "Gns. Sol", value: chartData.length ? `${Math.round(chartData.reduce((s,r) => s + r.solar, 0) / chartData.length)} MWh/t` : "—" },
-              { label: "Gns. Offshore", value: chartData.length ? `${Math.round(chartData.reduce((s,r) => s + r.offshore, 0) / chartData.length)} MWh/t` : "—" },
-              { label: "Gns. Onshore", value: chartData.length ? `${Math.round(chartData.reduce((s,r) => s + r.onshore, 0) / chartData.length)} MWh/t` : "—" },
-              { label: "Gns. VE total", value: chartData.length ? `${Math.round(chartData.reduce((s,r) => s + r.renewables, 0) / chartData.length)} MWh/t` : "—" },
+              { label: "Gns. Spotpris", value: chartData.filter(r=>r.price).length ? `${Math.round(chartData.reduce((s,r) => s+(r.price||0),0) / chartData.filter(r=>r.price).length)} DKK/MWh` : "—" },
+              { label: "Gns. Sol", value: `${Math.round(chartData.reduce((s,r) => s+r.solar,0) / chartData.length)} MWh/t` },
+              { label: "Gns. Offshore vind", value: `${Math.round(chartData.reduce((s,r) => s+r.offshore,0) / chartData.length)} MWh/t` },
+              { label: "Gns. Onshore vind", value: `${Math.round(chartData.reduce((s,r) => s+r.onshore,0) / chartData.length)} MWh/t` },
+              { label: "Gns. VE total", value: `${Math.round(chartData.reduce((s,r) => s+r.renewables,0) / chartData.length)} MWh/t` },
             ].map(({ label, value }) => (
               <div key={label} className="chart-box" style={{ padding: '14px 16px', marginBottom: 0 }}>
                 <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px' }}>{label}</div>
