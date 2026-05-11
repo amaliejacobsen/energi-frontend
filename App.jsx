@@ -38,33 +38,7 @@ function groupByYear(data, valueKey) {
   return { years, byMonth };
 }
 
-export default function App() {
-  const [tab, setTab] = useState(TABS[0]);
-  const [darkMode, setDarkMode] = useState(() => {
-    return localStorage.getItem('darkMode') === 'true';
-  });
 
-  const toggleDarkMode = () => {
-    setDarkMode(prev => {
-      const next = !prev;
-      localStorage.setItem('darkMode', String(next));
-      return next;
-    });
-  };
-
-  return (
-    <div className="app" data-theme={darkMode ? "dark" : "light"}>
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1>⚡ Energianalyse</h1>
-        <button onClick={toggleDarkMode} style={{
-          padding: '6px 14px', borderRadius: '20px', border: 'none', cursor: 'pointer',
-          backgroundColor: darkMode ? '#F39C12' : '#2C3E50',
-          color: '#fff', fontSize: '13px', fontWeight: '600'
-        }}>
-          {darkMode ? '☀️ Lys' : '🌙 Mørk'}
-        </button>
-      </header>
-      ...
 
 function groupHourlyByYear(data) {
   if (!data) return { years: [], byHour: [] };
