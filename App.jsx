@@ -658,9 +658,24 @@ function DKHourly() {
   );
 }
 
+function DKConsumption({ area }) {
+  const [monthly, setMonthly] = useState([]);
+  const [hourly, setHourly] = useState([]);
+  useEffect(() => {
+    supabase.from("consumption").select("*").eq("zone", area).order("year").order("month").then(({ data }) => setMonthly(data || []));
+    supabase.from("consumption_hourly").select("*").eq("zone", area).order("year").order("hour").then(({ data }) => setHourly(data || []));
+  }, [area]);
+  return (
+    <div>
+      <YearlyLineChart data={monthly} valueKey="value_mwh" title={`Forbrug – ${area} månedligt gennemsnit (MWh)`} yLabel="MWh" />
+      <HourlyLineChart data={hourly} title={`Forbrug – ${area} timesgennemsnit (MWh)`} />
+    </div>
+  );
+}
+
 function DanmarkSamlet() {
   const [view, setView] = useState("DK1 Priser");
-  const views = ["DK1 Priser", "DK1 Produktion", "DK2 Priser", "DK2 Produktion", "Timesdata"];
+  const views = ["DK1 Priser", "DK1 Produktion", "DK2 Priser", "DK2 Produktion", "Timesdata", "DK1 Forbrug", "DK2 Forbrug"];
 
   return (
     <div>
@@ -674,6 +689,8 @@ function DanmarkSamlet() {
       {view === "DK2 Priser"      && <DKPrices area="DK2" />}
       {view === "DK2 Produktion"  && <DKProduction area="DK2" />}
       {view === "Timesdata"       && <DKHourly />}
+      {view === "DK1 Forbrug"     && <DKConsumption area="DK1" />}
+      {view === "DK2 Forbrug"     && <DKConsumption area="DK2" />}
     </div>
   );
 }
@@ -707,7 +724,7 @@ export default function App() {
         {TABS.map(t => <button key={t} className={tab === t ? "nav-tab active" : "nav-tab"} onClick={() => setTab(t)}>{t}</button>)}
       </nav>
       <main>
-        {tab === "Danmark" && <DanmarkSamlet />
+        {tab === "Danmark" && <DanmarkSamlet />}
         {tab === "Hydro" && <Hydro />}
         {tab === "Gas Storage" && <GasStorage />}
         {tab === "Installed Capacity" && <InstalledCapacity />}
