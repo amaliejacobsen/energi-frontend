@@ -687,7 +687,7 @@ function Hydro() {
   );
 }
 
-const TABS = ["Danmark","Hydro","Gas Storage","Installed Capacity","Kernekraft","Forbrug"];
+const TABS = ["Danmark","Hydro","Gas Storage","Installed Capacity","Kernekraft"];
 
 export default function App() {
   const [tab, setTab] = useState(TABS[0]);
@@ -703,7 +703,6 @@ export default function App() {
         {tab === "Gas Storage" && <GasStorage />}
         {tab === "Installed Capacity" && <InstalledCapacity />}
         {tab === "Kernekraft" && <NuclearProduction />}
-        {tab === "Forbrug" && <Consumption />}
       </main>
       <style>{`
         :root {
