@@ -373,13 +373,14 @@ function InstalledCapacity() {
     "Norge": ["NO1", "NO2", "NO3", "NO4", "NO5"],
   };
 
-  const [selected, setSelected] = useState("Danmark");
+  const [selected, setSelected] = useState(null);
   const [subSelected, setSubSelected] = useState(null);
   const [data, setData] = useState([]);
   const [visibleYears, setVisibleYears] = useState([]);
   const [visibleTypes, setVisibleTypes] = useState([]);
 
   useEffect(() => {
+    if (!selected) return;
     const country = subSelected || selected;
     supabase.from("installed_capacity").select("*").eq("country", country).order("year")
       .then(({ data }) => setData(data || []));
@@ -387,13 +388,13 @@ function InstalledCapacity() {
 
   const years = [...new Set(data.map(d => d.year))].sort();
   const psrTypes = [...new Set(data.map(d => d.psr_name))];
+  const latestYear = years.length > 0 ? Math.max(...years) : null;
 
   useEffect(() => {
     if (years.length > 0) setVisibleYears(years);
     if (psrTypes.length > 0) setVisibleTypes(psrTypes);
   }, [years.join(','), psrTypes.join(',')]);
 
-  const latestYear = Math.max(...years);
   const chartData = psrTypes.filter(psr => visibleTypes.includes(psr)).map(psr => {
     const row = { psr };
     years.forEach(year => {
@@ -403,13 +404,90 @@ function InstalledCapacity() {
     return row;
   }).sort((a, b) => (b[latestYear] || 0) - (a[latestYear] || 0));
 
+  // Farver for kortet
+  const countryColors = {
+    "Danmark":   "#3498DB",
+    "Norge":     "#2ECC71",
+    "Finland":   "#9B59B6",
+    "Holland":   "#E67E22",
+    "Frankrig":  "#E74C3C",
+    "Tyskland":  "#F39C12",
+  };
+
+  // Simplified SVG paths for European countries
+  const countryPaths = {
+    "Norge": "M 285 30 L 310 25 L 340 40 L 360 35 L 370 60 L 350 80 L 330 100 L 310 120 L 295 140 L 280 130 L 270 110 L 260 90 L 270 70 L 275 50 Z",
+    "Finland": "M 370 35 L 400 30 L 420 50 L 415 75 L 400 95 L 385 110 L 370 100 L 360 80 L 355 60 Z",
+    "Danmark": "M 295 145 L 310 135 L 320 150 L 315 165 L 300 170 L 290 160 Z",
+    "Holland": "M 265 180 L 280 175 L 290 185 L 285 200 L 270 205 L 260 195 Z",
+    "Tyskland": "M 290 170 L 330 165 L 345 180 L 340 210 L 310 225 L 285 220 L 275 205 L 280 185 Z",
+    "Frankrig": "M 245 205 L 280 200 L 290 220 L 280 255 L 255 270 L 230 260 L 215 240 L 220 215 Z",
+  };
+
+  if (!selected) {
+    return (
+      <div>
+        <div className="chart-box">
+          <h3 style={{ marginBottom: '16px' }}>Vælg et land på kortet</h3>
+          <div style={{ position: 'relative', width: '100%', maxWidth: '600px', margin: '0 auto' }}>
+            <svg viewBox="200 20 250 270" style={{ width: '100%', height: 'auto' }}>
+              {Object.entries(countryPaths).map(([country, path]) => (
+                <g key={country} onClick={() => setSelected(country)} style={{ cursor: 'pointer' }}>
+                  <path
+                    d={path}
+                    fill={countryColors[country]}
+                    stroke="#fff"
+                    strokeWidth="2"
+                    opacity="0.85"
+                  />
+                  <text
+                    x={(() => {
+                      const coords = { "Norge": 310, "Finland": 388, "Danmark": 305, "Holland": 275, "Tyskland": 312, "Frankrig": 253 };
+                      return coords[country];
+                    })()}
+                    y={(() => {
+                      const coords = { "Norge": 85, "Finland": 70, "Danmark": 158, "Holland": 192, "Tyskland": 197, "Frankrig": 238 };
+                      return coords[country];
+                    })()}
+                    textAnchor="middle"
+                    fontSize="10"
+                    fontWeight="bold"
+                    fill="#fff"
+                    style={{ pointerEvents: 'none' }}
+                  >
+                    {country}
+                  </text>
+                </g>
+              ))}
+            </svg>
+          </div>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center', marginTop: '16px' }}>
+            {countries.map(c => (
+              <button key={c} onClick={() => setSelected(c)}
+                style={{ padding: '8px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer',
+                  backgroundColor: countryColors[c], color: '#fff', fontWeight: '600', fontSize: '13px' }}>
+                {c}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div>
+      <button onClick={() => { setSelected(null); setSubSelected(null); setData([]); }}
+        style={{ marginBottom: '16px', padding: '8px 16px', borderRadius: '6px', border: '1px solid #ddd',
+          cursor: 'pointer', backgroundColor: '#fff', fontSize: '13px' }}>
+        ← Tilbage til kort
+      </button>
+
       <div className="tab-row">
         {countries.map(c => (
-          <button key={c}
-            className={selected === c && !subSelected ? "tab active" : "tab"}
-            onClick={() => { setSelected(c); setSubSelected(null); }}>
+          <button key={c} className={selected === c && !subSelected ? "tab active" : "tab"}
+            onClick={() => { setSelected(c); setSubSelected(null); }}
+            style={{ borderLeft: `4px solid ${countryColors[c]}` }}>
             {c}
           </button>
         ))}
@@ -417,21 +495,16 @@ function InstalledCapacity() {
 
       {subZones[selected] && (
         <div className="tab-row" style={{ marginBottom: '16px' }}>
-          <button className={!subSelected ? "tab active" : "tab"} onClick={() => setSubSelected(null)}>
-            Total
-          </button>
+          <button className={!subSelected ? "tab active" : "tab"} onClick={() => setSubSelected(null)}>Total</button>
           {subZones[selected].map(z => (
-            <button key={z} className={subSelected === z ? "tab active" : "tab"} onClick={() => setSubSelected(z)}>
-              {z}
-            </button>
+            <button key={z} className={subSelected === z ? "tab active" : "tab"} onClick={() => setSubSelected(z)}>{z}</button>
           ))}
         </div>
       )}
 
       <div style={{ marginBottom: '15px', display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
         {psrTypes.map(type => (
-          <button key={type}
-            onClick={() => setVisibleTypes(prev => prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type])}
+          <button key={type} onClick={() => setVisibleTypes(prev => prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type])}
             style={{ padding: '5px 12px', fontSize: '11px', borderRadius: '20px', cursor: 'pointer',
               border: '1px solid ' + (visibleTypes.includes(type) ? '#444' : '#ccc'),
               backgroundColor: visibleTypes.includes(type) ? '#444' : '#fff',
@@ -461,7 +534,6 @@ function InstalledCapacity() {
     </div>
   );
 }
-
 function Consumption() {
   const zones = ["DK1", "DK2", "Tyskland"];
   const [monthly, setMonthly] = useState({});
