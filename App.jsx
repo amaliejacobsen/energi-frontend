@@ -378,6 +378,7 @@ function InstalledCapacity() {
   const [data, setData] = useState([]);
   const [visibleYears, setVisibleYears] = useState([]);
   const [visibleTypes, setVisibleTypes] = useState([]);
+  const [hoveredCountry, setHoveredCountry] = useState(null);
 
   useEffect(() => {
     if (!selected) return;
@@ -404,71 +405,102 @@ function InstalledCapacity() {
     return row;
   }).sort((a, b) => (b[latestYear] || 0) - (a[latestYear] || 0));
 
-  // Farver for kortet
   const countryColors = {
-    "Danmark":   "#3498DB",
-    "Norge":     "#2ECC71",
-    "Finland":   "#9B59B6",
-    "Holland":   "#E67E22",
-    "Frankrig":  "#E74C3C",
-    "Tyskland":  "#F39C12",
+    "Danmark":  "#3498DB",
+    "Norge":    "#2ECC71",
+    "Finland":  "#9B59B6",
+    "Holland":  "#E67E22",
+    "Frankrig": "#E74C3C",
+    "Tyskland": "#F39C12",
   };
 
-  // Simplified SVG paths for European countries
-  const countryPaths = {
-    "Norge": "M 285 30 L 310 25 L 340 40 L 360 35 L 370 60 L 350 80 L 330 100 L 310 120 L 295 140 L 280 130 L 270 110 L 260 90 L 270 70 L 275 50 Z",
-    "Finland": "M 370 35 L 400 30 L 420 50 L 415 75 L 400 95 L 385 110 L 370 100 L 360 80 L 355 60 Z",
-    "Danmark": "M 295 145 L 310 135 L 320 150 L 315 165 L 300 170 L 290 160 Z",
-    "Holland": "M 265 180 L 280 175 L 290 185 L 285 200 L 270 205 L 260 195 Z",
-    "Tyskland": "M 290 170 L 330 165 L 345 180 L 340 210 L 310 225 L 285 220 L 275 205 L 280 185 Z",
-    "Frankrig": "M 245 205 L 280 200 L 290 220 L 280 255 L 255 270 L 230 260 L 215 240 L 220 215 Z",
+  // Realistiske SVG paths for Europa lande (forenklet men genkendelig)
+  const countryData = {
+    "Norge": {
+      path: "M 178 10 L 195 8 L 215 15 L 228 12 L 238 20 L 245 35 L 240 50 L 228 65 L 215 78 L 205 92 L 195 105 L 185 118 L 175 108 L 168 95 L 162 80 L 158 65 L 160 50 L 165 35 L 170 22 Z",
+      labelX: 198, labelY: 60
+    },
+    "Finland": {
+      path: "M 248 18 L 268 12 L 285 20 L 290 35 L 288 52 L 280 68 L 268 80 L 255 88 L 245 78 L 240 62 L 238 45 L 240 30 Z",
+      labelX: 264, labelY: 50
+    },
+    "Sverige": {
+      path: "M 205 95 L 218 88 L 232 92 L 242 105 L 245 120 L 240 135 L 228 145 L 215 148 L 205 140 L 198 125 L 198 110 Z",
+      labelX: 221, labelY: 120
+    },
+    "Danmark": {
+      path: "M 188 148 L 198 142 L 210 148 L 212 160 L 205 170 L 194 172 L 186 164 L 185 154 Z",
+      labelX: 198, labelY: 158
+    },
+    "Holland": {
+      path: "M 168 178 L 182 174 L 192 180 L 192 192 L 182 198 L 168 196 L 162 188 Z",
+      labelX: 177, labelY: 187
+    },
+    "Tyskland": {
+      path: "M 192 172 L 215 168 L 235 172 L 242 185 L 238 202 L 225 212 L 205 215 L 190 208 L 183 195 L 185 180 Z",
+      labelX: 212, labelY: 193
+    },
+    "Frankrig": {
+      path: "M 148 198 L 170 194 L 185 200 L 188 218 L 182 238 L 168 248 L 150 250 L 135 242 L 128 225 L 132 208 Z",
+      labelX: 158, labelY: 223
+    },
   };
 
   if (!selected) {
     return (
       <div>
         <div className="chart-box">
-          <h3 style={{ marginBottom: '16px' }}>Vælg et land på kortet</h3>
-          <div style={{ position: 'relative', width: '100%', maxWidth: '600px', margin: '0 auto' }}>
-            <svg viewBox="200 20 250 270" style={{ width: '100%', height: 'auto' }}>
-              {Object.entries(countryPaths).map(([country, path]) => (
-                <g key={country} onClick={() => setSelected(country)} style={{ cursor: 'pointer' }}>
-                  <path
-                    d={path}
-                    fill={countryColors[country]}
-                    stroke="#fff"
-                    strokeWidth="2"
-                    opacity="0.85"
-                  />
-                  <text
-                    x={(() => {
-                      const coords = { "Norge": 310, "Finland": 388, "Danmark": 305, "Holland": 275, "Tyskland": 312, "Frankrig": 253 };
-                      return coords[country];
-                    })()}
-                    y={(() => {
-                      const coords = { "Norge": 85, "Finland": 70, "Danmark": 158, "Holland": 192, "Tyskland": 197, "Frankrig": 238 };
-                      return coords[country];
-                    })()}
-                    textAnchor="middle"
-                    fontSize="10"
-                    fontWeight="bold"
-                    fill="#fff"
-                    style={{ pointerEvents: 'none' }}
-                  >
-                    {country}
-                  </text>
-                </g>
-              ))}
+          <h3 style={{ marginBottom: '16px' }}>Vælg et land for at se installeret kapacitet</h3>
+          <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+            <svg viewBox="120 5 185 260" style={{ width: '380px', minWidth: '280px', height: 'auto', cursor: 'pointer' }}>
+              {Object.entries(countryData).map(([country, { path, labelX, labelY }]) => {
+                const isClickable = countries.includes(country);
+                const isHovered = hoveredCountry === country;
+                const color = countryColors[country] || '#ccc';
+                return (
+                  <g key={country}
+                    onClick={() => isClickable && setSelected(country)}
+                    onMouseEnter={() => setHoveredCountry(country)}
+                    onMouseLeave={() => setHoveredCountry(null)}
+                    style={{ cursor: isClickable ? 'pointer' : 'default' }}>
+                    <path
+                      d={path}
+                      fill={isClickable ? color : '#ddd'}
+                      stroke="#fff"
+                      strokeWidth={isHovered ? "3" : "1.5"}
+                      opacity={isHovered ? 1 : isClickable ? 0.85 : 0.4}
+                      style={{ transition: 'opacity 0.15s, stroke-width 0.15s' }}
+                    />
+                    {isClickable && (
+                      <text x={labelX} y={labelY} textAnchor="middle" fontSize="9" fontWeight="600" fill="#fff" style={{ pointerEvents: 'none', textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>
+                        {country}
+                      </text>
+                    )}
+                    {isHovered && isClickable && (
+                      <text x={labelX} y={labelY + 11} textAnchor="middle" fontSize="7.5" fill="#fff" style={{ pointerEvents: 'none' }}>
+                        Klik for data
+                      </text>
+                    )}
+                  </g>
+                );
+              })}
             </svg>
-          </div>
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center', marginTop: '16px' }}>
-            {countries.map(c => (
-              <button key={c} onClick={() => setSelected(c)}
-                style={{ padding: '8px 16px', borderRadius: '6px', border: 'none', cursor: 'pointer',
-                  backgroundColor: countryColors[c], color: '#fff', fontWeight: '600', fontSize: '13px' }}>
-                {c}
-              </button>
-            ))}
+
+            <div style={{ flex: 1, minWidth: '160px' }}>
+              <p style={{ fontSize: '13px', color: '#888', marginBottom: '12px' }}>Tilgængelige lande:</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {countries.map(c => (
+                  <button key={c} onClick={() => setSelected(c)}
+                    style={{ padding: '10px 16px', borderRadius: '8px', border: 'none', cursor: 'pointer',
+                      backgroundColor: countryColors[c], color: '#fff', fontWeight: '600', fontSize: '13px',
+                      textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.15)' }}>
+                    <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.5)', display: 'inline-block' }}></span>
+                    {c}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -479,7 +511,7 @@ function InstalledCapacity() {
     <div>
       <button onClick={() => { setSelected(null); setSubSelected(null); setData([]); }}
         style={{ marginBottom: '16px', padding: '8px 16px', borderRadius: '6px', border: '1px solid #ddd',
-          cursor: 'pointer', backgroundColor: '#fff', fontSize: '13px' }}>
+          cursor: 'pointer', backgroundColor: '#fff', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
         ← Tilbage til kort
       </button>
 
