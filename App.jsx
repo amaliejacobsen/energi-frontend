@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { LineChart, Line, BarChart, Bar, ComposedChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Brush } from "recharts";
+import { LineChart, Line, BarChart, Bar, ComposedChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Brush, ReferenceLine } from "recharts";
 import { supabase } from "./src/supabaseClient";
 
 const YEAR_COLORS = ["#2C3E50","#E74C3C","#3498DB","#2ECC71","#9B59B6","#F39C12","#1ABC9C","#E67E22","#95A5A6","#D35400"];
@@ -671,6 +671,98 @@ function Hydro() {
         ))}
       </div>
       <HydroSection country={country} zones={zones[country]} />
+    </div>
+  );
+}
+
+function HydroForecastChart() {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    // Henter data sorteret kronologisk efter dato
+    supabase
+      .from("hydro_weather_forecast")
+      .select("*")
+      .order("date", { ascending: true })
+      .then(({ data: fetchedData, error }) => {
+        if (error) {
+          console.error("Fejl ved hentning af hydro-forecast:", error);
+        } else {
+          // Recharts har nemmere ved at tegne to forskellige linjer, hvis vi 
+          // splitter værdien op baseret på data_type
+          const formattedData = (fetchedData || []).map(d => ({
+            ...d,
+            // Formatér datoen en smule mere læsbar (f.eks. "18/5" i stedet for "2026-05-18")
+            displayDate: d.date ? d.date.split('-').slice(1).reverse().join('/') : '',
+            // Hvis det er historisk eller i dag, lægger vi værdien i historisk-serien
+            Historisk: (d.data_type === "historisk" || d.data_type === "i dag") ? d.precipitation_mm : null,
+            // Hvis det er i dag eller forecast, lægger vi værdien i forecast-serien (så linjerne hænger sammen)
+            Prognose: (d.data_type === "forecast" || d.data_type === "i dag") ? d.precipitation_mm : null,
+          }));
+          setData(formattedData);
+        }
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) return <p style={{ padding: '20px' }}>Henter vejrprognose...</p>;
+  if (data.length === 0) return null;
+
+  return (
+    <div className="chart-box" style={{ marginTop: '30px' }}>
+      <h3>🌧️ Akkumuleret Nedbørsprognose (Magasin-input)</h3>
+      <p style={{ fontSize: '12px', color: '#666', marginTop: '-5px', marginBottom: '15px' }}>
+        Viser de seneste 14 dages faktiske nedbør samt de næste 14 dages forecast for de centrale nordiske fjelde.
+      </p>
+      
+      <ResponsiveContainer width="100%" height={350}>
+        <ComposedChart data={data} margin={{ top: 10, right: 30, left: 10, bottom: 10 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+          <XAxis 
+            dataKey="displayDate" 
+            tick={{ fontSize: 11, fill: '#2C3E50' }}
+          />
+          <YAxis 
+            tick={{ fontSize: 12 }} 
+            label={{ value: "Nedbør (mm)", angle: -90, position: "insideLeft", fontSize: 12 }} 
+          />
+          <Tooltip 
+            formatter={(value) => value !== null ? [`${Number(value).toFixed(1)} mm`] : [null]}
+          />
+          <Legend />
+
+          {/* ReferenceLine markerer præcis hvor "I dag" skærer grafen visuelt */}
+          <ReferenceLine 
+            x={data.find(d => d.data_type === "i dag")?.displayDate} 
+            stroke="#E74C3C" 
+            strokeDasharray="4 4"
+            label={{ value: "I DAG", position: "top", fill: "#E74C3C", fontSize: 11, fontWeight: 'bold' }} 
+          />
+
+          {/* Historisk data tegnes som en fast, mørkeblå linje (eller som et Area/søjler) */}
+          <Line 
+            type="monotone" 
+            dataKey="Historisk" 
+            stroke="#2C3E50" 
+            strokeWidth={3} 
+            dot={{ r: 3 }} 
+            connectNulls={false} 
+          />
+
+          {/* Forecast data tegnes som en stiplet lyseblå linje for at indikere usikkerhed */}
+          <Line 
+            type="monotone" 
+            dataKey="Prognose" 
+            stroke="#3498DB" 
+            strokeWidth={3} 
+            strokeDasharray="5 5" 
+            dot={{ r: 3 }} 
+            connectNulls={false} 
+          />
+        </ComposedChart>
+      </ResponsiveContainer>
     </div>
   );
 }
