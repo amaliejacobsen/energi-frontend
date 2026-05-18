@@ -373,15 +373,13 @@ function InstalledCapacity() {
     "Norge": ["NO1", "NO2", "NO3", "NO4", "NO5"],
   };
 
-  const [selected, setSelected] = useState(null);
+  const [selected, setSelected] = useState("Danmark");
   const [subSelected, setSubSelected] = useState(null);
   const [data, setData] = useState([]);
   const [visibleYears, setVisibleYears] = useState([]);
   const [visibleTypes, setVisibleTypes] = useState([]);
-  const [hoveredCountry, setHoveredCountry] = useState(null);
 
   useEffect(() => {
-    if (!selected) return;
     const country = subSelected || selected;
     supabase.from("installed_capacity").select("*").eq("country", country).order("year")
       .then(({ data }) => setData(data || []));
@@ -405,147 +403,33 @@ function InstalledCapacity() {
     return row;
   }).sort((a, b) => (b[latestYear] || 0) - (a[latestYear] || 0));
 
-  const countryColors = {
-    "Danmark":  "#3498DB",
-    "Norge":    "#2ECC71",
-    "Finland":  "#9B59B6",
-    "Holland":  "#E67E22",
-    "Frankrig": "#E74C3C",
-    "Tyskland": "#F39C12",
-  };
-
-  // Realistiske SVG paths for Europa lande (forenklet men genkendelig)
-  const countryData = {
-    "Norge": {
-      path: "M 178 10 L 195 8 L 215 15 L 228 12 L 238 20 L 245 35 L 240 50 L 228 65 L 215 78 L 205 92 L 195 105 L 185 118 L 175 108 L 168 95 L 162 80 L 158 65 L 160 50 L 165 35 L 170 22 Z",
-      labelX: 198, labelY: 60
-    },
-    "Finland": {
-      path: "M 248 18 L 268 12 L 285 20 L 290 35 L 288 52 L 280 68 L 268 80 L 255 88 L 245 78 L 240 62 L 238 45 L 240 30 Z",
-      labelX: 264, labelY: 50
-    },
-    "Sverige": {
-      path: "M 205 95 L 218 88 L 232 92 L 242 105 L 245 120 L 240 135 L 228 145 L 215 148 L 205 140 L 198 125 L 198 110 Z",
-      labelX: 221, labelY: 120
-    },
-    "Danmark": {
-      path: "M 188 148 L 198 142 L 210 148 L 212 160 L 205 170 L 194 172 L 186 164 L 185 154 Z",
-      labelX: 198, labelY: 158
-    },
-    "Holland": {
-      path: "M 168 178 L 182 174 L 192 180 L 192 192 L 182 198 L 168 196 L 162 188 Z",
-      labelX: 177, labelY: 187
-    },
-    "Tyskland": {
-      path: "M 192 172 L 215 168 L 235 172 L 242 185 L 238 202 L 225 212 L 205 215 L 190 208 L 183 195 L 185 180 Z",
-      labelX: 212, labelY: 193
-    },
-    "Frankrig": {
-      path: "M 148 198 L 170 194 L 185 200 L 188 218 L 182 238 L 168 248 L 150 250 L 135 242 L 128 225 L 132 208 Z",
-      labelX: 158, labelY: 223
-    },
-  };
-
-  if (!selected) {
-    return (
-      <div>
-        <div className="chart-box">
-          <h3 style={{ marginBottom: '16px' }}>Vælg et land for at se installeret kapacitet</h3>
-          <div style={{ display: 'flex', gap: '24px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
-            <svg viewBox="120 5 185 260" style={{ width: '380px', minWidth: '280px', height: 'auto', cursor: 'pointer' }}>
-              {Object.entries(countryData).map(([country, { path, labelX, labelY }]) => {
-                const isClickable = countries.includes(country);
-                const isHovered = hoveredCountry === country;
-                const color = countryColors[country] || '#ccc';
-                return (
-                  <g key={country}
-                    onClick={() => isClickable && setSelected(country)}
-                    onMouseEnter={() => setHoveredCountry(country)}
-                    onMouseLeave={() => setHoveredCountry(null)}
-                    style={{ cursor: isClickable ? 'pointer' : 'default' }}>
-                    <path
-                      d={path}
-                      fill={isClickable ? color : '#ddd'}
-                      stroke="#fff"
-                      strokeWidth={isHovered ? "3" : "1.5"}
-                      opacity={isHovered ? 1 : isClickable ? 0.85 : 0.4}
-                      style={{ transition: 'opacity 0.15s, stroke-width 0.15s' }}
-                    />
-                    {isClickable && (
-                      <text x={labelX} y={labelY} textAnchor="middle" fontSize="9" fontWeight="600" fill="#fff" style={{ pointerEvents: 'none', textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>
-                        {country}
-                      </text>
-                    )}
-                    {isHovered && isClickable && (
-                      <text x={labelX} y={labelY + 11} textAnchor="middle" fontSize="7.5" fill="#fff" style={{ pointerEvents: 'none' }}>
-                        Klik for data
-                      </text>
-                    )}
-                  </g>
-                );
-              })}
-            </svg>
-
-            <div style={{ flex: 1, minWidth: '160px' }}>
-              <p style={{ fontSize: '13px', color: '#888', marginBottom: '12px' }}>Tilgængelige lande:</p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {countries.map(c => (
-                  <button key={c} onClick={() => setSelected(c)}
-                    style={{ padding: '10px 16px', borderRadius: '8px', border: 'none', cursor: 'pointer',
-                      backgroundColor: countryColors[c], color: '#fff', fontWeight: '600', fontSize: '13px',
-                      textAlign: 'left', display: 'flex', alignItems: 'center', gap: '8px',
-                      boxShadow: '0 2px 4px rgba(0,0,0,0.15)' }}>
-                    <span style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.5)', display: 'inline-block' }}></span>
-                    {c}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div>
-      <button onClick={() => { setSelected(null); setSubSelected(null); setData([]); }}
-        style={{ marginBottom: '16px', padding: '8px 16px', borderRadius: '6px', border: '1px solid #ddd',
-          cursor: 'pointer', backgroundColor: '#fff', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-        ← Tilbage til kort
-      </button>
-
       <div className="tab-row">
         {countries.map(c => (
           <button key={c} className={selected === c && !subSelected ? "tab active" : "tab"}
-            onClick={() => { setSelected(c); setSubSelected(null); }}
-            style={{ borderLeft: `4px solid ${countryColors[c]}` }}>
-            {c}
-          </button>
+            onClick={() => { setSelected(c); setSubSelected(null); }}>{c}</button>
         ))}
       </div>
-
       {subZones[selected] && (
-        <div className="tab-row" style={{ marginBottom: '16px' }}>
+        <div className="tab-row">
           <button className={!subSelected ? "tab active" : "tab"} onClick={() => setSubSelected(null)}>Total</button>
           {subZones[selected].map(z => (
             <button key={z} className={subSelected === z ? "tab active" : "tab"} onClick={() => setSubSelected(z)}>{z}</button>
           ))}
         </div>
       )}
-
       <div style={{ marginBottom: '15px', display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
         {psrTypes.map(type => (
           <button key={type} onClick={() => setVisibleTypes(prev => prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type])}
             style={{ padding: '5px 12px', fontSize: '11px', borderRadius: '20px', cursor: 'pointer',
               border: '1px solid ' + (visibleTypes.includes(type) ? '#444' : '#ccc'),
-              backgroundColor: visibleTypes.includes(type) ? '#444' : '#fff',
-              color: visibleTypes.includes(type) ? '#fff' : '#666' }}>
+              backgroundColor: visibleTypes.includes(type) ? '#444' : 'var(--surface)',
+              color: visibleTypes.includes(type) ? '#fff' : 'var(--text)' }}>
             {type}
           </button>
         ))}
       </div>
-
       <div className="chart-box">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
           <h3>{subSelected || selected} – Installed Capacity (MW)</h3>
@@ -553,7 +437,7 @@ function InstalledCapacity() {
         </div>
         <ResponsiveContainer width="100%" height={Math.max(100, visibleTypes.length * years.length * 14)}>
           <BarChart data={chartData} layout="vertical" barGap={2} barCategoryGap="20%">
-            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" />
             <XAxis type="number" tick={{ fontSize: 12 }} />
             <YAxis type="category" dataKey="psr" width={200} tick={{ fontSize: 11 }} />
             <Tooltip formatter={(value) => value !== null ? [Number(value).toFixed(2)] : [null]} /><Legend />
