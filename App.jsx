@@ -274,6 +274,11 @@ function DKPrices({ area }) {
             <Brush dataKey="displayDate" height={30} stroke="#2C3E50" fill="#f0f0f0" />
           </LineChart>
         </ResponsiveContainer>
+        <div style={{ marginTop: '16px', padding: '10px 12px', background: 'var(--fafafa)', borderRadius: '6px', border: '1px solid var(--border)' }}>
+          <p style={{ fontSize: '11px', color: '#888', margin: 0 }}>
+            📡 Datakilde: <strong style={{ color: 'var(--text)' }}>Energidataservice – Elspotprices & ProductionConsumptionSettlement</strong>
+          </p>
+        </div>
       </div>
       <div className="chart-box">
         <h3>{area} – Capture rate udvikling (%)</h3>
@@ -289,10 +294,16 @@ function DKPrices({ area }) {
             <Brush dataKey="displayDate" height={30} stroke="#2C3E50" fill="#f0f0f0" />
           </LineChart>
         </ResponsiveContainer>
+        <div style={{ marginTop: '16px', padding: '10px 12px', background: 'var(--fafafa)', borderRadius: '6px', border: '1px solid var(--border)' }}>
+          <p style={{ fontSize: '11px', color: '#888', margin: 0 }}>
+            📡 Datakilde: <strong style={{ color: 'var(--text)' }}>Energidataservice – Elspotprices & ProductionConsumptionSettlement</strong>
+          </p>
+        </div>
       </div>
     </div>
   );
 }
+
 
 function DKProduction({ area }) {
   const [solar, setSolar] = useState([]);
@@ -618,11 +629,17 @@ function GasStorage() {
   return (
     <div>
       {areas.map(area => (
-        <YearlyLineChart key={area} data={data[area] || []} valueKey="full_pct" title={`Gas storage – ${area} (% kapacitet)`} yLabel="%" source="AGSI – Gas Storage Europe (agsi.gie.eu)" />
+        <div key={area}>
+          <YearlyLineChart data={data[area] || []} valueKey="full_pct" title={`Gas storage – ${area} (% kapacitet)`} yLabel="%" />
+          <div style={{ marginTop: '-16px', marginBottom: '20px', padding: '10px 12px', background: 'var(--fafafa)', borderRadius: '6px', border: '1px solid var(--border)' }}>
+            <p style={{ fontSize: '11px', color: '#888', margin: 0 }}>
+              📡 Datakilde: <strong style={{ color: 'var(--text)' }}>AGSI – Gas Storage Europe (agsi.gie.eu)</strong>
+            </p>
+          </div>
+        </div>
       ))}
     </div>
   );
-}
 
 function DKConsumption({ area }) {
   const [monthly, setMonthly] = useState([]);
@@ -633,8 +650,18 @@ function DKConsumption({ area }) {
   }, [area]);
   return (
     <div>
-      <YearlyLineChart data={monthly} valueKey="value_mwh" title={`Forbrug – ${area} månedligt gennemsnit (MWh)`} yLabel="MWh" source="ENTSO-E Transparency Platform – A65 Total Load" />
-      <HourlyLineChart data={hourly} title={`Forbrug – ${area} timesgennemsnit (MWh)`} source="ENTSO-E Transparency Platform – A65 Total Load" />
+      <YearlyLineChart data={monthly} valueKey="value_mwh" title={`Forbrug – ${area} månedligt gennemsnit (MWh)`} yLabel="MWh" />
+      <div style={{ marginTop: '-16px', marginBottom: '20px', padding: '10px 12px', background: 'var(--fafafa)', borderRadius: '6px', border: '1px solid var(--border)' }}>
+        <p style={{ fontSize: '11px', color: '#888', margin: 0 }}>
+          📡 Datakilde: <strong style={{ color: 'var(--text)' }}>ENTSO-E Transparency Platform – A65 Total Load</strong>
+        </p>
+      </div>
+      <HourlyLineChart data={hourly} title={`Forbrug – ${area} timesgennemsnit (MWh)`} />
+      <div style={{ marginTop: '-16px', marginBottom: '20px', padding: '10px 12px', background: 'var(--fafafa)', borderRadius: '6px', border: '1px solid var(--border)' }}>
+        <p style={{ fontSize: '11px', color: '#888', margin: 0 }}>
+          📡 Datakilde: <strong style={{ color: 'var(--text)' }}>ENTSO-E Transparency Platform – A65 Total Load</strong>
+        </p>
+      </div>
     </div>
   );
 }
@@ -680,15 +707,25 @@ function DKProductionCombined() {
       {view === "Samlet" && (
         <>
           <DKProductionChart data={combinedData("solar")}    valueKey="value_mwh" title="DK Samlet – Sol produktion (MWh)"            yLabel="MWh" />
+          <div style={{ marginTop: '-16px', marginBottom: '20px', padding: '10px 12px', background: 'var(--fafafa)', borderRadius: '6px', border: '1px solid var(--border)' }}>
+            <p style={{ fontSize: '11px', color: '#888', margin: 0 }}>
+              📡 Datakilde: <strong style={{ color: 'var(--text)' }}>Energidataservice – ProductionConsumptionSettlement</strong>
+            </p>
+          </div>
           <DKProductionChart data={combinedData("offshore")} valueKey="value_mwh" title="DK Samlet – Offshore vind produktion (MWh)" yLabel="MWh" />
+          <div style={{ marginTop: '-16px', marginBottom: '20px', padding: '10px 12px', background: 'var(--fafafa)', borderRadius: '6px', border: '1px solid var(--border)' }}>
+            <p style={{ fontSize: '11px', color: '#888', margin: 0 }}>
+              📡 Datakilde: <strong style={{ color: 'var(--text)' }}>Energidataservice – ProductionConsumptionSettlement</strong>
+            </p>
+          </div>
           <DKProductionChart data={combinedData("onshore")}  valueKey="value_mwh" title="DK Samlet – Onshore vind produktion (MWh)"  yLabel="MWh" />
+          <div style={{ marginTop: '-16px', marginBottom: '20px', padding: '10px 12px', background: 'var(--fafafa)', borderRadius: '6px', border: '1px solid var(--border)' }}>
+            <p style={{ fontSize: '11px', color: '#888', margin: 0 }}>
+              📡 Datakilde: <strong style={{ color: 'var(--text)' }}>Energidataservice – ProductionConsumptionSettlement</strong>
+            </p>
+          </div>
         </>
       )}
-      {view === "DK1" && <DKProduction area="DK1" />}
-      {view === "DK2" && <DKProduction area="DK2" />}
-    </div>
-  );
-}
 
 function DanmarkSamlet() {
   const [view, setView] = useState("DK1 priser");
