@@ -6,6 +6,7 @@ const YEAR_COLORS = ["#2C3E50","#E74C3C","#3498DB","#2ECC71","#9B59B6","#F39C12"
 const MONTH_NAMES = ["Jan","Feb","Mar","Apr","Maj","Jun","Jul","Aug","Sep","Okt","Nov","Dec"];
 const HOUR_LABELS = Array.from({length: 24}, (_, h) => `${String(h).padStart(2,'0')}:00`);
 
+
 function calcMedian(values) {
   if (!values || !values.length) return null;
   const sorted = [...values].sort((a, b) => a - b);
@@ -36,6 +37,18 @@ function groupByYear(data, valueKey) {
     return row;
   });
   return { years, byMonth };
+}
+
+
+function ChartSource({ source }) {
+  if (!source) return null;
+  return (
+    <div style={{ marginTop: '12px', padding: '10px 12px', background: 'var(--fafafa)', borderRadius: '6px', border: '1px solid var(--border)' }}>
+      <p style={{ fontSize: '11px', color: '#888', margin: 0 }}>
+        📡 Datakilde: <strong style={{ color: 'var(--text)' }}>{source}</strong>
+      </p>
+    </div>
+  );
 }
 
 
@@ -114,7 +127,7 @@ function YearToggleButtons({ years, visibleYears, setVisibleYears, showMedian, s
 }
 
 
-function DKProductionChart({ data, valueKey, title, yLabel }) {
+function DKProductionChart({ data, valueKey, title, yLabel, source }) {
   const { years, byDay } = groupByDayOfYear(data, valueKey);
   const monthTicks = [15, 45, 75, 105, 135, 165, 195, 225, 255, 285, 315, 345];
   const [visibleYears, setVisibleYears] = useState([]);
@@ -125,6 +138,7 @@ function DKProductionChart({ data, valueKey, title, yLabel }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
         <h3 style={{ margin: 0 }}>{title}</h3>
         <YearToggleButtons years={years} visibleYears={visibleYears} setVisibleYears={setVisibleYears} />
+        <ChartSource source={source} />
       </div>
       <ResponsiveContainer width="100%" height={320}>
         <LineChart data={byDay} margin={{ bottom: 20 }}>
@@ -146,7 +160,7 @@ function DKProductionChart({ data, valueKey, title, yLabel }) {
   );
 }
 
-function YearlyLineChart({ data, valueKey, title, yLabel }) {
+function YearlyLineChart({ data, valueKey, title, yLabel, source }) {
   const currentYear = new Date().getFullYear();
   const { years, byMonth } = groupByYear(data, valueKey);
   const [visibleYears, setVisibleYears] = useState([]);
@@ -158,6 +172,7 @@ function YearlyLineChart({ data, valueKey, title, yLabel }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
         <h3>{title}</h3>
         <YearToggleButtons years={years} visibleYears={visibleYears} setVisibleYears={setVisibleYears} showMedian={showMedian} setShowMedian={setShowMedian} />
+        <ChartSource source={source} />
       </div>
       <ResponsiveContainer width="100%" height={320}>
         <LineChart data={byMonth} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
@@ -176,7 +191,7 @@ function YearlyLineChart({ data, valueKey, title, yLabel }) {
   );
 }
 
-function HourlyLineChart({ data, title }) {
+function HourlyLineChart({ data, title, source }) {
   const currentYear = new Date().getFullYear();
   const { years, byHour } = groupHourlyByYear(data);
   const [visibleYears, setVisibleYears] = useState([]);
@@ -187,6 +202,7 @@ function HourlyLineChart({ data, title }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
         <h3 style={{ margin: 0 }}>{title}</h3>
         <YearToggleButtons years={years} visibleYears={visibleYears} setVisibleYears={setVisibleYears} />
+        <ChartSource source={source} />
       </div>
       <ResponsiveContainer width="100%" height={320}>
         <LineChart data={byHour}>
@@ -271,9 +287,9 @@ function DKProduction({ area }) {
   }, [area]);
   return (
     <div>
-      <DKProductionChart data={solar}    valueKey="value_mwh" title={`${area} – Sol produktion (MWh)`}            yLabel="MWh" />
-      <DKProductionChart data={offshore} valueKey="value_mwh" title={`${area} – Offshore vind produktion (MWh)`} yLabel="MWh" />
-      <DKProductionChart data={onshore}  valueKey="value_mwh" title={`${area} – Onshore vind produktion (MWh)`}  yLabel="MWh" />
+      <DKProductionChart data={solar}    valueKey="value_mwh" title={`${area} – Sol produktion (MWh)`}            yLabel="MWh" source="Energidataservice – ProductionConsumptionSettlement" />
+      <DKProductionChart data={offshore} valueKey="value_mwh" title={`${area} – Offshore vind produktion (MWh)`} yLabel="MWh" source="Energidataservice – ProductionConsumptionSettlement" />
+      <DKProductionChart data={onshore}  valueKey="value_mwh" title={`${area} – Onshore vind produktion (MWh)`}  yLabel="MWh" source="Energidataservice – ProductionConsumptionSettlement" />
     </div>
   );
 }
@@ -299,7 +315,7 @@ function NuclearProduction() {
           <button key={c} className={selected === c ? "tab active" : "tab"} onClick={() => setSelected(c)}>{c}</button>
         ))}
       </div>
-      <YearlyLineChart data={data} valueKey="value_mwh" title={`Kernekraft produktion – ${selected} (MWh)`} yLabel="MWh" />
+      <YearlyLineChart data={data} valueKey="value_mwh" title={`Kernekraft produktion – ${selected} (MWh)`} yLabel="MWh" source="ENTSO-E Transparency Platform – A75 Actual Generation (B14 Nuclear)" />
     </div>
   );
 }
@@ -403,8 +419,8 @@ function Consumption() {
     <div>
       {zones.map(zone => (
         <div key={zone}>
-          <YearlyLineChart data={monthly[zone] || []} valueKey="value_mwh" title={`Forbrug – ${zone} månedligt gennemsnit (MWh)`} yLabel="MWh" />
-          <HourlyLineChart data={hourly[zone] || []} title={`Forbrug – ${zone} timesgennemsnit (MWh)`} />
+          <YearlyLineChart data={monthly[zone] || []} valueKey="value_mwh" title={`Forbrug – ${zone} månedligt gennemsnit (MWh)`} yLabel="MWh" source="ENTSO-E Transparency Platform – A65 Total Load" />
+          <HourlyLineChart data={hourly[zone] || []} title={`Forbrug – ${zone} timesgennemsnit (MWh)`} source="ENTSO-E Transparency Platform – A65 Total Load" />
         </div>
       ))}
     </div>
@@ -584,7 +600,7 @@ function GasStorage() {
   return (
     <div>
       {areas.map(area => (
-        <YearlyLineChart key={area} data={data[area] || []} valueKey="full_pct"
+        <YearlyLineChart key={area} data={data[area] || []} valueKey="full_pct" title={`Gas storage – ${area} (% kapacitet)`} yLabel="%" source="AGSI – Gas Storage Europe (agsi.gie.eu)" />
           title={`Gas storage – ${area} (% kapacitet)`} yLabel="%" />
       ))}
     </div>
@@ -600,8 +616,8 @@ function DKConsumption({ area }) {
   }, [area]);
   return (
     <div>
-      <YearlyLineChart data={monthly} valueKey="value_mwh" title={`Forbrug – ${area} månedligt gennemsnit (MWh)`} yLabel="MWh" />
-      <HourlyLineChart data={hourly} title={`Forbrug – ${area} timesgennemsnit (MWh)`} />
+      <YearlyLineChart data={monthly} valueKey="value_mwh" title={`Forbrug – ${area} månedligt gennemsnit (MWh)`} yLabel="MWh" source="ENTSO-E Transparency Platform – A65 Total Load" />
+      <HourlyLineChart data={hourly} title={`Forbrug – ${area} timesgennemsnit (MWh)`} source="ENTSO-E Transparency Platform – A65 Total Load" />
     </div>
   );
 }
@@ -722,7 +738,7 @@ function HydroSection({ country, zones }) {
           <button key={z} className={selected === z ? "tab active" : "tab"} onClick={() => setSelected(z)}>{z}</button>
         ))}
       </div>
-      <YearlyLineChart data={data} valueKey="value_mwh" title={`${country} – ${selected} Hydro (MWh)`} yLabel="MWh" />
+      <YearlyLineChart data={data} valueKey="value_mwh" title={`${country} – ${selected} Hydro (MWh)`} yLabel="MWh" source="ENTSO-E Transparency Platform – A75 Actual Generation" />
     </div>
   );
 }
