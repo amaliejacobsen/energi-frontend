@@ -393,28 +393,12 @@ function Consumption() {
   const zones = ["DK1", "DK2", "Tyskland"];
   const [monthly, setMonthly] = useState({});
   const [hourly, setHourly] = useState({});
-  const [loading, setLoading] = useState(true);
-
   useEffect(() => {
-    let count = 0;
     zones.forEach(zone => {
-      supabase.from("consumption").select("*").eq("zone", zone).order("year").order("month")
-        .then(({ data }) => {
-          setMonthly(prev => ({ ...prev, [zone]: data || [] }));
-          count++;
-          if (count === zones.length * 2) setLoading(false);
-        });
-      supabase.from("consumption_hourly").select("*").eq("zone", zone).order("year").order("hour")
-        .then(({ data }) => {
-          setHourly(prev => ({ ...prev, [zone]: data || [] }));
-          count++;
-          if (count === zones.length * 2) setLoading(false);
-        });
+      supabase.from("consumption").select("*").eq("zone", zone).order("year").order("month").then(({ data }) => setMonthly(prev => ({ ...prev, [zone]: data || [] })));
+      supabase.from("consumption_hourly").select("*").eq("zone", zone).order("year").order("hour").then(({ data }) => setHourly(prev => ({ ...prev, [zone]: data || [] })));
     });
   }, []);
-
-  if (loading) return <p style={{ padding: '20px' }}>Henter forbrugsdata...</p>;
-
   return (
     <div>
       {zones.map(zone => (
@@ -426,6 +410,8 @@ function Consumption() {
     </div>
   );
 }
+
+
 function DKHourly() {
   const [area, setArea] = useState("DK1");
   const [days, setDays] = useState(7);
@@ -607,6 +593,7 @@ function GasStorage() {
     </div>
   );
 }
+
 
 function NuclearProduction() {
   const countries = ["Finland", "Frankrig"];
