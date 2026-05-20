@@ -702,7 +702,7 @@ function DanmarkSamlet() {
       {view === "DK2 produktion"        && <DKProduction area="DK2" />}
       {view === "DK produktion samlet"  && <DKProductionCombined />}
       {view === "Timesdata"             && <DKHourly />}
-      {view === "Forbrug DK"            && <ConsumptionDK />}
+      {view === "Forbrug DK" && <DKConsumption area="DK1" />}
     </div>
   );
 }
@@ -1044,6 +1044,7 @@ export default function App() {
         {tab === "Installed capacity" && <InstalledCapacity />}
         {tab === "Kernekraft" && <NuclearProduction />}
         {tab === "Forecast" && <ForecastTab />}
+        {tab === "Forbrug" && <Consumption />}
       </main>
       <style>{`
         :root {
