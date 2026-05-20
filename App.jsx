@@ -40,18 +40,6 @@ function groupByYear(data, valueKey) {
 }
 
 
-function ChartSource({ source }) {
-  if (!source) return null;
-  return (
-    <div style={{ marginTop: '12px', padding: '10px 12px', background: 'var(--fafafa)', borderRadius: '6px', border: '1px solid var(--border)' }}>
-      <p style={{ fontSize: '11px', color: '#888', margin: 0 }}>
-        📡 Datakilde: <strong style={{ color: 'var(--text)' }}>{source}</strong>
-      </p>
-    </div>
-  );
-}
-
-
 function groupHourlyByYear(data) {
   if (!data) return { years: [], byHour: [] };
   const years = [...new Set(data.map(d => d.year))].sort();
@@ -127,12 +115,11 @@ function YearToggleButtons({ years, visibleYears, setVisibleYears, showMedian, s
 }
 
 
-function DKProductionChart({ data, valueKey, title, yLabel, source }) {
+function DKProductionChart({ data, valueKey, title, yLabel }) {
   const { years, byDay } = groupByDayOfYear(data, valueKey);
   const monthTicks = [15, 45, 75, 105, 135, 165, 195, 225, 255, 285, 315, 345];
   const [visibleYears, setVisibleYears] = useState([]);
   useEffect(() => { if (years.length > 0) setVisibleYears(years); }, [years.join(',')]);
-
   return (
     <div className="chart-box">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
@@ -155,24 +142,16 @@ function DKProductionChart({ data, valueKey, title, yLabel, source }) {
           ))}
         </LineChart>
       </ResponsiveContainer>
-      {source && (
-        <div style={{ marginTop: '16px', padding: '12px', background: 'var(--fafafa)', borderRadius: '6px', border: '1px solid var(--border)' }}>
-          <p style={{ fontSize: '11px', color: '#888', margin: 0 }}>
-            📡 Datakilde: <strong style={{ color: 'var(--text)' }}>{source}</strong>
-          </p>
-        </div>
-      )}
     </div>
   );
 }
 
-function YearlyLineChart({ data, valueKey, title, yLabel, source }) {
+function YearlyLineChart({ data, valueKey, title, yLabel }) {
   const currentYear = new Date().getFullYear();
   const { years, byMonth } = groupByYear(data, valueKey);
   const [visibleYears, setVisibleYears] = useState([]);
   const [showMedian, setShowMedian] = useState(true);
   useEffect(() => { if (years.length > 0) setVisibleYears(years); }, [years.join(',')]);
-
   return (
     <div className="chart-box">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
@@ -192,23 +171,15 @@ function YearlyLineChart({ data, valueKey, title, yLabel, source }) {
           {showMedian && <Line type="monotone" dataKey="Median" stroke="#000000" strokeWidth={2} strokeDasharray="6 3" dot={false} connectNulls={true} />}
         </LineChart>
       </ResponsiveContainer>
-      {source && (
-        <div style={{ marginTop: '16px', padding: '12px', background: 'var(--fafafa)', borderRadius: '6px', border: '1px solid var(--border)' }}>
-          <p style={{ fontSize: '11px', color: '#888', margin: 0 }}>
-            📡 Datakilde: <strong style={{ color: 'var(--text)' }}>{source}</strong>
-          </p>
-        </div>
-      )}
     </div>
   );
 }
 
-function HourlyLineChart({ data, title, source }) {
+function HourlyLineChart({ data, title }) {
   const currentYear = new Date().getFullYear();
   const { years, byHour } = groupHourlyByYear(data);
   const [visibleYears, setVisibleYears] = useState([]);
   useEffect(() => { if (years.length > 0) setVisibleYears(years); }, [years.join(',')]);
-
   return (
     <div className="chart-box">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
@@ -227,13 +198,6 @@ function HourlyLineChart({ data, title, source }) {
           ))}
         </LineChart>
       </ResponsiveContainer>
-      {source && (
-        <div style={{ marginTop: '16px', padding: '12px', background: 'var(--fafafa)', borderRadius: '6px', border: '1px solid var(--border)' }}>
-          <p style={{ fontSize: '11px', color: '#888', margin: 0 }}>
-            📡 Datakilde: <strong style={{ color: 'var(--text)' }}>{source}</strong>
-          </p>
-        </div>
-      )}
     </div>
   );
 }
@@ -316,13 +280,27 @@ function DKProduction({ area }) {
   }, [area]);
   return (
     <div>
-      <DKProductionChart data={solar}    valueKey="value_mwh" title={`${area} – Sol produktion (MWh)`}            yLabel="MWh" source="Energidataservice – ProductionConsumptionSettlement" />
-      <DKProductionChart data={offshore} valueKey="value_mwh" title={`${area} – Offshore vind produktion (MWh)`} yLabel="MWh" source="Energidataservice – ProductionConsumptionSettlement" />
-      <DKProductionChart data={onshore}  valueKey="value_mwh" title={`${area} – Onshore vind produktion (MWh)`}  yLabel="MWh" source="Energidataservice – ProductionConsumptionSettlement" />
+      <DKProductionChart data={solar}    valueKey="value_mwh" title={`${area} – Sol produktion (MWh)`}            yLabel="MWh" />
+      <div style={{ marginTop: '-16px', marginBottom: '20px', padding: '10px 12px', background: 'var(--fafafa)', borderRadius: '6px', border: '1px solid var(--border)' }}>
+        <p style={{ fontSize: '11px', color: '#888', margin: 0 }}>
+          📡 Datakilde: <strong style={{ color: 'var(--text)' }}>Energidataservice – ProductionConsumptionSettlement</strong>
+        </p>
+      </div>
+      <DKProductionChart data={offshore} valueKey="value_mwh" title={`${area} – Offshore vind produktion (MWh)`} yLabel="MWh" />
+      <div style={{ marginTop: '-16px', marginBottom: '20px', padding: '10px 12px', background: 'var(--fafafa)', borderRadius: '6px', border: '1px solid var(--border)' }}>
+        <p style={{ fontSize: '11px', color: '#888', margin: 0 }}>
+          📡 Datakilde: <strong style={{ color: 'var(--text)' }}>Energidataservice – ProductionConsumptionSettlement</strong>
+        </p>
+      </div>
+      <DKProductionChart data={onshore}  valueKey="value_mwh" title={`${area} – Onshore vind produktion (MWh)`}  yLabel="MWh" />
+      <div style={{ marginTop: '-16px', marginBottom: '20px', padding: '10px 12px', background: 'var(--fafafa)', borderRadius: '6px', border: '1px solid var(--border)' }}>
+        <p style={{ fontSize: '11px', color: '#888', margin: 0 }}>
+          📡 Datakilde: <strong style={{ color: 'var(--text)' }}>Energidataservice – ProductionConsumptionSettlement</strong>
+        </p>
+      </div>
     </div>
   );
 }
-
 function NuclearProduction() {
   const countries = ["Finland", "Frankrig"];
   const [selected, setSelected] = useState("Finland");
