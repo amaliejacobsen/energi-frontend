@@ -633,11 +633,11 @@ function DanmarkSamlet() {
           <button key={v} className={view === v ? "tab active" : "tab"} onClick={() => setView(v)}>{v}</button>
         ))}
       </div>
-      {view === "DK1 Priser"            && <DKPrices area="DK1" />}
-      {view === "DK1 Produktion"        && <DKProduction area="DK1" />}
-      {view === "DK2 Priser"            && <DKPrices area="DK2" />}
-      {view === "DK2 Produktion"        && <DKProduction area="DK2" />}
-      {view === "DK Produktion Samlet"  && <DKProductionCombined />}
+      {view === "DK1 priser"            && <DKPrices area="DK1" />}
+      {view === "DK1 produktion"        && <DKProduction area="DK1" />}
+      {view === "DK2 priser"            && <DKPrices area="DK2" />}
+      {view === "DK2 produktion"        && <DKProduction area="DK2" />}
+      {view === "DK produktion samlet"  && <DKProductionCombined />}
       {view === "Timesdata"             && <DKHourly />}
       {view === "Forbrug DK"            && <ConsumptionDK />}
     </div>
