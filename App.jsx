@@ -566,14 +566,16 @@ function GasStorage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    let count = 0;
-    areas.forEach(area => {
-      supabase.from("gas_storage").select("*").eq("area", area).order("year").order("month")
-        .then(({ data: d }) => {
-          setData(prev => ({ ...prev, [area]: d || [] }));
-          count++;
-          if (count === areas.length) setLoading(false);
-        });
+    Promise.all(
+      areas.map(area =>
+        supabase.from("gas_storage").select("*").eq("area", area).order("year").order("month")
+          .then(({ data: d }) => ({ area, d: d || [] }))
+      )
+    ).then(results => {
+      const newData = {};
+      results.forEach(({ area, d }) => { newData[area] = d; });
+      setData(newData);
+      setLoading(false);
     });
   }, []);
 
@@ -582,7 +584,8 @@ function GasStorage() {
   return (
     <div>
       {areas.map(area => (
-        <YearlyLineChart key={area} data={data[area] || []} valueKey="full_pct" title={`Gas storage – ${area} (% kapacitet)`} yLabel="%" />
+        <YearlyLineChart key={area} data={data[area] || []} valueKey="full_pct"
+          title={`Gas storage – ${area} (% kapacitet)`} yLabel="%" />
       ))}
     </div>
   );
