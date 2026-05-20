@@ -755,6 +755,7 @@ function HydroForecastChart() {
 }
 
 function HydroForecast() {
+  const [country, setCountry] = useState("Norge");
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -763,6 +764,7 @@ function HydroForecast() {
     supabase
       .from("hydro_weather_forecast")
       .select("*")
+      .eq("country", country)
       .order("date", { ascending: true })
       .then(({ data: fetchedData, error }) => {
         if (error) console.error("Fejl:", error);
@@ -775,7 +777,7 @@ function HydroForecast() {
         setData(formatted);
         setLoading(false);
       });
-  }, []);
+  }, [country]);
 
   if (loading) return <p style={{ padding: '20px' }}>Henter vejrprognose...</p>;
   if (data.length === 0) return <div className="chart-box"><p style={{ color: '#888' }}>Ingen forecast data tilgængelig.</p></div>;
@@ -784,10 +786,15 @@ function HydroForecast() {
 
   return (
     <div>
+      <div className="tab-row">
+        {["Norge", "Sverige"].map(c => (
+          <button key={c} className={country === c ? "tab active" : "tab"} onClick={() => setCountry(c)}>{c}</button>
+        ))}
+      </div>
       <div className="chart-box">
-        <h3>🌧️ Nedbørsprognose – Norske fjelde</h3>
+        <h3>🌧️ Nedbørsprognose – {country}</h3>
         <p style={{ fontSize: '12px', color: '#888', marginBottom: '15px' }}>
-          De seneste 14 dages faktiske nedbør samt de næste 14 dages forecast for centrale nordiske vandreservoirer.
+          De seneste 14 dages faktiske nedbør samt de næste 14 dages forecast.
         </p>
         <ResponsiveContainer width="100%" height={350}>
           <ComposedChart data={data} margin={{ top: 10, right: 30, left: 10, bottom: 10 }}>
