@@ -622,11 +622,10 @@ function GasStorage() {
             </p>
           </div>
         </div>
+      ))}
     </div>
   );
 }
-
-function DKConsumption({ area }) {
 
 function DKConsumption({ area }) {
   const [monthly, setMonthly] = useState([]);
@@ -713,6 +712,8 @@ function DKProductionCombined() {
           </div>
         </>
       )}
+      {view === "DK1" && <DKProduction area="DK1" />}
+      {view === "DK2" && <DKProduction area="DK2" />}
     </div>
   );
 }
