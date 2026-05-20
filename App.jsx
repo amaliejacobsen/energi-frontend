@@ -301,27 +301,13 @@ function DKProduction({ area }) {
   }, [area]);
   return (
     <div>
-      <DKProductionChart data={solar}    valueKey="value_mwh" title={`${area} – Sol produktion (MWh)`}            yLabel="MWh" />
-      <div style={{ marginTop: '-16px', marginBottom: '20px', padding: '10px 12px', background: 'var(--fafafa)', borderRadius: '6px', border: '1px solid var(--border)' }}>
-        <p style={{ fontSize: '11px', color: '#888', margin: 0 }}>
-          📡 Datakilde: <strong style={{ color: 'var(--text)' }}>Energidataservice – ProductionConsumptionSettlement</strong>
-        </p>
-      </div>
-      <DKProductionChart data={offshore} valueKey="value_mwh" title={`${area} – Offshore vind produktion (MWh)`} yLabel="MWh" />
-      <div style={{ marginTop: '-16px', marginBottom: '20px', padding: '10px 12px', background: 'var(--fafafa)', borderRadius: '6px', border: '1px solid var(--border)' }}>
-        <p style={{ fontSize: '11px', color: '#888', margin: 0 }}>
-          📡 Datakilde: <strong style={{ color: 'var(--text)' }}>Energidataservice – ProductionConsumptionSettlement</strong>
-        </p>
-      </div>
-      <DKProductionChart data={onshore}  valueKey="value_mwh" title={`${area} – Onshore vind produktion (MWh)`}  yLabel="MWh" />
-      <div style={{ marginTop: '-16px', marginBottom: '20px', padding: '10px 12px', background: 'var(--fafafa)', borderRadius: '6px', border: '1px solid var(--border)' }}>
-        <p style={{ fontSize: '11px', color: '#888', margin: 0 }}>
-          📡 Datakilde: <strong style={{ color: 'var(--text)' }}>Energidataservice – ProductionConsumptionSettlement</strong>
-        </p>
-      </div>
+      <DKProductionChart data={solar}    valueKey="value_mwh" title={`${area} – Sol produktion (MWh)`}            yLabel="MWh" source="Energidataservice – ProductionConsumptionSettlement" />
+      <DKProductionChart data={offshore} valueKey="value_mwh" title={`${area} – Offshore vind produktion (MWh)`} yLabel="MWh" source="Energidataservice – ProductionConsumptionSettlement" />
+      <DKProductionChart data={onshore}  valueKey="value_mwh" title={`${area} – Onshore vind produktion (MWh)`}  yLabel="MWh" source="Energidataservice – ProductionConsumptionSettlement" />
     </div>
   );
 }
+
 function NuclearProduction() {
   const countries = ["Finland", "Frankrig"];
   const [selected, setSelected] = useState("Finland");
