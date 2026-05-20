@@ -643,7 +643,12 @@ function DanmarkSamlet() {
       {view === "DK2 produktion"        && <DKProduction area="DK2" />}
       {view === "DK produktion samlet"  && <DKProductionCombined />}
       {view === "Timesdata"             && <DKHourly />}
-      {view === "Forbrug DK" && <DKConsumption area="DK1" />}
+      {view === "Forbrug DK" && (
+        <div>
+          <DKConsumption area="DK1" />
+          <DKConsumption area="DK2" />
+        </div>
+      )}
     </div>
   );
 }
