@@ -172,7 +172,6 @@ function YearlyLineChart({ data, valueKey, title, yLabel, source }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
         <h3>{title}</h3>
         <YearToggleButtons years={years} visibleYears={visibleYears} setVisibleYears={setVisibleYears} showMedian={showMedian} setShowMedian={setShowMedian} />
-        <ChartSource source={source} />
       </div>
       <ResponsiveContainer width="100%" height={320}>
         <LineChart data={byMonth} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
@@ -187,7 +186,13 @@ function YearlyLineChart({ data, valueKey, title, yLabel, source }) {
           {showMedian && <Line type="monotone" dataKey="Median" stroke="#000000" strokeWidth={2} strokeDasharray="6 3" dot={false} connectNulls={true} />}
         </LineChart>
       </ResponsiveContainer>
-      <ChartSource source={source} />
+      {source && (
+        <div style={{ marginTop: '16px', padding: '12px', background: 'var(--fafafa)', borderRadius: '6px', border: '1px solid var(--border)' }}>
+          <p style={{ fontSize: '11px', color: '#888', margin: 0 }}>
+            📡 Datakilde: <strong style={{ color: 'var(--text)' }}>{source}</strong>
+          </p>
+        </div>
+      )}
     </div>
   );
 }
