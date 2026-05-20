@@ -560,6 +560,34 @@ function DKHourly() {
   );
 }
 
+function GasStorage() {
+  const areas = ["EU", "Tyskland", "Holland"];
+  const [data, setData] = useState({});
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let count = 0;
+    areas.forEach(area => {
+      supabase.from("gas_storage").select("*").eq("area", area).order("year").order("month")
+        .then(({ data: d }) => {
+          setData(prev => ({ ...prev, [area]: d || [] }));
+          count++;
+          if (count === areas.length) setLoading(false);
+        });
+    });
+  }, []);
+
+  if (loading) return <p style={{ padding: '20px' }}>Henter gas storage data...</p>;
+
+  return (
+    <div>
+      {areas.map(area => (
+        <YearlyLineChart key={area} data={data[area] || []} valueKey="full_pct" title={`Gas storage – ${area} (% kapacitet)`} yLabel="%" />
+      ))}
+    </div>
+  );
+}
+
 function DKConsumption({ area }) {
   const [monthly, setMonthly] = useState([]);
   const [hourly, setHourly] = useState([]);
@@ -692,6 +720,25 @@ function HydroSection({ country, zones }) {
         ))}
       </div>
       <YearlyLineChart data={data} valueKey="value_mwh" title={`${country} – ${selected} Hydro (MWh)`} yLabel="MWh" />
+    </div>
+  );
+}
+
+
+function Hydro() {
+  const [country, setCountry] = useState("Norge");
+  const zones = {
+    "Norge": ["NO1","NO2","NO3","NO4","NO5"],
+    "Sverige": ["SE1","SE2","SE3","SE4"],
+  };
+  return (
+    <div>
+      <div className="tab-row">
+        {["Norge","Sverige"].map(c => (
+          <button key={c} className={country === c ? "tab active" : "tab"} onClick={() => setCountry(c)}>{c}</button>
+        ))}
+      </div>
+      <HydroSection country={country} zones={zones[country]} />
     </div>
   );
 }
