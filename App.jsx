@@ -878,6 +878,20 @@ function TemperatureForecast() {
   );
 }
 
+function ForecastTab() {
+  const [view, setView] = useState("Nedbør");
+  return (
+    <div>
+      <div className="tab-row">
+        {["🌧️ Nedbør", "🌡️ Temperatur"].map(v => (
+          <button key={v} className={view === v ? "tab active" : "tab"} onClick={() => setView(v)}>{v}</button>
+        ))}
+      </div>
+      {view === "🌧️ Nedbør"     && <HydroForecast />}
+      {view === "🌡️ Temperatur" && <TemperatureForecast />}
+    </div>
+  );
+}
 const TABS = ["Danmark","Hydro","Forecast","Gas Storage","Installed Capacity","Kernekraft","Forbrug"];
 
 export default function App() {
@@ -894,12 +908,7 @@ export default function App() {
         {tab === "Gas Storage" && <GasStorage />}
         {tab === "Installed Capacity" && <InstalledCapacity />}
         {tab === "Kernekraft" && <NuclearProduction />}
-        {tab === "Forecast" && (
-  <div>
-    <HydroForecast />
-    <TemperatureForecast />
-  </div>
-)}
+        {tab === "Forecast" && <ForecastTab />}
       </main>
       <style>{`
         :root {
