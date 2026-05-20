@@ -816,6 +816,68 @@ function HydroForecast() {
   );
 }
 
+function TemperatureForecast() {
+  const [country, setCountry] = useState("Danmark");
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    supabase
+      .from("temperature_forecast")
+      .select("*")
+      .eq("country", country)
+      .order("date", { ascending: true })
+      .then(({ data: fetchedData, error }) => {
+        if (error) console.error("Fejl:", error);
+        const formatted = (fetchedData || []).map(d => ({
+          ...d,
+          displayDate: d.date ? d.date.split('-').slice(1).reverse().join('/') : '',
+          Historisk: (d.data_type === "historisk" || d.data_type === "i dag") ? d.temperature_c : null,
+          Prognose:  (d.data_type === "forecast"  || d.data_type === "i dag") ? d.temperature_c : null,
+        }));
+        setData(formatted);
+        setLoading(false);
+      });
+  }, [country]);
+
+  if (loading) return <p style={{ padding: '20px' }}>Henter temperaturprognose...</p>;
+  if (data.length === 0) return <div className="chart-box"><p style={{ color: '#888' }}>Ingen temperaturdata tilgængelig.</p></div>;
+
+  const todayDisplay = data.find(d => d.data_type === "i dag")?.displayDate;
+
+  return (
+    <div>
+      <div className="tab-row">
+        {["Danmark", "Norge", "Sverige", "Tyskland"].map(c => (
+          <button key={c} className={country === c ? "tab active" : "tab"} onClick={() => setCountry(c)}>{c}</button>
+        ))}
+      </div>
+      <div className="chart-box">
+        <h3>🌡️ Temperaturprognose – {country}</h3>
+        <p style={{ fontSize: '12px', color: '#888', marginBottom: '15px' }}>
+          De seneste 14 dages faktiske temperatur samt de næste 14 dages forecast.
+        </p>
+        <ResponsiveContainer width="100%" height={350}>
+          <ComposedChart data={data} margin={{ top: 10, right: 30, left: 10, bottom: 10 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+            <XAxis dataKey="displayDate" tick={{ fontSize: 11 }} />
+            <YAxis tick={{ fontSize: 12 }} label={{ value: "Temperatur (°C)", angle: -90, position: "insideLeft", fontSize: 12 }} />
+            <Tooltip formatter={(value) => value !== null ? [`${Number(value).toFixed(1)} °C`] : [null]} />
+            <Legend />
+            {todayDisplay && (
+              <ReferenceLine x={todayDisplay} stroke="#E74C3C" strokeDasharray="4 4"
+                label={{ value: "I DAG", position: "top", fill: "#E74C3C", fontSize: 11 }} />
+            )}
+            <Line type="monotone" dataKey="Historisk" stroke="#2C3E50" strokeWidth={3} dot={{ r: 3 }} connectNulls={false} />
+            <Line type="monotone" dataKey="Prognose"  stroke="#E67E22" strokeWidth={3} strokeDasharray="5 5" dot={{ r: 3 }} connectNulls={false} />
+          </ComposedChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+}
+
 const TABS = ["Danmark","Hydro","Forecast","Gas Storage","Installed Capacity","Kernekraft","Forbrug"];
 
 export default function App() {
