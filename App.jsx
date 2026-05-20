@@ -138,7 +138,6 @@ function DKProductionChart({ data, valueKey, title, yLabel, source }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
         <h3 style={{ margin: 0 }}>{title}</h3>
         <YearToggleButtons years={years} visibleYears={visibleYears} setVisibleYears={setVisibleYears} />
-        <ChartSource source={source} />
       </div>
       <ResponsiveContainer width="100%" height={320}>
         <LineChart data={byDay} margin={{ bottom: 20 }}>
@@ -156,6 +155,7 @@ function DKProductionChart({ data, valueKey, title, yLabel, source }) {
           ))}
         </LineChart>
       </ResponsiveContainer>
+      <ChartSource source={source} />
     </div>
   );
 }
@@ -203,7 +203,6 @@ function HourlyLineChart({ data, title, source }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
         <h3 style={{ margin: 0 }}>{title}</h3>
         <YearToggleButtons years={years} visibleYears={visibleYears} setVisibleYears={setVisibleYears} />
-        <ChartSource source={source} />
       </div>
       <ResponsiveContainer width="100%" height={320}>
         <LineChart data={byHour}>
@@ -217,6 +216,7 @@ function HourlyLineChart({ data, title, source }) {
           ))}
         </LineChart>
       </ResponsiveContainer>
+      <ChartSource source={source} />
       <ChartSource source={source} />
     </div>
   );
@@ -603,7 +603,6 @@ function GasStorage() {
     <div>
       {areas.map(area => (
         <YearlyLineChart key={area} data={data[area] || []} valueKey="full_pct" title={`Gas storage – ${area} (% kapacitet)`} yLabel="%" source="AGSI – Gas Storage Europe (agsi.gie.eu)" />
-          title={`Gas storage – ${area} (% kapacitet)`} yLabel="%" />
       ))}
     </div>
   );
