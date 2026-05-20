@@ -885,17 +885,17 @@ function TemperatureForecast() {
       source: "Open-Meteo Archive API + Forecast API"
     },
     "Norge": {
-      points: ["Vestlandet (60.5°N, 7.0°E)", "Østlandet (61.5°N, 9.5°E)", "Midt-Norge (63.0°N, 9.0°E)", "Nord-Norge (67.0°N, 16.0°E)"],
-      weights: ["30%", "30%", "25%", "15%"],
+      points: ["Oslo (59.9°N, 10.7°E)"],
+      weights: ["100%"],
       source: "Open-Meteo Archive API + Forecast API"
     },
     "Sverige": {
-      points: ["Norrland nord (66.0°N, 17.0°E)", "Norrland syd (63.5°N, 14.0°E)", "Dalarna (61.0°N, 13.5°E)"],
-      weights: ["35%", "35%", "30%"],
+      points: ["Stockholm (59.3°N, 18.1°E)"],
+      weights: ["100%"],
       source: "Open-Meteo Archive API + Forecast API"
     },
     "Tyskland": {
-      points: ["Tyskland (51.5°N, 10.0°E)"],
+      points: ["Frankfurt (50.1°N, 8.7°E)"],
       weights: ["100%"],
       source: "Open-Meteo Archive API + Forecast API"
     }
