@@ -576,33 +576,6 @@ function DKConsumption({ area }) {
 }
 
 
-function NuclearProduction() {
-  const countries = ["Finland", "Frankrig"];
-  const [selected, setSelected] = useState("Finland");
-  const [data, setData] = useState([]);
-
-  useEffect(() => {
-    supabase.from("nuclear_production")
-      .select("*")
-      .eq("country", selected)
-      .order("year")
-      .order("month")
-      .then(({ data }) => setData(data || []));
-  }, [selected]);
-
-  return (
-    <div>
-      <div className="tab-row">
-        {countries.map(c => (
-          <button key={c} className={selected === c ? "tab active" : "tab"} onClick={() => setSelected(c)}>{c}</button>
-        ))}
-      </div>
-      <YearlyLineChart data={data} valueKey="value_mwh" title={`Kernekraft produktion – ${selected} (MWh)`} yLabel="MWh" />
-    </div>
-  );
-}
-
-
 function DKProductionCombined() {
   const [view, setView] = useState("Samlet");
   const areas = ["DK1", "DK2"];
