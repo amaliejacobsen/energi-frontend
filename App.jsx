@@ -894,7 +894,12 @@ export default function App() {
         {tab === "Gas Storage" && <GasStorage />}
         {tab === "Installed Capacity" && <InstalledCapacity />}
         {tab === "Kernekraft" && <NuclearProduction />}
-        {tab === "Forecast" && <HydroForecast />}
+        {tab === "Forecast" && (
+  <div>
+    <HydroForecast />
+    <TemperatureForecast />
+  </div>
+)}
       </main>
       <style>{`
         :root {
