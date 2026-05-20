@@ -784,6 +784,21 @@ function HydroForecast() {
 
   const todayDisplay = data.find(d => d.data_type === "i dag")?.displayDate;
 
+  const metadataByCountry = {
+    "Norge": {
+      points: ["Vestlandet (60.5°N, 7.0°E)", "Østlandet (61.5°N, 9.5°E)", "Midt-Norge (63.0°N, 9.0°E)", "Nord-Norge (67.0°N, 16.0°E)"],
+      weights: ["30%", "30%", "25%", "15%"],
+      source: "Open-Meteo Archive API + Forecast API"
+    },
+    "Sverige": {
+      points: ["Norrland nord (66.0°N, 17.0°E)", "Norrland syd (63.5°N, 14.0°E)", "Dalarna (61.0°N, 13.5°E)"],
+      weights: ["35%", "35%", "30%"],
+      source: "Open-Meteo Archive API + Forecast API"
+    }
+  };
+
+  const meta = metadataByCountry[country];
+
   return (
     <div>
       <div className="tab-row">
@@ -811,6 +826,23 @@ function HydroForecast() {
             <Line type="monotone" dataKey="Prognose" stroke="#3498DB" strokeWidth={3} strokeDasharray="5 5" dot={{ r: 3 }} connectNulls={false} />
           </ComposedChart>
         </ResponsiveContainer>
+
+        {/* Metadata footer */}
+        <div style={{ marginTop: '16px', padding: '12px', background: 'var(--fafafa)', borderRadius: '6px', border: '1px solid var(--border)' }}>
+          <p style={{ fontSize: '11px', color: '#888', marginBottom: '6px' }}>
+            <strong style={{ color: 'var(--text)' }}>Målepunkter & vægte:</strong>
+          </p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '8px' }}>
+            {meta.points.map((point, i) => (
+              <span key={i} style={{ fontSize: '11px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '4px', padding: '2px 8px', color: 'var(--text)' }}>
+                {point} — {meta.weights[i]}
+              </span>
+            ))}
+          </div>
+          <p style={{ fontSize: '11px', color: '#888' }}>
+            📡 Datakilde: <strong style={{ color: 'var(--text)' }}>{meta.source}</strong>
+          </p>
+        </div>
       </div>
     </div>
   );
@@ -846,6 +878,31 @@ function TemperatureForecast() {
 
   const todayDisplay = data.find(d => d.data_type === "i dag")?.displayDate;
 
+  const metadataByCountry = {
+    "Danmark": {
+      points: ["Danmark (56.0°N, 10.0°E)"],
+      weights: ["100%"],
+      source: "Open-Meteo Archive API + Forecast API"
+    },
+    "Norge": {
+      points: ["Vestlandet (60.5°N, 7.0°E)", "Østlandet (61.5°N, 9.5°E)", "Midt-Norge (63.0°N, 9.0°E)", "Nord-Norge (67.0°N, 16.0°E)"],
+      weights: ["30%", "30%", "25%", "15%"],
+      source: "Open-Meteo Archive API + Forecast API"
+    },
+    "Sverige": {
+      points: ["Norrland nord (66.0°N, 17.0°E)", "Norrland syd (63.5°N, 14.0°E)", "Dalarna (61.0°N, 13.5°E)"],
+      weights: ["35%", "35%", "30%"],
+      source: "Open-Meteo Archive API + Forecast API"
+    },
+    "Tyskland": {
+      points: ["Tyskland (51.5°N, 10.0°E)"],
+      weights: ["100%"],
+      source: "Open-Meteo Archive API + Forecast API"
+    }
+  };
+
+  const meta = metadataByCountry[country];
+
   return (
     <div>
       <div className="tab-row">
@@ -873,6 +930,21 @@ function TemperatureForecast() {
             <Line type="monotone" dataKey="Prognose"  stroke="#E67E22" strokeWidth={3} strokeDasharray="5 5" dot={{ r: 3 }} connectNulls={false} />
           </ComposedChart>
         </ResponsiveContainer>
+        <div style={{ marginTop: '16px', padding: '12px', background: 'var(--fafafa)', borderRadius: '6px', border: '1px solid var(--border)' }}>
+          <p style={{ fontSize: '11px', color: '#888', marginBottom: '6px' }}>
+            <strong style={{ color: 'var(--text)' }}>Målepunkter & vægte:</strong>
+          </p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '8px' }}>
+            {meta.points.map((point, i) => (
+              <span key={i} style={{ fontSize: '11px', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '4px', padding: '2px 8px', color: 'var(--text)' }}>
+                {point} — {meta.weights[i]}
+              </span>
+            ))}
+          </div>
+          <p style={{ fontSize: '11px', color: '#888' }}>
+            📡 Datakilde: <strong style={{ color: 'var(--text)' }}>{meta.source}</strong>
+          </p>
+        </div>
       </div>
     </div>
   );
