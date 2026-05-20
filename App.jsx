@@ -707,6 +707,49 @@ function DanmarkSamlet() {
   );
 }
 
+function HydroSection({ country, zones }) {
+  const [selected, setSelected] = useState("Total");
+  const [data, setData] = useState([]);
+
+  useEffect(() => {
+    if (selected === "Total") {
+      Promise.all(
+        zones.map(z =>
+          supabase.from("hydro_production").select("*")
+            .eq("country", country).eq("zone", z)
+            .order("year").order("month")
+            .then(({ data }) => data || [])
+        )
+      ).then(allZoneData => {
+        const combined = {};
+        allZoneData.flat().forEach(d => {
+          const key = `${d.year}-${d.month}`;
+          if (!combined[key]) combined[key] = { ...d };
+          else combined[key].value_mwh += d.value_mwh;
+        });
+        setData(Object.values(combined));
+      });
+    } else {
+      supabase.from("hydro_production").select("*")
+        .eq("country", country).eq("zone", selected)
+        .order("year").order("month")
+        .then(({ data }) => setData(data || []));
+    }
+  }, [country, selected]);
+
+  return (
+    <div>
+      <div className="tab-row">
+        <button className={selected === "Total" ? "tab active" : "tab"} onClick={() => setSelected("Total")}>Total</button>
+        {zones.map(z => (
+          <button key={z} className={selected === z ? "tab active" : "tab"} onClick={() => setSelected(z)}>{z}</button>
+        ))}
+      </div>
+      <YearlyLineChart data={data} valueKey="value_mwh" title={`${country} – ${selected} Hydro (MWh)`} yLabel="MWh" />
+    </div>
+  );
+}
+
 function Hydro() {
   const [country, setCountry] = useState("Norge");
   const zones = {
