@@ -578,13 +578,25 @@ function DKConsumption({ area }) {
 function GasStorage() {
   const areas = ["EU", "Tyskland", "Holland"];
   const [data, setData] = useState({});
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
+
   useEffect(() => {
+    let count = 0;
     areas.forEach(area => {
-      supabase.from("gas_storage").select("*").eq("area", area).order("year").order("month").then(({ data: d }) => {
-        setData(prev => ({ ...prev, [area]: d || [] }));
-      });
+      supabase.from("gas_storage").select("*").eq("area", area).order("year").order("month")
+        .then(({ data: d, error: e }) => {
+          if (e) setError(e.message);
+          setData(prev => ({ ...prev, [area]: d || [] }));
+          count++;
+          if (count === areas.length) setLoading(false);
+        });
     });
   }, []);
+
+  if (loading) return <p style={{ padding: '20px' }}>Henter gas storage data...</p>;
+  if (error) return <p style={{ padding: '20px', color: 'red' }}>Fejl: {error}</p>;
+
   return (
     <div>
       {areas.map(area => (
