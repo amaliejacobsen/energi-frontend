@@ -39,7 +39,6 @@ function groupByYear(data, valueKey) {
 }
 
 
-
 function groupHourlyByYear(data) {
   if (!data) return { years: [], byHour: [] };
   const years = [...new Set(data.map(d => d.year))].sort();
@@ -274,68 +273,6 @@ function DKProduction({ area }) {
       <DKProductionChart data={solar}    valueKey="value_mwh" title={`${area} – Sol produktion (MWh)`}            yLabel="MWh" />
       <DKProductionChart data={offshore} valueKey="value_mwh" title={`${area} – Offshore vind produktion (MWh)`} yLabel="MWh" />
       <DKProductionChart data={onshore}  valueKey="value_mwh" title={`${area} – Onshore vind produktion (MWh)`}  yLabel="MWh" />
-    </div>
-  );
-}
-
-function HydroSection({ country, zones }) {
-  const [selected, setSelected] = useState("Total");
-  const [data, setData] = useState([]);
-
-  useEffect(() => {
-    if (selected === "Total") {
-      Promise.all(
-        zones.map(z =>
-          supabase.from("hydro_production").select("*")
-            .eq("country", country).eq("zone", z)
-            .order("year").order("month")
-            .then(({ data }) => data || [])
-        )
-      ).then(allZoneData => {
-        const combined = {};
-        allZoneData.flat().forEach(d => {
-          const key = `${d.year}-${d.month}`;
-          if (!combined[key]) combined[key] = { ...d };
-          else combined[key].value_mwh += d.value_mwh;
-        });
-        setData(Object.values(combined));
-      });
-    } else {
-      supabase.from("hydro_production").select("*")
-        .eq("country", country).eq("zone", selected)
-        .order("year").order("month")
-        .then(({ data }) => setData(data || []));
-    }
-  }, [country, selected]);
-
-  return (
-    <div>
-      <div className="tab-row">
-        <button className={selected === "Total" ? "tab active" : "tab"} onClick={() => setSelected("Total")}>Total</button>
-        {zones.map(z => (
-          <button key={z} className={selected === z ? "tab active" : "tab"} onClick={() => setSelected(z)}>{z}</button>
-        ))}
-      </div>
-      <YearlyLineChart data={data} valueKey="value_mwh" title={`${country} – ${selected} Hydro (MWh)`} yLabel="MWh" />
-    </div>
-  );
-}
-
-function GasStorage() {
-  const areas = ["EU", "Tyskland", "Holland"];
-  const [data, setData] = useState({});
-  useEffect(() => {
-    areas.forEach(area => {
-      supabase.from("gas_storage").select("*").eq("area", area).order("year").order("month").then(({ data: d }) => {
-        setData(prev => ({ ...prev, [area]: d || [] }));
-      });
-    });
-  }, []);
-  return (
-    <div>
-      {areas.map(area => (
-        <YearlyLineChart key={area} data={data[area] || []} valueKey="full_pct" title={`Gas storage – ${area} (% kapacitet)`} yLabel="%" />
-      ))}
     </div>
   );
 }
@@ -817,7 +754,62 @@ function HydroForecastChart() {
   );
 }
 
-const TABS = ["Danmark","Hydro","Gas Storage","Installed Capacity","Kernekraft"];
+function HydroForecast() {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    supabase
+      .from("hydro_weather_forecast")
+      .select("*")
+      .order("date", { ascending: true })
+      .then(({ data: fetchedData, error }) => {
+        if (error) console.error("Fejl:", error);
+        const formatted = (fetchedData || []).map(d => ({
+          ...d,
+          displayDate: d.date ? d.date.split('-').slice(1).reverse().join('/') : '',
+          Historisk: (d.data_type === "historisk" || d.data_type === "i dag") ? d.precipitation_mm : null,
+          Prognose: (d.data_type === "forecast" || d.data_type === "i dag") ? d.precipitation_mm : null,
+        }));
+        setData(formatted);
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) return <p style={{ padding: '20px' }}>Henter vejrprognose...</p>;
+  if (data.length === 0) return <div className="chart-box"><p style={{ color: '#888' }}>Ingen forecast data tilgængelig.</p></div>;
+
+  const todayDisplay = data.find(d => d.data_type === "i dag")?.displayDate;
+
+  return (
+    <div>
+      <div className="chart-box">
+        <h3>🌧️ Nedbørsprognose – Norske fjelde</h3>
+        <p style={{ fontSize: '12px', color: '#888', marginBottom: '15px' }}>
+          De seneste 14 dages faktiske nedbør samt de næste 14 dages forecast for centrale nordiske vandreservoirer.
+        </p>
+        <ResponsiveContainer width="100%" height={350}>
+          <ComposedChart data={data} margin={{ top: 10, right: 30, left: 10, bottom: 10 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+            <XAxis dataKey="displayDate" tick={{ fontSize: 11 }} />
+            <YAxis tick={{ fontSize: 12 }} label={{ value: "Nedbør (mm)", angle: -90, position: "insideLeft", fontSize: 12 }} />
+            <Tooltip formatter={(value) => value !== null ? [`${Number(value).toFixed(1)} mm`] : [null]} />
+            <Legend />
+            {todayDisplay && (
+              <ReferenceLine x={todayDisplay} stroke="#E74C3C" strokeDasharray="4 4"
+                label={{ value: "I DAG", position: "top", fill: "#E74C3C", fontSize: 11 }} />
+            )}
+            <Line type="monotone" dataKey="Historisk" stroke="#2C3E50" strokeWidth={3} dot={{ r: 3 }} connectNulls={false} />
+            <Line type="monotone" dataKey="Prognose" stroke="#3498DB" strokeWidth={3} strokeDasharray="5 5" dot={{ r: 3 }} connectNulls={false} />
+          </ComposedChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+}
+
+const TABS = ["Danmark","Hydro","Forecast","Gas Storage","Installed Capacity","Kernekraft","Forbrug"];
 
 export default function App() {
   const [tab, setTab] = useState(TABS[0]);
@@ -833,6 +825,7 @@ export default function App() {
         {tab === "Gas Storage" && <GasStorage />}
         {tab === "Installed Capacity" && <InstalledCapacity />}
         {tab === "Kernekraft" && <NuclearProduction />}
+        {tab === "Forecast" && <HydroForecast />}
       </main>
       <style>{`
         :root {
