@@ -155,7 +155,13 @@ function DKProductionChart({ data, valueKey, title, yLabel, source }) {
           ))}
         </LineChart>
       </ResponsiveContainer>
-      <ChartSource source={source} />
+      {source && (
+        <div style={{ marginTop: '16px', padding: '12px', background: 'var(--fafafa)', borderRadius: '6px', border: '1px solid var(--border)' }}>
+          <p style={{ fontSize: '11px', color: '#888', margin: 0 }}>
+            📡 Datakilde: <strong style={{ color: 'var(--text)' }}>{source}</strong>
+          </p>
+        </div>
+      )}
     </div>
   );
 }
@@ -221,8 +227,13 @@ function HourlyLineChart({ data, title, source }) {
           ))}
         </LineChart>
       </ResponsiveContainer>
-      <ChartSource source={source} />
-      <ChartSource source={source} />
+      {source && (
+        <div style={{ marginTop: '16px', padding: '12px', background: 'var(--fafafa)', borderRadius: '6px', border: '1px solid var(--border)' }}>
+          <p style={{ fontSize: '11px', color: '#888', margin: 0 }}>
+            📡 Datakilde: <strong style={{ color: 'var(--text)' }}>{source}</strong>
+          </p>
+        </div>
+      )}
     </div>
   );
 }
