@@ -892,7 +892,7 @@ function ForecastTab() {
     </div>
   );
 }
-const TABS = ["Danmark","Hydro","Forecast","Gas Storage","Installed Capacity","Kernekraft","Forbrug"];
+const TABS = ["Danmark","Hydro","Forecast","Gas storage","Installed capacity","Kernekraft","Forbrug"];
 
 export default function App() {
   const [tab, setTab] = useState(TABS[0]);
@@ -905,8 +905,8 @@ export default function App() {
       <main>
         {tab === "Danmark" && <DanmarkSamlet />}
         {tab === "Hydro" && <Hydro />}
-        {tab === "Gas Storage" && <GasStorage />}
-        {tab === "Installed Capacity" && <InstalledCapacity />}
+        {tab === "Gas storage" && <GasStorage />}
+        {tab === "Installed capacity" && <InstalledCapacity />}
         {tab === "Kernekraft" && <NuclearProduction />}
         {tab === "Forecast" && <ForecastTab />}
       </main>
