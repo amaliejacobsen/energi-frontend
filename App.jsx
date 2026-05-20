@@ -623,7 +623,7 @@ function DKProductionCombined() {
 }
 
 function DanmarkSamlet() {
-  const [view, setView] = useState("DK1 Priser");
+  const [view, setView] = useState("DK1 priser");
   const views = ["DK1 priser", "DK2 priser", "DK produktion samlet", "Timesdata", "Forbrug DK"];
 
   return (
