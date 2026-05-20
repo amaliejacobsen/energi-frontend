@@ -622,9 +622,11 @@ function GasStorage() {
             </p>
           </div>
         </div>
-      ))}
     </div>
   );
+}
+
+function DKConsumption({ area }) {
 
 function DKConsumption({ area }) {
   const [monthly, setMonthly] = useState([]);
@@ -711,6 +713,9 @@ function DKProductionCombined() {
           </div>
         </>
       )}
+    </div>
+  );
+}
 
 function DanmarkSamlet() {
   const [view, setView] = useState("DK1 priser");
