@@ -115,7 +115,7 @@ function YearToggleButtons({ years, visibleYears, setVisibleYears, showMedian, s
 }
 
 
-function DKProductionChart({ data, valueKey, title, yLabel }) {
+function DKProductionChart({ data, valueKey, title, yLabel, source }) {
   const { years, byDay } = groupByDayOfYear(data, valueKey);
   const monthTicks = [15, 45, 75, 105, 135, 165, 195, 225, 255, 285, 315, 345];
   const [visibleYears, setVisibleYears] = useState([]);
@@ -142,11 +142,18 @@ function DKProductionChart({ data, valueKey, title, yLabel }) {
           ))}
         </LineChart>
       </ResponsiveContainer>
+      {source && (
+        <div style={{ marginTop: '16px', padding: '12px', background: 'var(--fafafa)', borderRadius: '6px', border: '1px solid var(--border)' }}>
+          <p style={{ fontSize: '11px', color: '#888', margin: 0 }}>
+            📡 Datakilde: <strong style={{ color: 'var(--text)' }}>{source}</strong>
+          </p>
+        </div>
+      )}
     </div>
   );
 }
 
-function YearlyLineChart({ data, valueKey, title, yLabel }) {
+function YearlyLineChart({ data, valueKey, title, yLabel, source }) {
   const currentYear = new Date().getFullYear();
   const { years, byMonth } = groupByYear(data, valueKey);
   const [visibleYears, setVisibleYears] = useState([]);
@@ -171,11 +178,18 @@ function YearlyLineChart({ data, valueKey, title, yLabel }) {
           {showMedian && <Line type="monotone" dataKey="Median" stroke="#000000" strokeWidth={2} strokeDasharray="6 3" dot={false} connectNulls={true} />}
         </LineChart>
       </ResponsiveContainer>
+      {source && (
+        <div style={{ marginTop: '16px', padding: '12px', background: 'var(--fafafa)', borderRadius: '6px', border: '1px solid var(--border)' }}>
+          <p style={{ fontSize: '11px', color: '#888', margin: 0 }}>
+            📡 Datakilde: <strong style={{ color: 'var(--text)' }}>{source}</strong>
+          </p>
+        </div>
+      )}
     </div>
   );
 }
 
-function HourlyLineChart({ data, title }) {
+function HourlyLineChart({ data, title, source }) {
   const currentYear = new Date().getFullYear();
   const { years, byHour } = groupHourlyByYear(data);
   const [visibleYears, setVisibleYears] = useState([]);
@@ -198,6 +212,13 @@ function HourlyLineChart({ data, title }) {
           ))}
         </LineChart>
       </ResponsiveContainer>
+      {source && (
+        <div style={{ marginTop: '16px', padding: '12px', background: 'var(--fafafa)', borderRadius: '6px', border: '1px solid var(--border)' }}>
+          <p style={{ fontSize: '11px', color: '#888', margin: 0 }}>
+            📡 Datakilde: <strong style={{ color: 'var(--text)' }}>{source}</strong>
+          </p>
+        </div>
+      )}
     </div>
   );
 }
