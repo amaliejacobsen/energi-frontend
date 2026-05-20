@@ -783,26 +783,7 @@ function HydroSection({ country, zones }) {
           <button key={z} className={selected === z ? "tab active" : "tab"} onClick={() => setSelected(z)}>{z}</button>
         ))}
       </div>
-      <YearlyLineChart data={data} valueKey="value_mwh" title={`${country} – ${selected} Hydro (MWh)`} yLabel="MWh" source="ENTSO-E Transparency Platform – A75 Actual Generation" />
-    </div>
-  );
-}
-
-
-function Hydro() {
-  const [country, setCountry] = useState("Norge");
-  const zones = {
-    "Norge": ["NO1","NO2","NO3","NO4","NO5"],
-    "Sverige": ["SE1","SE2","SE3","SE4"],
-  };
-  return (
-    <div>
-      <div className="tab-row">
-        {["Norge","Sverige"].map(c => (
-          <button key={c} className={country === c ? "tab active" : "tab"} onClick={() => setCountry(c)}>{c}</button>
-        ))}
-      </div>
-      <HydroSection country={country} zones={zones[country]} />
+      <YearlyLineChart data={data} valueKey="value_mwh" title={`${country} – ${selected} Hydro (MWh)`} yLabel="MWh" />
     </div>
   );
 }
