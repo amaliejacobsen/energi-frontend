@@ -718,23 +718,6 @@ function HydroSection({ country, zones }) {
   );
 }
 
-function Hydro() {
-  const [country, setCountry] = useState("Norge");
-  const zones = {
-    "Norge": ["NO1","NO2","NO3","NO4","NO5"],
-    "Sverige": ["SE1","SE2","SE3","SE4"],
-  };
-  return (
-    <div>
-      <div className="tab-row">
-        {["Norge","Sverige"].map(c => (
-          <button key={c} className={country === c ? "tab active" : "tab"} onClick={() => setCountry(c)}>{c}</button>
-        ))}
-      </div>
-      <HydroSection country={country} zones={zones[country]} />
-    </div>
-  );
-}
 
 function HydroForecastChart() {
   const [data, setData] = useState([]);
