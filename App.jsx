@@ -187,6 +187,7 @@ function YearlyLineChart({ data, valueKey, title, yLabel, source }) {
           {showMedian && <Line type="monotone" dataKey="Median" stroke="#000000" strokeWidth={2} strokeDasharray="6 3" dot={false} connectNulls={true} />}
         </LineChart>
       </ResponsiveContainer>
+      <ChartSource source={source} />
     </div>
   );
 }
@@ -216,6 +217,7 @@ function HourlyLineChart({ data, title, source }) {
           ))}
         </LineChart>
       </ResponsiveContainer>
+      <ChartSource source={source} />
     </div>
   );
 }
