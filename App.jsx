@@ -829,7 +829,7 @@ function TemperatureForecast() {
       .eq("country", country)
       .order("date", { ascending: true })
       .then(({ data: fetchedData, error }) => {
-        console.log("Land:", country, "Rows:", fetchedData?.length, "Data:", fetchedData, "Error:", error); // ← tilføj
+        console.log("Land:", country, "Rows:", fetchedData?.length, "Data:", fetchedData, "Error:", error);
         if (error) console.error("Fejl:", error);
         const formatted = (fetchedData || []).map(d => ({
           ...d,
