@@ -113,6 +113,7 @@ function YearToggleButtons({ years, visibleYears, setVisibleYears, showMedian, s
   );
 }
 
+
 function DKProductionChart({ data, valueKey, title, yLabel }) {
   const { years, byDay } = groupByDayOfYear(data, valueKey);
   const monthTicks = [15, 45, 75, 105, 135, 165, 195, 225, 255, 285, 315, 345];
@@ -571,6 +572,52 @@ function DKConsumption({ area }) {
     </div>
   );
 }
+
+function GasStorage() {
+  const areas = ["EU", "Tyskland", "Holland"];
+  const [data, setData] = useState({});
+  useEffect(() => {
+    areas.forEach(area => {
+      supabase.from("gas_storage").select("*").eq("area", area).order("year").order("month").then(({ data: d }) => {
+        setData(prev => ({ ...prev, [area]: d || [] }));
+      });
+    });
+  }, []);
+  return (
+    <div>
+      {areas.map(area => (
+        <YearlyLineChart key={area} data={data[area] || []} valueKey="full_pct" title={`Gas storage – ${area} (% kapacitet)`} yLabel="%" />
+      ))}
+    </div>
+  );
+}
+
+function NuclearProduction() {
+  const countries = ["Finland", "Frankrig"];
+  const [selected, setSelected] = useState("Finland");
+  const [data, setData] = useState([]);
+
+  useEffect(() => {
+    supabase.from("nuclear_production")
+      .select("*")
+      .eq("country", selected)
+      .order("year")
+      .order("month")
+      .then(({ data }) => setData(data || []));
+  }, [selected]);
+
+  return (
+    <div>
+      <div className="tab-row">
+        {countries.map(c => (
+          <button key={c} className={selected === c ? "tab active" : "tab"} onClick={() => setSelected(c)}>{c}</button>
+        ))}
+      </div>
+      <YearlyLineChart data={data} valueKey="value_mwh" title={`Kernekraft produktion – ${selected} (MWh)`} yLabel="MWh" />
+    </div>
+  );
+}
+
 
 function DKProductionCombined() {
   const [view, setView] = useState("Samlet");
