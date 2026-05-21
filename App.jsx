@@ -618,7 +618,12 @@ function DKHourly() {
                 <Brush dataKey="label" height={25} stroke="#2C3E50" fill="#f0f0f0" travellerWidth={6} />
               </ComposedChart>
             </ResponsiveContainer>
-          </div>
+          </div>       
+        </>            
+      )}              
+    </div>       
+  );          
+}           
 
    
 
