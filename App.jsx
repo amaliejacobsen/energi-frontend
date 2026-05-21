@@ -490,13 +490,9 @@ function DKHourly() {
 
     // Realtid fra dk_realtid (hele Danmark, udfyld huller)
     realtid.forEach(r => {
-      // Afrund til nærmeste time for at matche med priser
-      const dt = new Date(r.datetime);
-      dt.setMinutes(0, 0, 0);
-      const key = dt.toISOString();
+      const key = r.datetime;  // ← brug direkte, ikke afrund
       if (!map[key]) map[key] = { datetime: key };
-      // Brug kun realtid hvis der ikke allerede er settlement-data
-      if (!map[key].solar)   map[key].solar   = r.solar;
+      if (!map[key].solar)    map[key].solar    = r.solar;
       if (!map[key].offshore) map[key].offshore = r.offshore;
       if (!map[key].onshore)  map[key].onshore  = r.onshore;
     });
