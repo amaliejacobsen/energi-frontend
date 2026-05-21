@@ -556,9 +556,10 @@ function DKHourly() {
   const filteredData = days === 1
     ? chartData.filter(r => {
         const dt = new Date(r.datetime);
-        const midnight = new Date();
-        midnight.setHours(0, 0, 0, 0);
-        return dt >= midnight;
+        const now = new Date();
+        const twentyFourHoursAgo = new Date();
+        twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
+        return dt >= twentyFourHoursAgo && dt <= now;
       })
     : chartData;
   
