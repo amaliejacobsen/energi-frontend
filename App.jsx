@@ -511,12 +511,17 @@ function DKHourly() {
           ? consumption - (solar + offshore + onshore)
           : null;
         const dt = new Date(r.datetime);
-        const isNewDay = dt.getHours() === 0;
+        const hour = dt.getHours();
+        const isNewDay = hour === 0;
         const dateLabel = days === 1
-          ? `${String(dt.getHours()).padStart(2,'0')}:00`
-          : isNewDay
-            ? `${dt.getDate()}/${dt.getMonth()+1}`
-            : `${String(dt.getHours()).padStart(2,'0')}:00`;
+          ? `${String(hour).padStart(2,'0')}:00`
+          : days === 3
+            ? isNewDay
+              ? `${dt.getDate()}/${dt.getMonth()+1}`
+              : `${String(hour).padStart(2,'0')}:00`
+            : isNewDay
+              ? `${dt.getDate()}/${dt.getMonth()+1}`
+              : `${String(hour).padStart(2,'0')}:00`;
         return {
           ...r,
           label: dateLabel,
@@ -531,7 +536,7 @@ function DKHourly() {
       });
   })();
 
-  })();
+  
 
   const filteredData = days === 1
     ? chartData.filter(r => {
@@ -573,7 +578,7 @@ function DKHourly() {
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis
                   dataKey="label"
-                  interval={days === 1 ? Math.floor(chartData.length / 24) : 5}
+                  interval={days === 1 ? Math.floor(chartData.length / 24) : days === 3 ? 2 : 5}
                   tick={{ fontSize: 10, fill: '#2C3E50' }}
                   angle={days === 1 ? 0 : -35}
                   textAnchor={days === 1 ? 'middle' : 'end'}
@@ -638,7 +643,6 @@ function DKHourly() {
     </div>
   );
 }
-
 
 
 function GasStorage() {
