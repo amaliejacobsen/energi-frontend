@@ -554,7 +554,7 @@ function DKHourly() {
           ))}
         </div>
         <div className="tab-row" style={{ margin: 0 }}>
-          {[1, 3, 7, 14, 30].map(d => (
+          {[1, 3, 7, 14].map(d => (
             <button key={d} className={days === d ? "tab active" : "tab"} onClick={() => setDays(d)}>{d}d</button>
           ))}
         </div>
