@@ -588,7 +588,7 @@ function DKHourly() {
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis
                   dataKey="label"
-                  interval={days === 1 ? Math.floor(filteredData.length / 24) : days === 3 ? Math.floor(chartData.length / (3 * 8)) : days === 7 ? Math.floor(chartData.length / (7 * 4)) : Math.floor(chartData.length / (14 * 2))}
+                  interval={days === 1 ? Math.floor(filteredData.length / 24) : days === 3 ? Math.round(chartData.length / 24) : days === 7 ? Math.round(chartData.length / 28) : Math.round(chartData.length / 28)}
                   tick={{ fontSize: 10, fill: '#2C3E50' }}
                   angle={days === 1 ? 0 : -35}
                   textAnchor={days === 1 ? 'middle' : 'end'}
@@ -628,7 +628,7 @@ function DKHourly() {
                   stroke="#2ECC71" strokeWidth={2} dot={false} connectNulls hide={!visible.price} />
                 <Line yAxisId="left" type="monotone" dataKey="consumption" name="Elforbrug"
                   stroke="#E74C3C" strokeWidth={2.5} dot={false} connectNulls hide={!visible.consumption} />
-                <Line yAxisId="left" type="monotone" dataKey="residual" name="Residual load"
+                <Line yAxisId="left" type="stepAfter" dataKey="residual" name="Residual load"
                   stroke="#9B59B6" strokeWidth={2} dot={false} connectNulls strokeDasharray="5 5" hide={!visible.residual} />
                 <Brush dataKey="label" height={25} stroke="#2C3E50" fill="#f0f0f0" travellerWidth={6} />
               </ComposedChart>
