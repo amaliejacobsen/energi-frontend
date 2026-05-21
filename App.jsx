@@ -506,9 +506,11 @@ function DKHourly() {
         const consumption = r.consumption || null;
         const dt = new Date(r.datetime);
         const isNewDay = dt.getHours() === 0;
-        const dateLabel = isNewDay
-          ? `${dt.getDate()}/${dt.getMonth()+1}`
-          : `${String(dt.getHours()).padStart(2,'0')}:00`;
+        const dateLabel = days === 1
+          ? `${String(dt.getHours()).padStart(2,'0')}:00`  // ← altid kun klokkeslæt ved 1d
+          : isNewDay
+            ? `${dt.getDate()}/${dt.getMonth()+1}`
+            : `${String(dt.getHours()).padStart(2,'0')}:00`;
         return {
           ...r,
           label: dateLabel,
@@ -548,7 +550,14 @@ function DKHourly() {
             <ResponsiveContainer width="100%" height={440}>
               <ComposedChart data={chartData} margin={{ top: 5, right: 70, left: 20, bottom: 30 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis dataKey="label" interval={5} tick={{ fontSize: 10, fill: '#2C3E50' }} angle={-35} textAnchor="end" height={55} />
+                <XAxis
+                  dataKey="label"
+                  interval={days === 1 ? 0 : 5}
+                  tick={{ fontSize: 10, fill: '#2C3E50' }}
+                  angle={days === 1 ? 0 : -35}
+                  textAnchor={days === 1 ? 'middle' : 'end'}
+                  height={55}
+                />
                 <YAxis yAxisId="left" tick={{ fontSize: 11 }} label={{ value: "MWh", angle: -90, position: 'insideLeft', offset: -5, fontSize: 12 }} />
                 <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11 }} label={{ value: "DKK/MWh", angle: 90, position: 'insideRight', offset: 15, fontSize: 12 }} />
                 <Tooltip
