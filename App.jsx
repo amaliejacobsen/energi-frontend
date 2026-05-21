@@ -549,9 +549,6 @@ function DKHourly() {
 
   return (
     <div>
-
-  return (
-    <div>
       <div style={{ display: 'flex', gap: '12px', marginBottom: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
         <div className="tab-row" style={{ margin: 0 }}>
           {["DK1", "DK2"].map(a => (
@@ -623,26 +620,7 @@ function DKHourly() {
             </ResponsiveContainer>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px', marginBottom: '20px' }}>
-            {[
-              { label: "Gns. Spotpris",     value: chartData.filter(r=>r.price).length      ? `${Math.round(chartData.reduce((s,r)=>s+(r.price||0),0) / chartData.filter(r=>r.price).length)} DKK/MWh` : "—" },
-              { label: "Gns. Sol",          value: `${Math.round(chartData.reduce((s,r)=>s+r.solar,0)   / chartData.length)} MWh/t` },
-              { label: "Gns. Offshore vind",value: `${Math.round(chartData.reduce((s,r)=>s+r.offshore,0)/ chartData.length)} MWh/t` },
-              { label: "Gns. Onshore vind", value: `${Math.round(chartData.reduce((s,r)=>s+r.onshore,0) / chartData.length)} MWh/t` },
-              { label: "Gns. VE total",     value: `${Math.round(chartData.reduce((s,r)=>s+r.renewables,0)/chartData.length)} MWh/t` },
-              { label: "Gns. Elforbrug",    value: chartData.filter(r=>r.consumption).length ? `${Math.round(chartData.reduce((s,r)=>s+(r.consumption||0),0)/chartData.filter(r=>r.consumption).length)} MWh/t` : "—" },
-            ].map(({ label, value }) => (
-              <div key={label} className="chart-box" style={{ padding: '14px 16px', marginBottom: 0 }}>
-                <div style={{ fontSize: '11px', color: '#888', marginBottom: '4px' }}>{label}</div>
-                <div style={{ fontSize: '20px', fontWeight: '700', color: '#2C3E50' }}>{value}</div>
-              </div>
-            ))}
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
+   
 
 
 function GasStorage() {
