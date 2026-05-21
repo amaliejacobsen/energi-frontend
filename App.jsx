@@ -587,11 +587,11 @@ function DKHourly() {
           <div className="chart-box">
             <h3>{area} – Produktion, Forbrug & Spotpris (seneste {days} dage)</h3>
             <ResponsiveContainer width="100%" height={440}>
-              <ComposedChart data={chartData} margin={{ top: 5, right: 70, left: 20, bottom: 30 }}>
+              <ComposedChart data={filteredData} margin={{ top: 5, right: 70, left: 20, bottom: 30 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis
                   dataKey="label"
-                  interval={days === 1 ? Math.floor(filteredData.length / 24) : 0}
+                  interval={days === 1 ? Math.floor(chartData.length / 24) : 0}
                   tickFormatter={(value, index) => {
                     if (days === 3) {
                       const item = filteredData[index];
