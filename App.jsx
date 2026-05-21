@@ -477,6 +477,8 @@ function DKHourly() {
       setProduction(prodRes.data || []);
       setRealtid(realtidRes.data || []);
       setLoading(false);
+
+      console.log(prices[0]?.datetime, realtid[0]?.datetime)
     });
   }, [area, days]);
 
