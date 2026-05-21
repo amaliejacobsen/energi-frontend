@@ -611,6 +611,8 @@ function DKHourly() {
                   }}
                 />
                 <Legend
+                  verticalAlign="top"
+                  align="center"
                   onClick={(e) => toggleSeries(e.dataKey)}
                   formatter={(value, entry) => (
                     <span style={{ color: visible[entry.dataKey] ? entry.color : '#ccc', cursor: 'pointer' }}>
