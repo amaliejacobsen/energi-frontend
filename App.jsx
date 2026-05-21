@@ -512,8 +512,8 @@ function DKHourly() {
     .map((r, i, arr) => {
       const prev = arr[i - 1];
       if (prev) {
-        if (r.price === undefined)       r.price       = prev.price;
-        if (r.consumption === undefined) r.consumption = prev.consumption;
+        if (r.price == null)       r.price       = prev.price;
+        if (r.consumption == null) r.consumption = prev.consumption;
       }
       return r;
     })
@@ -559,7 +559,7 @@ function DKHourly() {
       })
     : chartData;
   
-  
+  console.log("chartData length:", chartData.length, "days:", days);
   return (
     <div>
       <div style={{ display: 'flex', gap: '12px', marginBottom: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
