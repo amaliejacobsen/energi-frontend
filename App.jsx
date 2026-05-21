@@ -525,6 +525,20 @@ function DKHourly() {
       });
   })();
 
+  })();
+
+  const filteredData = days === 1
+    ? chartData.filter(r => {
+        const dt = new Date(r.datetime);
+        const midnight = new Date();
+        midnight.setHours(0, 0, 0, 0);
+        return dt >= midnight;
+      })
+    : chartData;
+
+  return (
+    <div>
+
   return (
     <div>
       <div style={{ display: 'flex', gap: '12px', marginBottom: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
@@ -565,15 +579,21 @@ function DKHourly() {
                   labelFormatter={(_, payload) => payload?.[0] ? `🕐 ${payload[0].payload.fullLabel}` : ''}
                   formatter={(value, name) => {
                     if (name === "Spotpris") return [`${Math.round(value)} DKK/MWh`, name];
+                    if (name === "Elforbrug") return [`${Math.round(value)} MWh`, name];
                     return value !== null ? [`${Math.round(value)} MWh`, name] : [null];
+                  }}
+                  itemSorter={(item) => {
+                    const order = { "Elforbrug": 0, "Spotpris": 1, "Sol": 2, "Onshore vind": 3, "Offshore vind": 4 };
+                    return order[item.name] ?? 99;
                   }}
                 />
                 <Legend verticalAlign="top" height={36} />
                 <Area yAxisId="left" type="monotone" dataKey="offshore" name="Offshore vind" stackId="prod" fill="#1A3A5C" stroke="#1A3A5C" fillOpacity={0.85} />
                 <Area yAxisId="left" type="monotone" dataKey="onshore"  name="Onshore vind"  stackId="prod" fill="#3498DB" stroke="#3498DB" fillOpacity={0.85} />
                 <Area yAxisId="left" type="monotone" dataKey="solar"    name="Sol"            stackId="prod" fill="#F4A927" stroke="#F4A927" fillOpacity={0.9} />
-                <Line yAxisId="left"  type="monotone"  dataKey="consumption" name="Elforbrug" stroke="#E74C3C" strokeWidth={2} dot={false} connectNulls />
-                <Line yAxisId="right" type="stepAfter" dataKey="price"       name="Spotpris"  stroke="#2ECC71" strokeWidth={2} dot={false} connectNulls />
+                <Line yAxisId="right" type="stepAfter" dataKey="price" name="Spotpris" stroke="#2ECC71" strokeWidth={2} dot={false} connectNulls />
+                <Line yAxisId="left" type="monotone" dataKey="consumption" name="Elforbrug"
+                  stroke="#E74C3C" strokeWidth={2.5} dot={false} connectNulls strokeDasharray="0" />
                 <Brush dataKey="label" height={25} stroke="#2C3E50" fill="#f0f0f0" travellerWidth={6} />
               </ComposedChart>
             </ResponsiveContainer>
