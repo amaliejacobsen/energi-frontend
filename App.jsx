@@ -449,6 +449,12 @@ function DKHourly() {
   const [production, setProduction] = useState([]);
   const [realtid, setRealtid] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [visible, setVisible] = useState({
+    offshore: true, onshore: true, solar: true,
+    consumption: true, price: true, residual: true,
+  });
+
+  const toggleSeries = (key) => setVisible(prev => ({ ...prev, [key]: !prev[key] }));
 
   useEffect(() => {
     setLoading(true);
@@ -587,16 +593,26 @@ function DKHourly() {
                     return order[item.name] ?? 99;
                   }}
                 />
-                <Legend verticalAlign="top" height={36} />
-                <Area yAxisId="left" type="monotone" dataKey="offshore" name="Offshore vind" stackId="prod" fill="#1A3A5C" stroke="#1A3A5C" fillOpacity={0.85} />
-                <Area yAxisId="left" type="monotone" dataKey="onshore"  name="Onshore vind"  stackId="prod" fill="#3498DB" stroke="#3498DB" fillOpacity={0.85} />
-                <Area yAxisId="left" type="monotone" dataKey="solar"    name="Sol"            stackId="prod" fill="#F4A927" stroke="#F4A927" fillOpacity={0.9} />
+                <Legend
+                  onClick={(e) => toggleSeries(e.dataKey)}
+                  formatter={(value, entry) => (
+                    <span style={{ color: visible[entry.dataKey] ? entry.color : '#ccc', cursor: 'pointer' }}>
+                      {value}
+                    </span>
+                  )}
+                />
+                <Area yAxisId="left" type="monotone" dataKey="offshore" name="Offshore vind"
+                  stackId="prod" fill="#1A3A5C" stroke="#1A3A5C" fillOpacity={0.85} hide={!visible.offshore} />
+                <Area yAxisId="left" type="monotone" dataKey="onshore" name="Onshore vind"
+                  stackId="prod" fill="#3498DB" stroke="#3498DB" fillOpacity={0.85} hide={!visible.onshore} />
+                <Area yAxisId="left" type="monotone" dataKey="solar" name="Sol"
+                  stackId="prod" fill="#F4A927" stroke="#F4A927" fillOpacity={0.9} hide={!visible.solar} />
                 <Line yAxisId="right" type="stepAfter" dataKey="price" name="Spotpris"
-                  stroke="#2ECC71" strokeWidth={2} dot={false} connectNulls />
+                  stroke="#2ECC71" strokeWidth={2} dot={false} connectNulls hide={!visible.price} />
                 <Line yAxisId="left" type="monotone" dataKey="consumption" name="Elforbrug"
-                  stroke="#E74C3C" strokeWidth={2.5} dot={false} connectNulls />
+                  stroke="#E74C3C" strokeWidth={2.5} dot={false} connectNulls hide={!visible.consumption} />
                 <Line yAxisId="left" type="monotone" dataKey="residual" name="Residual load"
-                  stroke="#9B59B6" strokeWidth={2} dot={false} connectNulls strokeDasharray="5 5" />
+                  stroke="#9B59B6" strokeWidth={2} dot={false} connectNulls strokeDasharray="5 5" hide={!visible.residual} />
                 <Brush dataKey="label" height={25} stroke="#2C3E50" fill="#f0f0f0" travellerWidth={6} />
               </ComposedChart>
             </ResponsiveContainer>
