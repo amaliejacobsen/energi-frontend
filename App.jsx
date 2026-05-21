@@ -476,28 +476,24 @@ function DKHourly() {
 
   const chartData = (() => {
     const map = {};
-
     // Priser
     prices.forEach(r => {
       map[r.datetime] = { datetime: r.datetime, price: r.price_dkk };
     });
-
     // Produktion fra dk_production_hourly (historisk, opdelt på DK1/DK2)
     production.forEach(r => {
       if (!map[r.datetime]) map[r.datetime] = { datetime: r.datetime };
       map[r.datetime][r.source] = r.value_mwh;
     });
-
     // Realtid fra dk_realtid (hele Danmark, udfyld huller)
     realtid.forEach(r => {
-      const key = r.datetime;  // ← brug direkte, ikke afrund
+      const key = r.datetime;
       if (!map[key]) map[key] = { datetime: key };
-      if (!map[key].solar)    map[key].solar    = r.solar;
-      if (!map[key].offshore) map[key].offshore = r.offshore;
-      if (!map[key].onshore)  map[key].onshore  = r.onshore;
-      if (!map[key].consumption) map[key].consumption  = r.consumption;
+      if (!map[key].solar)       map[key].solar       = r.solar;
+      if (!map[key].offshore)    map[key].offshore    = r.offshore;
+      if (!map[key].onshore)     map[key].onshore     = r.onshore;
+      if (!map[key].consumption) map[key].consumption = r.consumption;
     });
-
     return Object.values(map)
       .sort((a, b) => a.datetime.localeCompare(b.datetime))
       .map(r => {
@@ -505,10 +501,13 @@ function DKHourly() {
         const offshore    = r.offshore    || 0;
         const onshore     = r.onshore     || 0;
         const consumption = r.consumption || null;
+        const residual    = consumption !== null
+          ? consumption - (solar + offshore + onshore)
+          : null;
         const dt = new Date(r.datetime);
         const isNewDay = dt.getHours() === 0;
         const dateLabel = days === 1
-          ? `${String(dt.getHours()).padStart(2,'0')}:00`  // ← altid kun klokkeslæt ved 1d
+          ? `${String(dt.getHours()).padStart(2,'0')}:00`
           : isNewDay
             ? `${dt.getDate()}/${dt.getMonth()+1}`
             : `${String(dt.getHours()).padStart(2,'0')}:00`;
@@ -520,6 +519,7 @@ function DKHourly() {
           offshore,
           onshore,
           consumption,
+          residual,
           renewables: solar + offshore + onshore,
         };
       });
@@ -593,6 +593,8 @@ function DKHourly() {
                 <Area yAxisId="left" type="monotone" dataKey="solar"    name="Sol"            stackId="prod" fill="#F4A927" stroke="#F4A927" fillOpacity={0.9} />
                 <Line yAxisId="right" type="stepAfter" dataKey="price" name="Spotpris" stroke="#2ECC71" strokeWidth={2} dot={false} connectNulls />
                 <Line yAxisId="left" type="monotone" dataKey="consumption" name="Elforbrug"
+                <Line yAxisId="left" type="monotone" dataKey="residual" name="Residual load"
+                  stroke="#9B59B6" strokeWidth={2} dot={false} connectNulls strokeDasharray="5 5" />
                   stroke="#E74C3C" strokeWidth={2.5} dot={false} connectNulls strokeDasharray="0" />
                 <Brush dataKey="label" height={25} stroke="#2C3E50" fill="#f0f0f0" travellerWidth={6} />
               </ComposedChart>
