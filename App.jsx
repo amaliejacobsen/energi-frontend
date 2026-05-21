@@ -590,17 +590,28 @@ function DKHourly() {
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis
                   dataKey="label"
-                  ticks={filteredData
-                    .filter(item => {
-                      const hour = new Date(item.datetime).getHours();
-                      if (days === 3)  return hour % 3  === 0;
-                      if (days === 7)  return hour % 6  === 0;
-                      if (days === 14) return hour % 12 === 0;
-                      return true;
-                    })
-                    .map(item => item.label)
-                  }
                   interval={days === 1 ? Math.floor(chartData.length / 24) : 0}
+                  tickFormatter={(value, index) => {
+                    if (days === 3) {
+                      const item = filteredData[index];
+                      if (!item) return '';
+                      const hour = new Date(item.datetime).getHours();
+                      return hour % 3 === 0 ? `${String(hour).padStart(2,'0')}:00` : '';
+                    }
+                    if (days === 7) {
+                      const item = filteredData[index];
+                      if (!item) return '';
+                      const hour = new Date(item.datetime).getHours();
+                      return hour % 6 === 0 ? `${String(hour).padStart(2,'0')}:00` : '';
+                    }
+                    if (days === 14) {
+                      const item = filteredData[index];
+                      if (!item) return '';
+                      const hour = new Date(item.datetime).getHours();
+                      return hour % 12 === 0 ? `${String(hour).padStart(2,'0')}:00` : '';
+                    }
+                    return value;
+                  }}
                   tick={{ fontSize: 10, fill: '#2C3E50' }}
                   angle={days === 1 ? 0 : -35}
                   textAnchor={days === 1 ? 'middle' : 'end'}
