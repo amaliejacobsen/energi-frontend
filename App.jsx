@@ -532,7 +532,7 @@ function DKHourly() {
         ? `${String(hour).padStart(2,'0')}:00`
         : isNewDay
           ? `${dt.getDate()}/${dt.getMonth()+1}`
-          : `${String(hour).padStart(2,'0')}:00`;`
+          : `${String(hour).padStart(2,'0')}:00`;
       return {
           ...r,
           label: dateLabel,
