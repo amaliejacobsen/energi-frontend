@@ -552,7 +552,7 @@ function DKHourly() {
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis
                   dataKey="label"
-                  interval={days === 1 ? 0 : 5}
+                  interval={days === 1 ? Math.floor(chartData.length / 24) : 5}
                   tick={{ fontSize: 10, fill: '#2C3E50' }}
                   angle={days === 1 ? 0 : -35}
                   textAnchor={days === 1 ? 'middle' : 'end'}
