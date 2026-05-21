@@ -561,7 +561,9 @@ function DKHourly() {
         return dt >= midnight;
       })
     : chartData;
-
+  
+  console.log("filteredData length:", filteredData.length, "days:", days);
+  
   return (
     <div>
       <div style={{ display: 'flex', gap: '12px', marginBottom: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
