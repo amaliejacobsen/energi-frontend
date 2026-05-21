@@ -603,7 +603,7 @@ function DKHourly() {
                       const item = filteredData[index];
                       if (!item) return '';
                       const hour = new Date(item.datetime).getHours();
-                      return hour % 6 === 0 ? ${String(hour).padStart(2,'0')}:00 : '';
+                      return hour % 6 === 0 ? `${String(hour).padStart(2,'0')}:00` : '';
                     }
                     if (days === 14) {
                       const item = filteredData[index];
