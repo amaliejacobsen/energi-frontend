@@ -590,19 +590,33 @@ function DKHourly() {
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis
                   dataKey="label"
-                  interval={days === 1 ? Math.floor(chartData.length / 24) : days === 3 ? 0 : 5}
+                  interval={days === 1 ? Math.floor(chartData.length / 24) : 0}
                   tickFormatter={(value, index) => {
-                  if (days !== 3) return value;
-                  const item = filteredData[index];
-                  if (!item) return '';
-                  const hour = new Date(item.datetime).getHours();
-                  return hour % 3 === 0 ? `${String(hour).padStart(2,'0')}:00` : '';
-                }}
-                tick={{ fontSize: 10, fill: '#2C3E50' }}
-                angle={days === 1 ? 0 : -35}
-                textAnchor={days === 1 ? 'middle' : 'end'}
-                height={55}
-                />
+                    if (days === 3) {
+                      const item = filteredData[index];
+                      if (!item) return '';
+                      const hour = new Date(item.datetime).getHours();
+                      return hour % 3 === 0 ? `${String(hour).padStart(2,'0')}:00` : '';
+                    }
+                    if (days === 7) {
+                      const item = filteredData[index];
+                      if (!item) return '';
+                      const hour = new Date(item.datetime).getHours();
+                      return hour % 6 === 0 ? `${String(hour).padStart(2,'0')}:00` : '';
+                    }
+                    if (days === 14) {
+                      const item = filteredData[index];
+                      if (!item) return '';
+                      const hour = new Date(item.datetime).getHours();
+                      return hour % 12 === 0 ? `${String(hour).padStart(2,'0')}:00` : '';
+                    }
+                    return value;
+                  }}
+                  tick={{ fontSize: 10, fill: '#2C3E50' }}
+                  angle={days === 1 ? 0 : -35}
+                  textAnchor={days === 1 ? 'middle' : 'end'}
+                  height={55}
+                  />
                 <YAxis yAxisId="left" tick={{ fontSize: 11 }} label={{ value: "MWh", angle: -90, position: 'insideLeft', offset: -5, fontSize: 12 }} />
                 <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11 }} label={{ value: "DKK/MWh", angle: 90, position: 'insideRight', offset: 15, fontSize: 12 }} />
                 <Tooltip
