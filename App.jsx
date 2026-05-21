@@ -530,13 +530,9 @@ function DKHourly() {
       const isNewDay = hour === 0;
       const dateLabel = days === 1
         ? `${String(hour).padStart(2,'0')}:00`
-        : days === 3
-          ? isNewDay
-            ? `${dt.getDate()}/${dt.getMonth()+1}`
-            : `${String(hour).padStart(2,'0')}:00`
-          : isNewDay
-            ? `${dt.getDate()}/${dt.getMonth()+1}`
-            : `${String(hour).padStart(2,'0')}:00`;
+        : isNewDay
+          ? `${dt.getDate()}/${dt.getMonth()+1}`
+          : `${String(hour).padStart(2,'0')}:00`;`
       return {
           ...r,
           label: dateLabel,
@@ -592,28 +588,7 @@ function DKHourly() {
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis
                   dataKey="label"
-                  interval={days === 1 ? Math.floor(chartData.length / 24) : 0}
-                  tickFormatter={(value, index) => {
-                    if (days === 3) {
-                      const item = filteredData[index];
-                      if (!item) return '';
-                      const hour = new Date(item.datetime).getHours();
-                      return hour % 3 === 0 ? `${String(hour).padStart(2,'0')}:00` : '';
-                    }
-                    if (days === 7) {
-                      const item = filteredData[index];
-                      if (!item) return '';
-                      const hour = new Date(item.datetime).getHours();
-                      return hour % 6 === 0 ? `${String(hour).padStart(2,'0')}:00` : '';
-                    }
-                    if (days === 14) {
-                      const item = filteredData[index];
-                      if (!item) return '';
-                      const hour = new Date(item.datetime).getHours();
-                      return hour % 12 === 0 ? `${String(hour).padStart(2,'0')}:00` : '';
-                    }
-                    return value;
-                  }}
+                  interval={days === 1 ? Math.floor(chartData.length / 24) : days === 3 ? Math.floor(chartData.length / (3 * 8)) : days === 7 ? Math.floor(chartData.length / (7 * 4)) : Math.floor(chartData.length / (14 * 2))}
                   tick={{ fontSize: 10, fill: '#2C3E50' }}
                   angle={days === 1 ? 0 : -35}
                   textAnchor={days === 1 ? 'middle' : 'end'}
