@@ -504,6 +504,15 @@ function DKHourly() {
     });
     return Object.values(map)
       .sort((a, b) => a.datetime.localeCompare(b.datetime))
+      .map((r, i, arr) => {
+        // Forward-fill: brug seneste kendte værdi hvis null
+        const prev = arr[i - 1];
+        if (prev) {
+          if (r.price === undefined)       r.price       = prev.price;
+          if (r.consumption === undefined) r.consumption = prev.consumption;
+        }
+        return r;
+      })
       .map(r => {
         const solar       = r.solar       || 0;
         const offshore    = r.offshore    || 0;
