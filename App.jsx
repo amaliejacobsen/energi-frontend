@@ -495,6 +495,7 @@ function DKHourly() {
       if (!map[key].solar)    map[key].solar    = r.solar;
       if (!map[key].offshore) map[key].offshore = r.offshore;
       if (!map[key].onshore)  map[key].onshore  = r.onshore;
+      if (!map[key].consumption) map[key].consumption  = r.consumption;
     });
 
     return Object.values(map)
