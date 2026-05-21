@@ -562,7 +562,6 @@ function DKHourly() {
       })
     : chartData;
   
-  console.log("filteredData length:", filteredData.length, "days:", days);
   
   return (
     <div>
