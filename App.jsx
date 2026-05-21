@@ -590,7 +590,13 @@ function DKHourly() {
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis
                   dataKey="label"
-                  interval={days === 1 ? Math.floor(chartData.length / 24) : 0}
+                  interval={
+                    days === 1  ? Math.floor(filteredData.length / 24) :
+                    days === 3  ? Math.floor(filteredData.length / (3 * 8)) :
+                    days === 7  ? Math.floor(filteredData.length / (7 * 4)) :
+                    days === 14 ? Math.floor(filteredData.length / (14 * 2)) :
+                    5
+                  }
                   tickFormatter={(value, index) => {
                     if (days === 3) {
                       const item = filteredData[index];
