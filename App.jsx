@@ -502,38 +502,42 @@ function DKHourly() {
       if (!map[key].onshore)     map[key].onshore     = r.onshore;
       if (!map[key].consumption) map[key].consumption = r.consumption;
     });
-    return Object.values(map)
-      .sort((a, b) => a.datetime.localeCompare(b.datetime))
-      .map((r, i, arr) => {
-        // Forward-fill: brug seneste kendte værdi hvis null
-        const prev = arr[i - 1];
-        if (prev) {
-          if (r.price === undefined)       r.price       = prev.price;
-          if (r.consumption === undefined) r.consumption = prev.consumption;
-        }
-        return r;
-      })
-      .map(r => {
-        const solar       = r.solar       || 0;
-        const offshore    = r.offshore    || 0;
-        const onshore     = r.onshore     || 0;
-        const consumption = r.consumption || null;
-        const residual    = consumption !== null
-          ? consumption - (solar + offshore + onshore)
-          : null;
-        const dt = new Date(r.datetime);
-        const hour = dt.getHours();
-        const isNewDay = hour === 0;
-        const dateLabel = days === 1
-          ? `${String(hour).padStart(2,'0')}:00`
-          : days === 3
-            ? isNewDay
-              ? `${dt.getDate()}/${dt.getMonth()+1}`
-              : `${String(hour).padStart(2,'0')}:00`
-            : isNewDay
-              ? `${dt.getDate()}/${dt.getMonth()+1}`
-              : `${String(hour).padStart(2,'0')}:00`;
-        return {
+
+    const sorted = Object.values(map)
+      .sort((a, b) => a.datetime.localeCompare(b.datetime));
+
+    console.log("Første 3 rækker:", JSON.stringify(sorted.slice(0,3), null, 2));
+
+    return sorted
+    .map((r, i, arr) => {
+      const prev = arr[i - 1];
+      if (prev) {
+        if (r.price === undefined)       r.price       = prev.price;
+        if (r.consumption === undefined) r.consumption = prev.consumption;
+      }
+      return r;
+    })
+    .map(r => {
+      const solar       = r.solar       || 0;
+      const offshore    = r.offshore    || 0;
+      const onshore     = r.onshore     || 0;
+      const consumption = r.consumption || null;
+      const residual    = consumption !== null
+        ? consumption - (solar + offshore + onshore)
+        : null;
+      const dt = new Date(r.datetime);
+      const hour = dt.getHours();
+      const isNewDay = hour === 0;
+      const dateLabel = days === 1
+        ? `${String(hour).padStart(2,'0')}:00`
+        : days === 3
+          ? isNewDay
+            ? `${dt.getDate()}/${dt.getMonth()+1}`
+            : `${String(hour).padStart(2,'0')}:00`
+          : isNewDay
+            ? `${dt.getDate()}/${dt.getMonth()+1}`
+            : `${String(hour).padStart(2,'0')}:00`;
+      return {
           ...r,
           label: dateLabel,
           fullLabel: `${dt.getDate()}/${dt.getMonth()+1} ${String(dt.getHours()).padStart(2,'0')}:00`,
