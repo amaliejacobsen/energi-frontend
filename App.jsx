@@ -86,10 +86,7 @@ function groupByDayOfYear(data, valueKey) {
         if (month > currentMonth) { row[yr] = null; return; }
         if (month === currentMonth) {
           currentMonthDayOverride = dayOfYear(2024, currentMonth, currentDay);
-          const fullMonthVal = lookup[yr][month] ?? null;
-          row[yr] = fullMonthVal !== null
-            ? fullMonthVal * (currentDay / 30.5)
-            : null;
+          row[yr] = lookup[yr][month] ?? null;
           return;
         }
       }
@@ -202,6 +199,7 @@ function YearlyLineChart({ data, valueKey, title, yLabel, source }) {
     </div>
   );
 }
+
 
 function HourlyLineChart({ data, title, source }) {
   const currentYear = new Date().getFullYear();
@@ -322,6 +320,8 @@ function DKProduction({ area }) {
   );
 }
 
+
+
 function NuclearProduction() {
   const countries = ["Finland", "Frankrig"];
   const [selected, setSelected] = useState("Finland");
@@ -347,6 +347,8 @@ function NuclearProduction() {
     </div>
   );
 }
+
+
 
 function InstalledCapacity() {
   const countries = ["Danmark", "Norge", "Finland", "Holland", "Frankrig", "Tyskland"];
@@ -432,6 +434,8 @@ function InstalledCapacity() {
     </div>
   );
 }
+
+
 
 function Consumption() {
   const zones = ["DK1", "DK2", "Tyskland"];
