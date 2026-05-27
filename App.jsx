@@ -664,6 +664,20 @@ function DKHourly() {
                     </span>
                   )}
                 />
+                <YAxis yAxisId="left" tick={{ fontSize: 11 }} label={{ value: "MWh", angle: -90, position: 'insideLeft', offset: -5, fontSize: 12 }} />
+                <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11 }} label={{ value: "DKK/MWh", angle: 90, position: 'insideRight', offset: 15, fontSize: 12 }} />
+                <Tooltip
+                  labelFormatter={(_, payload) => payload?.[0] ? `🕐 ${payload[0].payload.fullLabel}` : ''}
+                  formatter={(value, name) => {
+                    if (value === null || value === undefined) return [null];
+                    if (name === "Spotpris") return [`${Math.round(value)} DKK/MWh`, name];
+                    return [`${Math.round(value)} MWh`, name];
+                  }}
+                  itemSorter={(item) => {
+                    const order = { "Elforbrug": 0, "Spotpris": 1, "Sol": 2, "Onshore vind": 3, "Offshore vind": 4 };
+                    return order[item.name] ?? 99;
+                  }}
+                />
                 <Area yAxisId="left" type="monotone" dataKey="offshore" name="Offshore vind"
                   stackId="prod" fill="#1A3A5C" stroke="#1A3A5C" fillOpacity={0.85} hide={!visible.offshore} />
                 <Area yAxisId="left" type="monotone" dataKey="onshore" name="Onshore vind"
