@@ -60,6 +60,8 @@ function dayOfYear(year, month, day = 15) {
   return Math.floor((date - start) / 86400000);
 }
 
+
+
 function groupByDayOfYear(data, valueKey) {
   if (!data || data.length === 0) return { years: [], byDay: [] };
   const currentYear = new Date().getFullYear();
@@ -76,24 +78,32 @@ function groupByDayOfYear(data, valueKey) {
     const month = i + 1;
     const doy = dayOfYear(2024, month, 15);
     const row = { day: doy, monthLabel: MONTH_NAMES[i] };
+    let currentMonthDayOverride = null;
     years.forEach(yr => {
       if (yr === currentYear) {
         const currentMonth = today.getMonth() + 1;
         const currentDay = today.getDate();
         if (month > currentMonth) { row[yr] = null; return; }
         if (month === currentMonth) {
-          // Flyt datapunktet til dags dato i stedet for dag 15
-          row.day = dayOfYear(2024, currentMonth, currentDay);
+          currentMonthDayOverride = dayOfYear(2024, currentMonth, currentDay);
+          const fullMonthVal = lookup[yr][month] ?? null;
+          row[yr] = fullMonthVal !== null
+            ? fullMonthVal * (currentDay / 30.5)
+            : null;
+          return;
         }
       }
       row[yr] = lookup[yr][month] ?? null;
     });
+    if (currentMonthDayOverride !== null) row.day = currentMonthDayOverride;
     const historicVals = years.filter(y => y < currentYear).map(y => row[y]).filter(v => v != null && v > 0);
     row["Median"] = calcMedian(historicVals);
     return row;
   });
   return { years, byDay };
 }
+
+
 
 function YearToggleButtons({ years, visibleYears, setVisibleYears, showMedian, setShowMedian }) {
   return (
@@ -116,6 +126,7 @@ function YearToggleButtons({ years, visibleYears, setVisibleYears, showMedian, s
     </div>
   );
 }
+
 
 
 function DKProductionChart({ data, valueKey, title, yLabel, source }) {
@@ -591,27 +602,32 @@ function DKHourly() {
               <ComposedChart data={filteredData} margin={{ top: 5, right: 70, left: 20, bottom: 30 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis
-                  dataKey="label"
-                  interval={days === 1 ? Math.floor(filteredData.length / 24) : days === 3 ? Math.round(chartData.length / 24) : days === 7 ? Math.round(chartData.length / 28) : Math.round(chartData.length / 28)}
+                  dataKey="datetime"
+                  ticks={filteredData
+                    .filter(item => {
+                      const dt = new Date(item.datetime);
+                      if (dt.getMinutes() !== 0) return false;
+                      const hour = dt.getHours();
+                      if (days === 3)  return hour % 3  === 0;
+                      if (days === 7)  return hour % 6  === 0;
+                      if (days === 14) return hour % 12 === 0;
+                      return true;
+                    })
+                    .map(item => item.datetime)
+                  }
+                  tickFormatter={(val) => {
+                    const dt = new Date(val);
+                    const hour = dt.getHours();
+                    if (days === 1) return `${String(hour).padStart(2,'0')}:00`;
+                    if (hour === 0) return `${dt.getDate()}/${dt.getMonth()+1}`;
+                    return `${String(hour).padStart(2,'0')}:00`;
+                  }}
+                  interval={0}
                   tick={{ fontSize: 10, fill: '#2C3E50' }}
                   angle={days === 1 ? 0 : -35}
                   textAnchor={days === 1 ? 'middle' : 'end'}
                   height={55}
                 />
-                        <YAxis yAxisId="left" tick={{ fontSize: 11 }} label={{ value: "MWh", angle: -90, position: 'insideLeft', offset: -5, fontSize: 12 }} />
-                        <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11 }} label={{ value: "DKK/MWh", angle: 90, position: 'insideRight', offset: 15, fontSize: 12 }} />
-                        <Tooltip
-                        labelFormatter={(_, payload) => payload?.[0] ? `🕐 ${payload[0].payload.fullLabel}` : ''}
-                        formatter={(value, name) => {
-                          if (value === null || value === undefined) return [null];
-                          if (name === "Spotpris") return [`${Math.round(value)} DKK/MWh`, name];
-                          return [`${Math.round(value)} MWh`, name];
-                        }}
-                        itemSorter={(item) => {
-                          const order = { "Elforbrug": 0, "Spotpris": 1, "Sol": 2, "Onshore vind": 3, "Offshore vind": 4 };
-                          return order[item.name] ?? 99;
-                        }}
-                        />
                 <Legend
                   verticalAlign="top"
                   align="center"
