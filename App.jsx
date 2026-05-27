@@ -306,11 +306,33 @@ function DKProduction({ area }) {
   const [solar, setSolar] = useState([]);
   const [offshore, setOffshore] = useState([]);
   const [onshore, setOnshore] = useState([]);
+
   useEffect(() => {
-    supabase.from("dk_production").select("*").eq("area", area).eq("source", "solar").order("year").order("month").then(({ data }) => setSolar(data || []));
-    supabase.from("dk_production").select("*").eq("area", area).eq("source", "offshore").order("year").order("month").then(({ data }) => setOffshore(data || []));
-    supabase.from("dk_production").select("*").eq("area", area).eq("source", "onshore").order("year").order("month").then(({ data }) => setOnshore(data || []));
+    const fetchAndSum = (source, setter) => {
+      if (area === "Samlet") {
+        Promise.all([
+          supabase.from("dk_production").select("*").eq("area", "DK1").eq("source", source).order("year").order("month"),
+          supabase.from("dk_production").select("*").eq("area", "DK2").eq("source", source).order("year").order("month"),
+        ]).then(([dk1, dk2]) => {
+          const combined = {};
+          [...(dk1.data || []), ...(dk2.data || [])].forEach(r => {
+            const key = `${r.year}-${r.month}`;
+            if (!combined[key]) combined[key] = { ...r, area: "Samlet" };
+            else combined[key].value_mwh += r.value_mwh;
+          });
+          setter(Object.values(combined).sort((a, b) => a.year - b.year || a.month - b.month));
+        });
+      } else {
+        supabase.from("dk_production").select("*").eq("area", area).eq("source", source).order("year").order("month")
+          .then(({ data }) => setter(data || []));
+      }
+    };
+
+    fetchAndSum("solar", setSolar);
+    fetchAndSum("offshore", setOffshore);
+    fetchAndSum("onshore", setOnshore);
   }, [area]);
+
   return (
     <div>
       <DKProductionChart data={solar}    valueKey="value_mwh" title={`${area} – Sol produktion (MWh)`}            yLabel="MWh" source="Energidataservice – ProductionConsumptionSettlement" />
