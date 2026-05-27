@@ -78,10 +78,13 @@ function groupByDayOfYear(data, valueKey) {
     const row = { day: doy, monthLabel: MONTH_NAMES[i] };
     years.forEach(yr => {
       if (yr === currentYear) {
-        const dayOfMonth = today.getDate();
         const currentMonth = today.getMonth() + 1;
-        const cutoff = dayOfMonth >= 14 ? currentMonth : currentMonth - 1;
-        if (month > cutoff) { row[yr] = null; return; }
+        const currentDay = today.getDate();
+        if (month > currentMonth) { row[yr] = null; return; }
+        if (month === currentMonth) {
+          // Flyt datapunktet til dags dato i stedet for dag 15
+          row.day = dayOfYear(2024, currentMonth, currentDay);
+        }
       }
       row[yr] = lookup[yr][month] ?? null;
     });
@@ -479,7 +482,8 @@ function DKHourly() {
       setLoading(false);
 
       console.log(prices[0]?.datetime, realtid[0]?.datetime)
-    });
+      console.log("prices:", priceRes.data?.length, "production:", prodRes.data?.length, "realtid:", realtidRes.data?.length);
+  });
   }, [area, days]);
 
   const chartData = (() => {
@@ -706,6 +710,7 @@ function DKConsumption({ area }) {
 }
 
 
+
 function DKProductionCombined() {
   const [view, setView] = useState("Samlet");
   const areas = ["DK1", "DK2"];
@@ -771,6 +776,8 @@ function DKProductionCombined() {
   );
 }
 
+
+
 function DanmarkSamlet() {
   const [view, setView] = useState("DK1 priser");
   const views = ["DK1 priser", "DK2 priser", "DK produktion", "Timesdata", "Forbrug DK"];
@@ -797,6 +804,7 @@ function DanmarkSamlet() {
     </div>
   );
 }
+
 
 
 function HydroSection({ country, zones }) {
@@ -859,6 +867,8 @@ function Hydro() {
     </div>
   );
 }
+
+
 
 function HydroForecastChart() {
   const [data, setData] = useState([]);
