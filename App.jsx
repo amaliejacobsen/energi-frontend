@@ -164,6 +164,89 @@ function DKProductionChart({ data, valueKey, title, yLabel, source }) {
   );
 }
 
+
+function groupByDayOfYearDaily(data, valueKey) {
+  if (!data || data.length === 0) return { years: [], byDay: [] };
+  const today = new Date();
+  const currentYear = today.getFullYear();
+  const years = [...new Set(data.map(d => new Date(d.date).getFullYear()))].sort();
+  
+  // Byg lookup: year -> dayOfYear -> value
+  const lookup = {};
+  years.forEach(y => { lookup[y] = {}; });
+  data.forEach(d => {
+    const dt = new Date(d.date);
+    const yr = dt.getFullYear();
+    const doy = dayOfYear(yr, dt.getMonth() + 1, dt.getDate());
+    if (d[valueKey] != null) lookup[yr][doy] = d[valueKey];
+  });
+
+  // Beregn 7-dages glidende gennemsnit per år
+  const allDoys = Array.from({ length: 365 }, (_, i) => i + 1);
+  const byDay = allDoys.map(doy => {
+    const row = { day: doy };
+    years.forEach(yr => {
+      if (yr === currentYear) {
+        const todayDoy = dayOfYear(currentYear, today.getMonth() + 1, today.getDate());
+        if (doy > todayDoy) { row[yr] = null; return; }
+      }
+      // 7-dages glidende gennemsnit
+      const vals = [];
+      for (let i = 0; i < 7; i++) {
+        const v = lookup[yr][doy - i];
+        if (v != null) vals.push(v);
+      }
+      row[yr] = vals.length > 0 ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+    });
+    return row;
+  });
+
+  return { years, byDay };
+}
+
+function DKProductionDailyChart({ data, valueKey, title, yLabel, source }) {
+  const { years, byDay } = groupByDayOfYearDaily(data, valueKey);
+  const monthTicks = [15, 45, 75, 105, 135, 165, 195, 225, 255, 285, 315, 345];
+  const [visibleYears, setVisibleYears] = useState([]);
+  useEffect(() => { if (years.length > 0) setVisibleYears(years); }, [years.join(',')]);
+
+  return (
+    <div className="chart-box">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+        <h3 style={{ margin: 0 }}>{title} – 7-dages glidende gennemsnit</h3>
+        <YearToggleButtons years={years} visibleYears={visibleYears} setVisibleYears={setVisibleYears} />
+      </div>
+      <ResponsiveContainer width="100%" height={320}>
+        <LineChart data={byDay} margin={{ bottom: 20 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+          <XAxis dataKey="day" type="number" domain={[0, 365]} ticks={monthTicks} interval={0}
+            tickFormatter={(day) => { const monthIdx = Math.floor(day / 30.5); return MONTH_NAMES[monthIdx] || ""; }}
+            tick={{ fontSize: 11, fill: '#2C3E50' }} />
+          <YAxis tick={{ fontSize: 12 }} label={{ value: yLabel, angle: -90, position: "insideLeft", fontSize: 12 }} />
+          <Tooltip
+            labelFormatter={(day) => { const monthIdx = Math.floor(day / 30.5); return `Måned: ${MONTH_NAMES[monthIdx] || "Dec"}`; }}
+            formatter={(value) => value !== null ? [Number(value).toFixed(0)] : [null]}
+          />
+          <Legend />
+          {years.map((year, i) => visibleYears.includes(year) && (
+            <Line key={year} type="monotone" dataKey={year.toString()} name={year.toString()}
+              stroke={YEAR_COLORS[i % YEAR_COLORS.length]}
+              strokeWidth={i === years.length - 1 ? 3 : 1.5} dot={false} connectNulls={false} />
+          ))}
+        </LineChart>
+      </ResponsiveContainer>
+      {source && (
+        <div style={{ marginTop: '16px', padding: '12px', background: 'var(--fafafa)', borderRadius: '6px', border: '1px solid var(--border)' }}>
+          <p style={{ fontSize: '11px', color: '#888', margin: 0 }}>
+            📡 Datakilde: <strong style={{ color: 'var(--text)' }}>{source}</strong>
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+
 function YearlyLineChart({ data, valueKey, title, yLabel, source }) {
   const currentYear = new Date().getFullYear();
   const { years, byMonth } = groupByYear(data, valueKey);
