@@ -202,8 +202,11 @@ function DKProductionDailyChart({ data, valueKey, title, yLabel, source }) {
   const { years, byDay } = groupByDayOfYearDaily(data, valueKey);
   const monthTicks = [15, 45, 75, 105, 135, 165, 195, 225, 255, 285, 315, 345];
   const [visibleYears, setVisibleYears] = useState([]);
+  const [brushDomain, setBrushDomain] = useState(null);
   useEffect(() => { if (years.length > 0) setVisibleYears(years); }, [years.join(',')]);
 
+  const domain = brushDomain || ['auto', 'auto'];
+  
   return (
     <div className="chart-box">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
@@ -222,7 +225,19 @@ function DKProductionDailyChart({ data, valueKey, title, yLabel, source }) {
             formatter={(value) => value !== null ? [Number(value).toFixed(0)] : [null]}
           />
           <Legend />
-          <Brush height={25} stroke="#2C3E50" fill="#f0f0f0" travellerWidth={6} />
+          <Brush 
+            height={25} 
+            stroke="#2C3E50" 
+            fill="#f0f0f0" 
+            travellerWidth={6}
+            onChange={(range) => {
+              if (range && range.startIndex !== undefined) {
+                const start = byDay[range.startIndex]?.day;
+                const end = byDay[range.endIndex]?.day;
+                if (start && end) setBrushDomain([start, end]);
+              }
+            }}
+          />
           {years.map((year, i) => visibleYears.includes(year) && (
             <Line key={year} type="monotone" dataKey={year.toString()} name={year.toString()}
               stroke={YEAR_COLORS[i % YEAR_COLORS.length]}
