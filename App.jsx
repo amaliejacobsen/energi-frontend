@@ -222,7 +222,7 @@ function DKProductionDailyChart({ data, valueKey, title, yLabel, source }) {
             formatter={(value) => value !== null ? [Number(value).toFixed(0)] : [null]}
           />
           <Legend />
-          <Brush dataKey="day" height={25} stroke="#2C3E50" fill="#f0f0f0" travellerWidth={6} />
+          <Brush height={25} stroke="#2C3E50" fill="#f0f0f0" travellerWidth={6} />
           {years.map((year, i) => visibleYears.includes(year) && (
             <Line key={year} type="monotone" dataKey={year.toString()} name={year.toString()}
               stroke={YEAR_COLORS[i % YEAR_COLORS.length]}
