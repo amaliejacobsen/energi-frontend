@@ -202,11 +202,11 @@ function DKProductionDailyChart({ data, valueKey, title, yLabel, source }) {
   const { years, byDay } = groupByDayOfYearDaily(data, valueKey);
   const monthTicks = [15, 45, 75, 105, 135, 165, 195, 225, 255, 285, 315, 345];
   const [visibleYears, setVisibleYears] = useState([]);
-  const [brushDomain, setBrushDomain] = useState(null);
+  const [brushRange, setBrushRange] = useState({ startIndex: 0, endIndex: 364 });
   useEffect(() => { if (years.length > 0) setVisibleYears(years); }, [years.join(',')]);
 
-  const domain = brushDomain || ['auto', 'auto'];
-  
+  const visibleData = byDay.slice(brushRange.startIndex, brushRange.endIndex + 1);
+
   return (
     <div className="chart-box">
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
@@ -214,9 +214,9 @@ function DKProductionDailyChart({ data, valueKey, title, yLabel, source }) {
         <YearToggleButtons years={years} visibleYears={visibleYears} setVisibleYears={setVisibleYears} />
       </div>
       <ResponsiveContainer width="100%" height={320}>
-        <LineChart data={byDay} margin={{ bottom: 20 }}>
+        <LineChart data={visibleData} margin={{ bottom: 20 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-          <XAxis dataKey="day" type="number" domain={domain} ticks={monthTicks} interval={0}
+          <XAxis dataKey="day" type="number" domain={['auto', 'auto']} ticks={monthTicks} interval={0}
             tickFormatter={(day) => { const monthIdx = Math.floor(day / 30.5); return MONTH_NAMES[monthIdx] || ""; }}
             tick={{ fontSize: 11, fill: '#2C3E50' }} />
           <YAxis tick={{ fontSize: 12 }} label={{ value: yLabel, angle: -90, position: "insideLeft", fontSize: 12 }} />
@@ -225,18 +225,15 @@ function DKProductionDailyChart({ data, valueKey, title, yLabel, source }) {
             formatter={(value) => value !== null ? [Number(value).toFixed(0)] : [null]}
           />
           <Legend />
-          <Brush 
-            height={25} 
-            stroke="#2C3E50" 
-            fill="#f0f0f0" 
+          <Brush
+            data={byDay}
+            startIndex={brushRange.startIndex}
+            endIndex={brushRange.endIndex}
+            height={25}
+            stroke="#2C3E50"
+            fill="#f0f0f0"
             travellerWidth={6}
-            onChange={(range) => {
-              if (range && range.startIndex !== undefined) {
-                const start = byDay[range.startIndex]?.day;
-                const end = byDay[range.endIndex]?.day;
-                if (start && end) setBrushDomain([start, end]);
-              }
-            }}
+            onChange={(range) => { if (range) setBrushRange(range); }}
           />
           {years.map((year, i) => visibleYears.includes(year) && (
             <Line key={year} type="monotone" dataKey={year.toString()} name={year.toString()}
