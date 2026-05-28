@@ -82,13 +82,7 @@ function groupByDayOfYear(data, valueKey) {
     years.forEach(yr => {
       if (yr === currentYear) {
         const currentMonth = today.getMonth() + 1;
-        const currentDay = today.getDate();
-        if (month > currentMonth) { row[yr] = null; return; }
-        if (month === currentMonth) {
-          currentMonthDayOverride = dayOfYear(2024, currentMonth, currentDay);
-          row[yr] = lookup[yr][month] ?? null;
-          return;
-        }
+        if (month >= currentMonth) { row[yr] = null; return; }
       }
       row[yr] = lookup[yr][month] ?? null;
     });
@@ -177,7 +171,6 @@ function groupByDayOfYearDaily(data, valueKey) {
   data.forEach(d => {
     const [yr, mo, da] = d.date.split('-').map(Number);
     const dt = new Date(yr, mo - 1, da);
-    const yr = dt.getFullYear();
     const doy = dayOfYear(yr, dt.getMonth() + 1, dt.getDate());
     if (d[valueKey] != null) lookup[yr][doy] = d[valueKey];
   });
@@ -229,6 +222,7 @@ function DKProductionDailyChart({ data, valueKey, title, yLabel, source }) {
             formatter={(value) => value !== null ? [Number(value).toFixed(0)] : [null]}
           />
           <Legend />
+          <Brush dataKey="day" height={25} stroke="#2C3E50" fill="#f0f0f0" travellerWidth={6} />
           {years.map((year, i) => visibleYears.includes(year) && (
             <Line key={year} type="monotone" dataKey={year.toString()} name={year.toString()}
               stroke={YEAR_COLORS[i % YEAR_COLORS.length]}
