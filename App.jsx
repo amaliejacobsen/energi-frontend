@@ -163,7 +163,7 @@ function groupByDayOfYearDaily(data, valueKey) {
   if (!data || data.length === 0) return { years: [], byDay: [] };
   const today = new Date();
   const currentYear = today.getFullYear();
-  const years = [...new Set(data.map(d => new Date(d.date).getFullYear()))].sort();
+  const years = [...new Set(data.map(d => parseInt(d.date.split('-')[0])))].sort();
   
   // Byg lookup: year -> dayOfYear -> value
   const lookup = {};
