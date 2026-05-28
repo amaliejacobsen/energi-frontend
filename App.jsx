@@ -175,7 +175,8 @@ function groupByDayOfYearDaily(data, valueKey) {
   const lookup = {};
   years.forEach(y => { lookup[y] = {}; });
   data.forEach(d => {
-    const dt = new Date(d.date);
+    const [yr, mo, da] = d.date.split('-').map(Number);
+    const dt = new Date(yr, mo - 1, da);
     const yr = dt.getFullYear();
     const doy = dayOfYear(yr, dt.getMonth() + 1, dt.getDate());
     if (d[valueKey] != null) lookup[yr][doy] = d[valueKey];
