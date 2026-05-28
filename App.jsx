@@ -906,73 +906,6 @@ function DKConsumption({ area }) {
 
 
 
-function DKProductionCombined() {
-  const [view, setView] = useState("Samlet");
-  const areas = ["DK1", "DK2"];
-  const [data, setData] = useState({ DK1: { solar: [], offshore: [], onshore: [] }, DK2: { solar: [], offshore: [], onshore: [] } });
-
-  useEffect(() => {
-    areas.forEach(area => {
-      ["solar", "offshore", "onshore"].forEach(source => {
-        supabase.from("dk_production").select("*").eq("area", area).eq("source", source)
-          .order("year").order("month")
-          .then(({ data: d }) => setData(prev => ({ ...prev, [area]: { ...prev[area], [source]: d || [] } })));
-      });
-    });
-  }, []);
-
-  // Slå DK1 og DK2 sammen per år/måned
-  function combinedData(source) {
-    const map = {};
-    ["DK1", "DK2"].forEach(area => {
-      (data[area][source] || []).forEach(r => {
-        const key = `${r.year}-${String(r.month).padStart(2,'0')}`;
-        if (!map[key]) map[key] = { year: r.year, month: r.month, value_mwh: 0 };
-        map[key].value_mwh += r.value_mwh;
-      });
-    });
-    return Object.values(map).sort((a, b) => a.year !== b.year ? a.year - b.year : a.month - b.month);
-  }
-
-  const views = ["Samlet", "DK1", "DK2"];
-
-  return (
-    <div>
-      <div className="tab-row">
-        {views.map(v => (
-          <button key={v} className={view === v ? "tab active" : "tab"} onClick={() => setView(v)}>{v}</button>
-        ))}
-      </div>
-      {view === "Samlet" && (
-        <>
-          <DKProductionChart data={combinedData("solar")}    valueKey="value_mwh" title="DK Samlet – Sol produktion (MWh)"            yLabel="MWh" />
-          <div style={{ marginTop: '-16px', marginBottom: '20px', padding: '10px 12px', background: 'var(--fafafa)', borderRadius: '6px', border: '1px solid var(--border)' }}>
-            <p style={{ fontSize: '11px', color: '#888', margin: 0 }}>
-              📡 Datakilde: <strong style={{ color: 'var(--text)' }}>Energidataservice – ProductionConsumptionSettlement</strong>
-            </p>
-          </div>
-          <DKProductionChart data={combinedData("offshore")} valueKey="value_mwh" title="DK Samlet – Offshore vind produktion (MWh)" yLabel="MWh" />
-          <div style={{ marginTop: '-16px', marginBottom: '20px', padding: '10px 12px', background: 'var(--fafafa)', borderRadius: '6px', border: '1px solid var(--border)' }}>
-            <p style={{ fontSize: '11px', color: '#888', margin: 0 }}>
-              📡 Datakilde: <strong style={{ color: 'var(--text)' }}>Energidataservice – ProductionConsumptionSettlement</strong>
-            </p>
-          </div>
-          <DKProductionChart data={combinedData("onshore")}  valueKey="value_mwh" title="DK Samlet – Onshore vind produktion (MWh)"  yLabel="MWh" />
-          <div style={{ marginTop: '-16px', marginBottom: '20px', padding: '10px 12px', background: 'var(--fafafa)', borderRadius: '6px', border: '1px solid var(--border)' }}>
-            <p style={{ fontSize: '11px', color: '#888', margin: 0 }}>
-              📡 Datakilde: <strong style={{ color: 'var(--text)' }}>Energidataservice – ProductionConsumptionSettlement</strong>
-            </p>
-          </div>
-        </>
-      )}
-      {view === "DK1" && <DKProduction area="DK1" />}
-      {view === "DK2" && <DKProduction area="DK2" />}
-    </div>
-  );
-}
-
-
-
 function DanmarkSamlet() {
   const [view, setView] = useState("DK1 priser");
   const views = ["DK1 priser", "DK2 priser", "DK produktion", "Timesdata", "Forbrug DK"];
@@ -988,7 +921,7 @@ function DanmarkSamlet() {
       {view === "DK1 produktion"        && <DKProduction area="DK1" />}
       {view === "DK2 priser"            && <DKPrices area="DK2" />}
       {view === "DK2 produktion"        && <DKProduction area="DK2" />}
-      {view === "DK produktion"  && <DKProductionCombined />}
+      {view === "DK produktion"         && <DKProduction />}}
       {view === "Timesdata"             && <DKHourly />}
       {view === "Forbrug DK" && (
         <div>
