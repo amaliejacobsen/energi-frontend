@@ -213,7 +213,7 @@ function DKProductionDailyChart({ data, valueKey, title, yLabel, source }) {
       <ResponsiveContainer width="100%" height={320}>
         <LineChart data={byDay} margin={{ bottom: 20 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-          <XAxis dataKey="day" type="number" domain={[0, 365]} ticks={monthTicks} interval={0}
+          <XAxis dataKey="day" type="number" domain={['auto', 'auto']} ticks={monthTicks} interval={0}
             tickFormatter={(day) => { const monthIdx = Math.floor(day / 30.5); return MONTH_NAMES[monthIdx] || ""; }}
             tick={{ fontSize: 11, fill: '#2C3E50' }} />
           <YAxis tick={{ fontSize: 12 }} label={{ value: yLabel, angle: -90, position: "insideLeft", fontSize: 12 }} />
