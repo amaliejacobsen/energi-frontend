@@ -916,7 +916,7 @@ function DanmarkSamlet() {
       {view === "DK1 produktion"        && <DKProduction area="DK1" />}
       {view === "DK2 priser"            && <DKPrices area="DK2" />}
       {view === "DK2 produktion"        && <DKProduction area="DK2" />}
-      {view === "DK produktion"         && <DKProduction />}}
+      {view === "DK produktion"         && <DKProduction />}
       {view === "Timesdata"             && <DKHourly />}
       {view === "Forbrug DK" && (
         <div>
