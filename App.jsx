@@ -420,8 +420,8 @@ function DKProduction() {
     const fetchDailyAndSum = (source, setter) => {
       if (area === "Samlet") {
         Promise.all([
-          supabase.from("dk_production_daily").select("*").eq("area", "DK1").eq("source", source).order("date"),
-          supabase.from("dk_production_daily").select("*").eq("area", "DK2").eq("source", source).order("date"),
+          supabase.from("dk_production_daily").select("*").eq("area", "DK1").eq("source", source).order("date").limit(10000),
+          supabase.from("dk_production_daily").select("*").eq("area", "DK2").eq("source", source).order("date").limit(10000),
         ]).then(([dk1, dk2]) => {
           const combined = {};
           [...(dk1.data || []), ...(dk2.data || [])].forEach(r => {
@@ -432,7 +432,7 @@ function DKProduction() {
           setter(Object.values(combined).sort((a, b) => a.date.localeCompare(b.date)));
         });
       } else {
-        supabase.from("dk_production_daily").select("*").eq("area", area).eq("source", source).order("date")
+        supabase.from("dk_production_daily").select("*").eq("area", area).eq("source", source).order("date").limit(10000)
           .then(({ data }) => setter(data || []));
       }
     };
@@ -442,9 +442,7 @@ function DKProduction() {
     fetchAndSum("onshore", setOnshore);
     fetchDailyAndSum("offshore", setOffshoreDaily);
     fetchDailyAndSum("onshore", setOnshoreDaily);
-    fetchDailyAndSum("solar", (data) => {
-      console.log("Daily solar count:", data.length, "years:", [...new Set(data.map(d => d.date.split('-')[0]))]);
-      setSolarDaily(data);
+    fetchDailyAndSum("solar", setSolarDaily);
     });
   }, [area]);
 
