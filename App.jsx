@@ -443,7 +443,6 @@ function DKProduction() {
     fetchDailyAndSum("offshore", setOffshoreDaily);
     fetchDailyAndSum("onshore", setOnshoreDaily);
     fetchDailyAndSum("solar", setSolarDaily);
-    });
   }, [area]);
 
   return (
