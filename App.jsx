@@ -385,12 +385,22 @@ function DKPrices({ area }) {
 }
 
 
-function DKProduction({ area }) {
+function DKProduction() {
+  const [area, setArea] = useState("Samlet");
+  const [viewType, setViewType] = useState("monthly"); // "monthly" eller "rolling7"
+  
+  // Månedlig data
   const [solar, setSolar] = useState([]);
   const [offshore, setOffshore] = useState([]);
   const [onshore, setOnshore] = useState([]);
+  
+  // Daglig data
+  const [solarDaily, setSolarDaily] = useState([]);
+  const [offshoreDaily, setOffshoreDaily] = useState([]);
+  const [onshoreDaily, setOnshoreDaily] = useState([]);
 
   useEffect(() => {
+    // Hent månedlig data
     const fetchAndSum = (source, setter) => {
       if (area === "Samlet") {
         Promise.all([
@@ -411,16 +421,62 @@ function DKProduction({ area }) {
       }
     };
 
+    // Hent daglig data
+    const fetchDailyAndSum = (source, setter) => {
+      if (area === "Samlet") {
+        Promise.all([
+          supabase.from("dk_production_daily").select("*").eq("area", "DK1").eq("source", source).order("date"),
+          supabase.from("dk_production_daily").select("*").eq("area", "DK2").eq("source", source).order("date"),
+        ]).then(([dk1, dk2]) => {
+          const combined = {};
+          [...(dk1.data || []), ...(dk2.data || [])].forEach(r => {
+            const key = r.date;
+            if (!combined[key]) combined[key] = { ...r, area: "Samlet" };
+            else combined[key].value_mwh += r.value_mwh;
+          });
+          setter(Object.values(combined).sort((a, b) => a.date.localeCompare(b.date)));
+        });
+      } else {
+        supabase.from("dk_production_daily").select("*").eq("area", area).eq("source", source).order("date")
+          .then(({ data }) => setter(data || []));
+      }
+    };
+
     fetchAndSum("solar", setSolar);
     fetchAndSum("offshore", setOffshore);
     fetchAndSum("onshore", setOnshore);
+    fetchDailyAndSum("solar", setSolarDaily);
+    fetchDailyAndSum("offshore", setOffshoreDaily);
+    fetchDailyAndSum("onshore", setOnshoreDaily);
   }, [area]);
 
   return (
     <div>
-      <DKProductionChart data={solar}    valueKey="value_mwh" title={`${area} – Sol produktion (MWh)`}            yLabel="MWh" source="Energidataservice – ProductionConsumptionSettlement" />
-      <DKProductionChart data={offshore} valueKey="value_mwh" title={`${area} – Offshore vind produktion (MWh)`} yLabel="MWh" source="Energidataservice – ProductionConsumptionSettlement" />
-      <DKProductionChart data={onshore}  valueKey="value_mwh" title={`${area} – Onshore vind produktion (MWh)`}  yLabel="MWh" source="Energidataservice – ProductionConsumptionSettlement" />
+      <div style={{ display: 'flex', gap: '12px', marginBottom: '16px', flexWrap: 'wrap' }}>
+        <div className="tab-row" style={{ margin: 0 }}>
+          {["Samlet", "DK1", "DK2"].map(a => (
+            <button key={a} className={area === a ? "tab active" : "tab"} onClick={() => setArea(a)}>{a}</button>
+          ))}
+        </div>
+        <div className="tab-row" style={{ margin: 0 }}>
+          <button className={viewType === "monthly" ? "tab active" : "tab"} onClick={() => setViewType("monthly")}>Månedligt</button>
+          <button className={viewType === "rolling7" ? "tab active" : "tab"} onClick={() => setViewType("rolling7")}>7-dages glidende</button>
+        </div>
+      </div>
+
+      {viewType === "monthly" ? (
+        <div>
+          <DKProductionChart data={solar}    valueKey="value_mwh" title={`${area} – Sol produktion (MWh)`}            yLabel="MWh" source="Energidataservice – ProductionConsumptionSettlement" />
+          <DKProductionChart data={offshore} valueKey="value_mwh" title={`${area} – Offshore vind produktion (MWh)`} yLabel="MWh" source="Energidataservice – ProductionConsumptionSettlement" />
+          <DKProductionChart data={onshore}  valueKey="value_mwh" title={`${area} – Onshore vind produktion (MWh)`}  yLabel="MWh" source="Energidataservice – ProductionConsumptionSettlement" />
+        </div>
+      ) : (
+        <div>
+          <DKProductionDailyChart data={solarDaily}    valueKey="value_mwh" title={`${area} – Sol produktion`}            yLabel="MWh" source="Energidataservice – ProductionConsumptionSettlement" />
+          <DKProductionDailyChart data={offshoreDaily} valueKey="value_mwh" title={`${area} – Offshore vind produktion`} yLabel="MWh" source="Energidataservice – ProductionConsumptionSettlement" />
+          <DKProductionDailyChart data={onshoreDaily}  valueKey="value_mwh" title={`${area} – Onshore vind produktion`}  yLabel="MWh" source="Energidataservice – ProductionConsumptionSettlement" />
+        </div>
+      )}
     </div>
   );
 }
