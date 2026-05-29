@@ -633,7 +633,6 @@ function DKHourly() {
   const [days, setDays] = useState(7);
   const [prices, setPrices] = useState([]);
   const [production, setProduction] = useState([]);
-  const [realtid, setRealtid] = useState([]);
   const [loading, setLoading] = useState(true);
   const [visible, setVisible] = useState({
     offshore: true, onshore: true, solar: true,
@@ -650,85 +649,58 @@ function DKHourly() {
 
     Promise.all([
       supabase.from("dk_prices_hourly").select("*")
-        .eq("area", area).gte("datetime", fromIso)
-        .order("datetime"),
+        .eq("area", area).gte("datetime", fromIso).order("datetime"),
       supabase.from("dk_production_hourly").select("*")
-        .eq("area", area).gte("datetime", fromIso)
-        .order("datetime"),
-      supabase.from("dk_realtid").select("*")
-        .gte("datetime", fromIso)
-        .order("datetime"),
-    ]).then(([priceRes, prodRes, realtidRes]) => {
+        .eq("area", area).gte("datetime", fromIso).order("datetime"),
+    ]).then(([priceRes, prodRes]) => {
       setPrices(priceRes.data || []);
       setProduction(prodRes.data || []);
-      setRealtid(realtidRes.data || []);
       setLoading(false);
-
-      console.log(prices[0]?.datetime, realtid[0]?.datetime)
-      console.log("prices:", priceRes.data?.length, "production:", prodRes.data?.length, "realtid:", realtidRes.data?.length);
-  });
+      console.log("prices:", priceRes.data?.length, "production:", prodRes.data?.length);
+    });
   }, [area, days]);
 
   const chartData = (() => {
     const map = {};
-    // Priser
     prices.forEach(r => {
       map[r.datetime] = { datetime: r.datetime, price: r.price_dkk };
     });
-    // Produktion fra dk_production_hourly (historisk, opdelt på DK1/DK2)
     production.forEach(r => {
       if (!map[r.datetime]) map[r.datetime] = { datetime: r.datetime };
       map[r.datetime][r.source] = r.value_mwh;
     });
-    // Realtid fra dk_realtid (hele Danmark, udfyld huller)
-    realtid.forEach(r => {
-      const key = r.datetime;
-      if (!map[key]) map[key] = { datetime: key };
-      if (!map[key].solar)       map[key].solar       = r.solar;
-      if (!map[key].offshore)    map[key].offshore    = r.offshore;
-      if (!map[key].onshore)     map[key].onshore     = r.onshore;
-      if (!map[key].consumption) map[key].consumption = r.consumption;
-    });
 
-    const sorted = Object.values(map)
-      .sort((a, b) => a.datetime.localeCompare(b.datetime));
-
-    console.log("Første 3 rækker:", JSON.stringify(sorted.slice(0,3), null, 2));
-
-    return sorted
-    .map((r, i, arr) => {
-      const prev = arr[i - 1];
-      if (prev) {
-        if (r.price == null)       r.price       = prev.price;
-        if (r.consumption == null) r.consumption = prev.consumption;
-      }
-      return r;
-    })
-    .map(r => {
-      const solar       = r.solar       || 0;
-      const offshore    = r.offshore    || 0;
-      const onshore     = r.onshore     || 0;
-      const consumption = r.consumption || null;
-      const residual    = consumption !== null
-        ? consumption - (solar + offshore + onshore)
-        : null;
-      const dt = new Date(r.datetime);
-      const hour = dt.getHours();
-      const isNewDay = hour === 0;
-      const dateLabel = days === 1
-        ? `${String(hour).padStart(2,'0')}:00`
-        : isNewDay
-          ? `${dt.getDate()}/${dt.getMonth()+1}`
-          : `${String(hour).padStart(2,'0')}:00`;
-      return {
+    return Object.values(map)
+      .sort((a, b) => a.datetime.localeCompare(b.datetime))
+      .map((r, i, arr) => {
+        const prev = arr[i - 1];
+        if (prev) {
+          if (r.price == null)       r.price       = prev.price;
+          if (r.consumption == null) r.consumption = prev.consumption;
+        }
+        return r;
+      })
+      .map(r => {
+        const solar       = r.solar       || 0;
+        const offshore    = r.offshore    || 0;
+        const onshore     = r.onshore     || 0;
+        const consumption = r.consumption || null;
+        const residual    = consumption !== null
+          ? consumption - (solar + offshore + onshore)
+          : null;
+        const dt = new Date(r.datetime);
+        const hour = dt.getHours();
+        const isNewDay = hour === 0;
+        const dateLabel = days === 1
+          ? `${String(hour).padStart(2,'0')}:00`
+          : isNewDay
+            ? `${dt.getDate()}/${dt.getMonth()+1}`
+            : `${String(hour).padStart(2,'0')}:00`;
+        return {
           ...r,
           label: dateLabel,
           fullLabel: `${dt.getDate()}/${dt.getMonth()+1} ${String(dt.getHours()).padStart(2,'0')}:00`,
-          solar,
-          offshore,
-          onshore,
-          consumption,
-          residual,
+          solar, offshore, onshore, consumption, residual,
           renewables: solar + offshore + onshore,
         };
       });
