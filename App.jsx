@@ -723,22 +723,19 @@ function DKHourly() {
 
   
 
-  const filteredData = days === 1
-    ? (() => {
-        const now = new Date();
-        // Sæt til seneste hele time
-        const latestHour = new Date(now);
-        latestHour.setMinutes(0, 0, 0);
-      
-        const fromDt = new Date(latestHour);
-        fromDt.setHours(fromDt.getHours() - 23);
-      
-        return chartData.filter(r => {
-          const dt = new Date(r.datetime);
-          if (dt < fromDt) return false;
-          return dt <= latestHour;
-        });
-      })()
+  const filteredData = (() => {
+    const now = new Date();
+    const latestHour = new Date(now);
+    latestHour.setMinutes(0, 0, 0);
+  
+    const fromDt = new Date(latestHour);
+    fromDt.setHours(fromDt.getHours() - (days * 24));
+  
+    return chartData.filter(r => {
+      const dt = new Date(r.datetime);
+      return dt >= fromDt && dt <= latestHour;
+    });
+  })();
     : chartData;
   
   console.log("chartData length:", chartData.length, "days:", days);
