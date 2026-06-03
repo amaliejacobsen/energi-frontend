@@ -735,7 +735,8 @@ function DKHourly() {
       
         return chartData.filter(r => {
           const dt = new Date(r.datetime);
-          return dt >= fromDt && dt <= latestHour;
+          if (dt < fromDt) return false;
+          return dt <= latestHour;
         });
       })()
     : chartData;
