@@ -653,20 +653,24 @@ function DKHourly() {
 
   useEffect(() => {
     setLoading(true);
-    const from = new Date();
-    from.setDate(from.getDate() - (days === 1 ? 2 : days)); // hent 2 dages data ved 1d-visning
+  
+    const now = new Date();
+    const latestHour = new Date(now);
+    latestHour.setMinutes(0, 0, 0);
+  
+    const from = new Date(latestHour);
+    from.setHours(from.getHours() - (days * 24));
     const fromIso = from.toISOString();
 
     Promise.all([
       supabase.from("dk_prices_hourly").select("*")
-        .eq("area", area).gte("datetime", fromIso).order("datetime"),
+        .eq("area", area).gte("datetime", fromIso).lte("datetime", latestHour.toISOString()).order("datetime"),
       supabase.from("dk_production_hourly").select("*")
-        .eq("area", area).gte("datetime", fromIso).order("datetime"),
+        .eq("area", area).gte("datetime", fromIso).lte("datetime", latestHour.toISOString()).order("datetime"),
     ]).then(([priceRes, prodRes]) => {
       setPrices(priceRes.data || []);
       setProduction(prodRes.data || []);
       setLoading(false);
-      console.log("prices:", priceRes.data?.length, "production:", prodRes.data?.length);
     });
   }, [area, days]);
 
