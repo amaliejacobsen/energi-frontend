@@ -725,19 +725,17 @@ function DKHourly() {
 
   const filteredData = days === 1
     ? (() => {
-        // Find det seneste tidspunkt med produktionsdata
-        const withData = chartData.filter(r => 
-          r.offshore > 0 || r.onshore > 0 || r.solar > 0
-        );
-        if (withData.length === 0) return chartData.slice(-24);
+        const now = new Date();
+        // Sæt til seneste hele time
+        const latestHour = new Date(now);
+        latestHour.setMinutes(0, 0, 0);
       
-        const latestDt = new Date(withData[withData.length - 1].datetime);
-        const fromDt = new Date(latestDt);
+        const fromDt = new Date(latestHour);
         fromDt.setHours(fromDt.getHours() - 23);
       
         return chartData.filter(r => {
           const dt = new Date(r.datetime);
-          return dt >= fromDt && dt <= latestDt;
+          return dt >= fromDt && dt <= latestHour;
         });
       })()
     : chartData;
