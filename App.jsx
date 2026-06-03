@@ -654,7 +654,7 @@ function DKHourly() {
   useEffect(() => {
     setLoading(true);
     const from = new Date();
-    from.setDate(from.getDate() - days);
+    from.setDate(from.getDate() - (days === 1 ? 2 : days)); // hent 2 dages data ved 1d-visning
     const fromIso = from.toISOString();
 
     Promise.all([
@@ -719,13 +719,22 @@ function DKHourly() {
   
 
   const filteredData = days === 1
-    ? chartData.filter(r => {
-        const dt = new Date(r.datetime);
-        const now = new Date();
-        const twentyFourHoursAgo = new Date();
-        twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
-        return dt >= twentyFourHoursAgo && dt <= now;
-      })
+    ? (() => {
+        // Find det seneste tidspunkt med data
+        const withData = chartData.filter(r => 
+          r.offshore > 0 || r.onshore > 0 || r.solar > 0 || r.price != null
+        );
+        if (withData.length === 0) return chartData.slice(-24);
+      
+        const latestDt = new Date(withData[withData.length - 1].datetime);
+        const fromDt = new Date(latestDt);
+        fromDt.setHours(fromDt.getHours() - 23);
+      
+        return chartData.filter(r => {
+          const dt = new Date(r.datetime);
+          return dt >= fromDt && dt <= latestDt;
+        });
+      })()
     : chartData;
   
   console.log("chartData length:", chartData.length, "days:", days);
