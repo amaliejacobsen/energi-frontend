@@ -683,17 +683,22 @@ function DKHourly() {
     return Object.values(map)
       .sort((a, b) => a.datetime.localeCompare(b.datetime))
       .map((r, i, arr) => {
+        // Forward-fill ALLE værdier fra forrige række hvis null
         const prev = arr[i - 1];
         if (prev) {
-          if (r.price == null)       r.price       = prev.price;
+          if (r.price       == null) r.price       = prev.price;
           if (r.consumption == null) r.consumption = prev.consumption;
+          // Produktionskilder sættes til 0 hvis mangler (ikke forward-fill)
+          if (r.solar    == null) r.solar    = 0;
+          if (r.offshore == null) r.offshore = 0;
+          if (r.onshore  == null) r.onshore  = 0;
         }
         return r;
       })
       .map(r => {
-        const solar       = r.solar       || 0;
-        const offshore    = r.offshore    || 0;
-        const onshore     = r.onshore     || 0;
+        const solar       = r.solar    || 0;
+        const offshore    = r.offshore || 0;
+        const onshore     = r.onshore  || 0;
         const consumption = r.consumption || null;
         const residual    = consumption !== null
           ? consumption - (solar + offshore + onshore)
