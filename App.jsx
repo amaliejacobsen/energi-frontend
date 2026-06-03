@@ -720,9 +720,9 @@ function DKHourly() {
 
   const filteredData = days === 1
     ? (() => {
-        // Find det seneste tidspunkt med data
+        // Find det seneste tidspunkt med produktionsdata
         const withData = chartData.filter(r => 
-          r.offshore > 0 || r.onshore > 0 || r.solar > 0 || r.price != null
+          r.offshore > 0 || r.onshore > 0 || r.solar > 0
         );
         if (withData.length === 0) return chartData.slice(-24);
       
