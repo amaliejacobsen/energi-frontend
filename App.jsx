@@ -491,7 +491,7 @@ function DKProduction() {
 
 
 function NuclearProduction() {
-  const countries = ["Finland", "Frankrig"];
+  const countries = ["Finland", "Frankrig", "Sverige"];  // ← Sverige tilføjet
   const [selected, setSelected] = useState("Finland");
   const [data, setData] = useState([]);
 
@@ -511,7 +511,17 @@ function NuclearProduction() {
           <button key={c} className={selected === c ? "tab active" : "tab"} onClick={() => setSelected(c)}>{c}</button>
         ))}
       </div>
-      <YearlyLineChart data={data} valueKey="value_mwh" title={`Kernekraft produktion – ${selected} (MWh)`} yLabel="MWh" source="ENTSO-E Transparency Platform – A75 Actual Generation (B14 Nuclear)" />
+      <YearlyLineChart
+        data={data}
+        valueKey="value_mwh"
+        title={`Kernekraft produktion – ${selected} (MWh)`}
+        yLabel="MWh"
+        source={
+          selected === "Sverige"
+            ? "SYSpower – PROSENUC_PS"
+            : "ENTSO-E Transparency Platform – A75 Actual Generation (B14 Nuclear)"
+        }
+      />
     </div>
   );
 }
