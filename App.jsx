@@ -488,7 +488,30 @@ function DKProduction() {
   );
 }
 
+function daysInMonth(year, month) {
+  return new Date(year, month, 0).getDate();
+}
 
+function normalizeToDailyAvg(data) {
+  const today = new Date();
+  const currentYear = today.getFullYear();
+  const currentMonth = today.getMonth() + 1;
+  const currentDay = today.getDate();
+
+  return data.map(d => {
+    let days;
+    if (d.year === currentYear && d.month === currentMonth) {
+      // Indeværende måned: brug antal dage hidtil
+      days = currentDay;
+    } else {
+      days = daysInMonth(d.year, d.month);
+    }
+    return {
+      ...d,
+      value_mwh: days > 0 ? d.value_mwh / days : null,
+    };
+  });
+}
 
 function NuclearProduction() {
   const countries = ["Finland", "Frankrig", "Sverige"];  // ← Sverige tilføjet
@@ -501,7 +524,9 @@ function NuclearProduction() {
       .eq("country", selected)
       .order("year")
       .order("month")
-      .then(({ data }) => setData(data || []));
+      .then(({ data }) => {
+        setData(normalizeToDailyAvg(data || []));
+      });
   }, [selected]);
 
   return (
@@ -514,8 +539,8 @@ function NuclearProduction() {
       <YearlyLineChart
         data={data}
         valueKey="value_mwh"
-        title={`Kernekraft produktion – ${selected} (MWh)`}
-        yLabel="MWh"
+        title={`Kernekraft produktion – ${selected} (MWh/dag gennemsnit)`}
+        yLabel="MWh/dag"
         source={
           selected === "Sverige"
             ? "SYSpower – PROSENUC_PS"
