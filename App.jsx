@@ -754,14 +754,14 @@ function DKHourly() {
 
   
 
-  const filteredData = (() => {
+  const filteredData = days === 1 ? (() => {
     const now = new Date();
     const latestHour = new Date(now);
     latestHour.setMinutes(0, 0, 0);
-  
+
     const fromDt = new Date(latestHour);
     fromDt.setHours(fromDt.getHours() - (days * 24));
-  
+
     return chartData.filter(r => {
       const dt = new Date(r.datetime);
       return dt >= fromDt && dt <= latestHour;
