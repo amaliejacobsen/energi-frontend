@@ -766,8 +766,8 @@ function DKHourly() {
       const dt = new Date(r.datetime);
       return dt >= fromDt && dt <= latestHour;
     });
-  })();
-    : chartData;
+  })()
+  : chartData;
   
   console.log("chartData length:", chartData.length, "days:", days);
   return (
