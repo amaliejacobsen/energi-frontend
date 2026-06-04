@@ -525,7 +525,9 @@ function NuclearProduction() {
       .order("year")
       .order("month")
       .then(({ data }) => {
-        setData(normalizeToDailyAvg(data || []));
+        const normalized = normalizeToDailyAvg(data || []);
+        console.log("Første række før:", data?.[0]?.value_mwh, "efter:", normalized?.[0]?.value_mwh);
+        setData(normalized);
       });
   }, [selected]);
 
