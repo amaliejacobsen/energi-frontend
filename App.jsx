@@ -674,7 +674,7 @@ function GenerationMixChart({ area }) {
   useEffect(() => {
     const today = new Date().toISOString().split('T')[0];
     supabase.from("generation_mix").select("*")
-      .eq("area", area).eq("date", today)
+      .eq("area", area).gte("date", today)
       .then(({ data: d }) => {
         setData(d || []);
         setLoading(false);
