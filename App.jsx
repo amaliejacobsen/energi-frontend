@@ -1330,7 +1330,7 @@ function ForecastTab() {
     </div>
   );
 }
-const TABS = ["Danmark","Hydro","Forecast","Gas storage","Installed capacity","Kernekraft","Forbrug"];
+const TABS = ["Danmark","Hydro","Forecast","Gas storage","Installed capacity","Kernekraft"];
 
 export default function App() {
   const [tab, setTab] = useState(TABS[0]);
