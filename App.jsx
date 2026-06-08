@@ -701,7 +701,7 @@ function DKHourly() {
     });
   }, [area, days]);
 
-  const chartData = (() => {
+ const chartData = (() => {
     const map = {};
     prices.forEach(r => {
       map[r.datetime] = { datetime: r.datetime, price: r.price_dkk };
@@ -714,12 +714,10 @@ function DKHourly() {
     return Object.values(map)
       .sort((a, b) => a.datetime.localeCompare(b.datetime))
       .map((r, i, arr) => {
-        // Forward-fill ALLE værdier fra forrige række hvis null
         const prev = arr[i - 1];
         if (prev) {
           if (r.price       == null) r.price       = prev.price;
           if (r.consumption == null) r.consumption = prev.consumption;
-          // Produktionskilder sættes til 0 hvis mangler (ikke forward-fill)
           if (r.solar    == null) r.solar    = 0;
           if (r.offshore == null) r.offshore = 0;
           if (r.onshore  == null) r.onshore  = 0;
@@ -734,27 +732,29 @@ function DKHourly() {
         const residual    = consumption !== null
           ? consumption - (solar + offshore + onshore)
           : null;
-        const dt = new Date(r.datetime + (r.datetime.includes('+') ? '' : '+00:00'));
-        const hour = dt.toLocaleString('da-DK', { timeZone: 'Europe/Copenhagen', hour: 'numeric', hour12: false });
-        const dayNum = dt.toLocaleString('da-DK', { timeZone: 'Europe/Copenhagen', day: 'numeric' });
-        const monthNum = dt.toLocaleString('da-DK', { timeZone: 'Europe/Copenhagen', month: 'numeric' });
-        const hourNum = parseInt(hour);
+
+        // Konverter UTC datetime til dansk tid
+        const dt = new Date(r.datetime.includes('+') || r.datetime.includes('Z') 
+          ? r.datetime 
+          : r.datetime + 'Z');
+        
+        const dkDate = new Intl.DateTimeFormat('da-DK', {
+          timeZone: 'Europe/Copenhagen',
+          day: 'numeric', month: 'numeric',
+          hour: 'numeric', hour12: false
+        }).formatToParts(dt);
+
+        const dayNum   = dkDate.find(p => p.type === 'day')?.value;
+        const monthNum = dkDate.find(p => p.type === 'month')?.value;
+        const hourNum  = parseInt(dkDate.find(p => p.type === 'hour')?.value || '0');
+
         const isNewDay = hourNum === 0;
         const dateLabel = days === 1
           ? `${String(hourNum).padStart(2,'0')}:00`
-          : days === 3
-            ? isNewDay
-              ? `${dayNum}/${monthNum}`
-              : `${String(hourNum).padStart(2,'0')}:00`
-            : isNewDay
-              ? `${dayNum}/${monthNum}`
-             : `${String(hourNum).padStart(2,'0')}:00`;
-        const isNewDay = hour === 0;
-        const dateLabel = days === 1
-          ? `${String(hour).padStart(2,'0')}:00`
           : isNewDay
-            ? `${dt.getDate()}/${dt.getMonth()+1}`
-            : `${String(hour).padStart(2,'0')}:00`;
+            ? `${dayNum}/${monthNum}`
+            : `${String(hourNum).padStart(2,'0')}:00`;
+
         return {
           ...r,
           label: dateLabel,
