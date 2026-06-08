@@ -860,7 +860,7 @@ function DKHourly() {
           <p style={{ color: '#888' }}>Ingen timedata tilgængelig for de seneste {days} dage.</p>
         </div>
       ) : (
-        <>
+        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '16px', alignItems: 'start' }}>
           <div className="chart-box">
             <h3>{area} – Produktion, Forbrug & Spotpris (seneste {days} dage)</h3>
             <ResponsiveContainer width="100%" height={440}>
@@ -932,13 +932,20 @@ function DKHourly() {
                 <Brush dataKey="label" height={25} stroke="#2C3E50" fill="#f0f0f0" travellerWidth={6} />
               </ComposedChart>
             </ResponsiveContainer>
-          </div>
-          <GenerationMixChart area={area} />
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '16px', alignItems: 'start' }}>
+              <div className="chart-box">
+                <h3>...</h3>
+                <ResponsiveContainer ...>
+                  ...
+                </ResponsiveContainer>
+              </div>
+              <GenerationMixChart area={area} />
+            </div>
+          )}
         </div>
-      )}
-    </div>
-  );
-}           
+      );
+    }     
 
    
 
