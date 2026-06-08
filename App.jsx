@@ -710,12 +710,27 @@ function DKHourly() {
 
  const chartData = (() => {
     const map = {};
+    
+    // Aggreger 15-min priser til timesgennemsnit
+    const hourlyPrices = {};
     prices.forEach(r => {
-      map[r.datetime] = { datetime: r.datetime, price: r.price_dkk };
+      const dt = new Date(r.datetime);
+      dt.setMinutes(0, 0, 0);
+      const key = dt.toISOString();
+      if (!hourlyPrices[key]) hourlyPrices[key] = [];
+      hourlyPrices[key].push(r.price_dkk);
     });
+    Object.entries(hourlyPrices).forEach(([key, vals]) => {
+      map[key] = { datetime: key, price: vals.reduce((a,b) => a+b, 0) / vals.length };
+    });
+
+    // Produktion per time
     production.forEach(r => {
-      if (!map[r.datetime]) map[r.datetime] = { datetime: r.datetime };
-      map[r.datetime][r.source] = r.value_mwh;
+      const dt = new Date(r.datetime);
+      dt.setMinutes(0, 0, 0);
+      const key = dt.toISOString();
+      if (!map[key]) map[key] = { datetime: key };
+      map[key][r.source] = r.value_mwh;
     });
 
     return Object.values(map)
