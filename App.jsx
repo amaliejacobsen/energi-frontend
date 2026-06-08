@@ -734,8 +734,21 @@ function DKHourly() {
         const residual    = consumption !== null
           ? consumption - (solar + offshore + onshore)
           : null;
-        const dt = new Date(r.datetime);
-        const hour = dt.getHours();
+        const dt = new Date(r.datetime + (r.datetime.includes('+') ? '' : '+00:00'));
+        const hour = dt.toLocaleString('da-DK', { timeZone: 'Europe/Copenhagen', hour: 'numeric', hour12: false });
+        const dayNum = dt.toLocaleString('da-DK', { timeZone: 'Europe/Copenhagen', day: 'numeric' });
+        const monthNum = dt.toLocaleString('da-DK', { timeZone: 'Europe/Copenhagen', month: 'numeric' });
+        const hourNum = parseInt(hour);
+        const isNewDay = hourNum === 0;
+        const dateLabel = days === 1
+          ? `${String(hourNum).padStart(2,'0')}:00`
+          : days === 3
+            ? isNewDay
+              ? `${dayNum}/${monthNum}`
+              : `${String(hourNum).padStart(2,'0')}:00`
+            : isNewDay
+              ? `${dayNum}/${monthNum}`
+             : `${String(hourNum).padStart(2,'0')}:00`;
         const isNewDay = hour === 0;
         const dateLabel = days === 1
           ? `${String(hour).padStart(2,'0')}:00`
@@ -745,7 +758,7 @@ function DKHourly() {
         return {
           ...r,
           label: dateLabel,
-          fullLabel: `${dt.getDate()}/${dt.getMonth()+1} ${String(dt.getHours()).padStart(2,'0')}:00`,
+          fullLabel: `${dayNum}/${monthNum} ${String(hourNum).padStart(2,'0')}:00`,
           solar, offshore, onshore, consumption, residual,
           renewables: solar + offshore + onshore,
         };
