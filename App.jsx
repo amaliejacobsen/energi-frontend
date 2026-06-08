@@ -680,34 +680,20 @@ function DKHourly() {
 
   useEffect(() => {
     setLoading(true);
-
-    const now = new Date();
   
-    // Seneste hele time i dansk tid
+    const now = new Date();
     const latestHour = new Date(now);
-    latestHour.setMinutes(0, 0, 0, 0);
-
+    latestHour.setMinutes(0, 0, 0);
+  
     const from = new Date(latestHour);
     from.setHours(from.getHours() - (days * 24));
+    const fromIso = from.toISOString();
 
-    // Konverter til dansk tid ISO string (uden Z) for at matche det der er gemt
-    const toDKString = (dt) => {
-      return new Intl.DateTimeFormat('sv-SE', {
-        timeZone: 'Europe/Copenhagen',
-        year: 'numeric', month: '2-digit', day: '2-digit',
-        hour: '2-digit', minute: '2-digit', second: '2-digit',
-        hour12: false
-      }).format(dt).replace(' ', 'T');
-    };
-
-    const fromStr = toDKString(from);
-    const toStr = toDKString(latestHour);
-
-     Promise.all([
+    Promise.all([
       supabase.from("dk_prices_hourly").select("*")
-        .eq("area", area).gte("datetime", fromStr).lte("datetime", toStr).order("datetime"),
+        .eq("area", area).gte("datetime", fromIso).lte("datetime", latestHour.toISOString()).order("datetime"),
       supabase.from("dk_production_hourly").select("*")
-        .eq("area", area).gte("datetime", fromStr).lte("datetime", toStr).order("datetime"),
+        .eq("area", area).gte("datetime", fromIso).lte("datetime", latestHour.toISOString()).order("datetime"),
     ]).then(([priceRes, prodRes]) => {
       setPrices(priceRes.data || []);
       setProduction(prodRes.data || []);
@@ -715,45 +701,25 @@ function DKHourly() {
     });
   }, [area, days]);
 
-  useEffect(() => {
-    if (prices.length > 0) {
-      console.log("Pris eksempel:", prices[0].datetime);
-      console.log("Produktion eksempel:", production[0]?.datetime);
-    }
-  }, [prices, production]);
-
- const chartData = (() => {
+  const chartData = (() => {
     const map = {};
-    
-    // Aggreger 15-min priser til timesgennemsnit
-    const hourlyPrices = {};
     prices.forEach(r => {
-      const dt = new Date(r.datetime);
-      dt.setMinutes(0, 0, 0);
-      const key = dt.toISOString();
-      if (!hourlyPrices[key]) hourlyPrices[key] = [];
-      hourlyPrices[key].push(r.price_dkk);
+      map[r.datetime] = { datetime: r.datetime, price: r.price_dkk };
     });
-    Object.entries(hourlyPrices).forEach(([key, vals]) => {
-      map[key] = { datetime: key, price: vals.reduce((a,b) => a+b, 0) / vals.length };
-    });
-
-    // Produktion per time
     production.forEach(r => {
-      const dt = new Date(r.datetime);
-      dt.setMinutes(0, 0, 0);
-      const key = dt.toISOString();
-      if (!map[key]) map[key] = { datetime: key };
-      map[key][r.source] = r.value_mwh;
+      if (!map[r.datetime]) map[r.datetime] = { datetime: r.datetime };
+      map[r.datetime][r.source] = r.value_mwh;
     });
 
     return Object.values(map)
       .sort((a, b) => a.datetime.localeCompare(b.datetime))
       .map((r, i, arr) => {
+        // Forward-fill ALLE værdier fra forrige række hvis null
         const prev = arr[i - 1];
         if (prev) {
           if (r.price       == null) r.price       = prev.price;
           if (r.consumption == null) r.consumption = prev.consumption;
+          // Produktionskilder sættes til 0 hvis mangler (ikke forward-fill)
           if (r.solar    == null) r.solar    = 0;
           if (r.offshore == null) r.offshore = 0;
           if (r.onshore  == null) r.onshore  = 0;
@@ -768,33 +734,18 @@ function DKHourly() {
         const residual    = consumption !== null
           ? consumption - (solar + offshore + onshore)
           : null;
-
-        // Konverter UTC datetime til dansk tid
-        const dt = new Date(r.datetime.includes('+') || r.datetime.includes('Z')
-          ? r.datetime
-          : r.datetime + '+02:00');  // dansk sommertid
-        
-        const dkDate = new Intl.DateTimeFormat('da-DK', {
-          timeZone: 'Europe/Copenhagen',
-          day: 'numeric', month: 'numeric',
-          hour: 'numeric', hour12: false
-        }).formatToParts(dt);
-
-        const dayNum   = dkDate.find(p => p.type === 'day')?.value;
-        const monthNum = dkDate.find(p => p.type === 'month')?.value;
-        const hourNum  = parseInt(dkDate.find(p => p.type === 'hour')?.value || '0');
-
-        const isNewDay = hourNum === 0;
+        const dt = new Date(r.datetime);
+        const hour = dt.getHours();
+        const isNewDay = hour === 0;
         const dateLabel = days === 1
-          ? `${String(hourNum).padStart(2,'0')}:00`
+          ? `${String(hour).padStart(2,'0')}:00`
           : isNewDay
-            ? `${dayNum}/${monthNum}`
-            : `${String(hourNum).padStart(2,'0')}:00`;
-
+            ? `${dt.getDate()}/${dt.getMonth()+1}`
+            : `${String(hour).padStart(2,'0')}:00`;
         return {
           ...r,
           label: dateLabel,
-          fullLabel: `${dayNum}/${monthNum} ${String(hourNum).padStart(2,'0')}:00`,
+          fullLabel: `${dt.getDate()}/${dt.getMonth()+1} ${String(dt.getHours()).padStart(2,'0')}:00`,
           solar, offshore, onshore, consumption, residual,
           renewables: solar + offshore + onshore,
         };
