@@ -1347,7 +1347,6 @@ export default function App() {
         {tab === "Installed capacity" && <InstalledCapacity />}
         {tab === "Kernekraft" && <NuclearProduction />}
         {tab === "Forecast" && <ForecastTab />}
-        {tab === "Forbrug" && <Consumption />}
       </main>
       <style>{`
         :root {
