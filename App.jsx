@@ -680,20 +680,34 @@ function DKHourly() {
 
   useEffect(() => {
     setLoading(true);
-  
+
     const now = new Date();
-    const latestHour = new Date(now);
-    latestHour.setMinutes(0, 0, 0);
   
+    // Seneste hele time i dansk tid
+    const latestHour = new Date(now);
+    latestHour.setMinutes(0, 0, 0, 0);
+
     const from = new Date(latestHour);
     from.setHours(from.getHours() - (days * 24));
-    const fromIso = from.toISOString();
 
-    Promise.all([
+    // Konverter til dansk tid ISO string (uden Z) for at matche det der er gemt
+    const toDKString = (dt) => {
+      return new Intl.DateTimeFormat('sv-SE', {
+        timeZone: 'Europe/Copenhagen',
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', second: '2-digit',
+        hour12: false
+      }).format(dt).replace(' ', 'T');
+    };
+
+    const fromStr = toDKString(from);
+    const toStr = toDKString(latestHour);
+
+     Promise.all([
       supabase.from("dk_prices_hourly").select("*")
-        .eq("area", area).gte("datetime", fromIso).lte("datetime", latestHour.toISOString()).order("datetime"),
+        .eq("area", area).gte("datetime", fromStr).lte("datetime", toStr).order("datetime"),
       supabase.from("dk_production_hourly").select("*")
-        .eq("area", area).gte("datetime", fromIso).lte("datetime", latestHour.toISOString()).order("datetime"),
+        .eq("area", area).gte("datetime", fromStr).lte("datetime", toStr).order("datetime"),
     ]).then(([priceRes, prodRes]) => {
       setPrices(priceRes.data || []);
       setProduction(prodRes.data || []);
@@ -756,9 +770,9 @@ function DKHourly() {
           : null;
 
         // Konverter UTC datetime til dansk tid
-        const dt = new Date(r.datetime.includes('+') || r.datetime.includes('Z') 
-          ? r.datetime 
-          : r.datetime + 'Z');
+        const dt = new Date(r.datetime.includes('+') || r.datetime.includes('Z')
+          ? r.datetime
+          : r.datetime + '+02:00');  // dansk sommertid
         
         const dkDate = new Intl.DateTimeFormat('da-DK', {
           timeZone: 'Europe/Copenhagen',
