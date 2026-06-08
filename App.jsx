@@ -701,6 +701,13 @@ function DKHourly() {
     });
   }, [area, days]);
 
+  useEffect(() => {
+    if (prices.length > 0) {
+      console.log("Pris eksempel:", prices[0].datetime);
+      console.log("Produktion eksempel:", production[0]?.datetime);
+    }
+  }, [prices, production]);
+
  const chartData = (() => {
     const map = {};
     prices.forEach(r => {
