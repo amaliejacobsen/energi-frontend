@@ -930,16 +930,15 @@ function DKHourly() {
                 <Line yAxisId="left" type="stepAfter" dataKey="residual" name="Residual load"
                   stroke="#9B59B6" strokeWidth={2} dot={false} connectNulls strokeDasharray="5 5" hide={!visible.residual} />
                 <Brush dataKey="label" height={25} stroke="#2C3E50" fill="#f0f0f0" travellerWidth={6} />
-                </ComposedChart>
-              </ResponsiveContainer>
-            </div>
-            <GenerationMixChart area={area} />
+              </ComposedChart>
+            </ResponsiveContainer>
           </div>
-          </>
-        )}
-      </div>
-    );
-  }           
+          <GenerationMixChart area={area} />
+        </div>
+      )}
+    </div>
+  );
+}           
 
    
 
