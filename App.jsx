@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { LineChart, Line, BarChart, Bar, ComposedChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Brush, ReferenceLine } from "recharts";
+import { LineChart, Line, BarChart, Bar, ComposedChart, Area, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Brush, ReferenceLine } from "recharts";
 import { supabase } from "./src/supabaseClient";
 
 const YEAR_COLORS = ["#2C3E50","#E74C3C","#3498DB","#2ECC71","#9B59B6","#F39C12","#1ABC9C","#E67E22","#95A5A6","#D35400"];
@@ -665,6 +665,76 @@ function Consumption() {
 }
 
 
+const PIE_COLORS = ["#1A3A5C","#3498DB","#F4A927","#2ECC71","#E74C3C","#9B59B6","#F39C12","#1ABC9C","#E67E22","#95A5A6"];
+
+function GenerationMixChart({ area }) {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const today = new Date().toISOString().split('T')[0];
+    supabase.from("generation_mix").select("*")
+      .eq("area", area).eq("date", today)
+      .then(({ data: d }) => {
+        setData(d || []);
+        setLoading(false);
+      });
+  }, [area]);
+
+  if (loading) return <p style={{ padding: '20px' }}>Henter mix...</p>;
+  if (!data.length) return <div className="chart-box"><p style={{ color: '#888' }}>Ingen mix-data tilgængelig for i dag.</p></div>;
+
+  const total = data.reduce((s, d) => s + d.avg_mw, 0);
+  const pieData = data
+    .filter(d => d.avg_mw > 0)
+    .sort((a, b) => b.avg_mw - a.avg_mw)
+    .map(d => ({ name: d.source, value: Math.round(d.avg_mw) }));
+
+  const largest = pieData[0];
+
+  return (
+    <div className="chart-box" style={{ height: '100%' }}>
+      <h3>{area} – Dagens strømsammensætning</h3>
+      <div style={{ position: 'relative', width: '100%', height: 260 }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <PieChart>
+            <Pie data={pieData} cx="50%" cy="50%" innerRadius={70} outerRadius={110}
+              dataKey="value" paddingAngle={1}>
+              {pieData.map((_, i) => (
+                <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+              ))}
+            </Pie>
+            <Tooltip formatter={(value) => [`${Math.round(value / total * 100)}% (${value} MW)`]} />
+          </PieChart>
+        </ResponsiveContainer>
+        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)', textAlign: 'center', pointerEvents: 'none' }}>
+          <div style={{ fontSize: '20px', fontWeight: '700', color: 'var(--text)' }}>
+            {Math.round(largest.value / total * 100)}%
+          </div>
+          <div style={{ fontSize: '11px', color: '#888' }}>{largest.name}</div>
+        </div>
+      </div>
+      <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+        {pieData.map((d, i) => (
+          <div key={d.name} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: PIE_COLORS[i % PIE_COLORS.length] }} />
+              <span style={{ color: 'var(--text)' }}>{d.name}</span>
+            </div>
+            <strong style={{ color: 'var(--text)' }}>{Math.round(d.value / total * 100)}%</strong>
+          </div>
+        ))}
+      </div>
+      <div style={{ marginTop: '16px', padding: '10px 12px', background: 'var(--fafafa)', borderRadius: '6px', border: '1px solid var(--border)' }}>
+        <p style={{ fontSize: '11px', color: '#888', margin: 0 }}>
+          📡 Datakilde: <strong style={{ color: 'var(--text)' }}>ENTSO-E – A75 & A11</strong>
+        </p>
+      </div>
+    </div>
+  );
+}
+
+
 function DKHourly() {
   const [area, setArea] = useState("DK1");
   const [days, setDays] = useState(7);
@@ -860,14 +930,16 @@ function DKHourly() {
                 <Line yAxisId="left" type="stepAfter" dataKey="residual" name="Residual load"
                   stroke="#9B59B6" strokeWidth={2} dot={false} connectNulls strokeDasharray="5 5" hide={!visible.residual} />
                 <Brush dataKey="label" height={25} stroke="#2C3E50" fill="#f0f0f0" travellerWidth={6} />
-              </ComposedChart>
-            </ResponsiveContainer>
-          </div>       
-        </>            
-      )}              
-    </div>       
-  );          
-}           
+                </ComposedChart>
+              </ResponsiveContainer>
+            </div>
+            <GenerationMixChart area={area} />
+          </div>
+          </>
+        )}
+      </div>
+    );
+  }           
 
    
 
