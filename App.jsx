@@ -679,6 +679,8 @@ function GenerationMixChart({ area }) {
       month: '2-digit',
       day: '2-digit'
     }).format(today);
+
+    console.log("Søger efter dato:", dateStr);  
     supabase.from("generation_mix").select("*")
       .eq("area", area).eq("date", dateStr)
       .then(({ data: d }) => {
