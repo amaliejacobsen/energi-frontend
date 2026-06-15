@@ -673,7 +673,12 @@ function GenerationMixChart({ area }) {
 
   useEffect(() => {
     const today = new Date();
-    const dateStr = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
+    const dateStr = new Intl.DateTimeFormat('sv-SE', {
+      timeZone: 'Europe/Copenhagen',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    }).format(today);
     supabase.from("generation_mix").select("*")
       .eq("area", area).eq("date", dateStr)
       .then(({ data: d }) => {
