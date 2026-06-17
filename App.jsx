@@ -738,7 +738,7 @@ function GenerationMixChart({ area }) {
       </div>
       <div style={{ marginTop: '16px', padding: '10px 12px', background: 'var(--fafafa)', borderRadius: '6px', border: '1px solid var(--border)' }}>
         <p style={{ fontSize: '11px', color: '#888', margin: 0 }}>
-          📡 Datakilde: <strong style={{ color: 'var(--text)' }}>SysPower / ENTSO-E</strong>
+          📡 Datakilde: <strong style={{ color: 'var(--text)' }}>SysPower</strong>
         </p>
       </div>
     </div>
