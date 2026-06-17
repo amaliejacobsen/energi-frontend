@@ -667,6 +667,8 @@ function Consumption() {
 
 const PIE_COLORS = ["#1A3A5C","#3498DB","#F4A927","#2ECC71","#E74C3C","#9B59B6","#F39C12","#1ABC9C","#E67E22","#95A5A6"];
 
+
+
 function GenerationMixChart({ area }) {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -736,7 +738,7 @@ function GenerationMixChart({ area }) {
       </div>
       <div style={{ marginTop: '16px', padding: '10px 12px', background: 'var(--fafafa)', borderRadius: '6px', border: '1px solid var(--border)' }}>
         <p style={{ fontSize: '11px', color: '#888', margin: 0 }}>
-          📡 Datakilde: <strong style={{ color: 'var(--text)' }}>ENTSO-E – A75 & A11</strong>
+          📡 Datakilde: <strong style={{ color: 'var(--text)' }}>SysPower / ENTSO-E</strong>
         </p>
       </div>
     </div>
