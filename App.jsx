@@ -1264,7 +1264,7 @@ function HydroForecast() {
           De seneste 14 dages faktiske nedbør samt de næste 14 dages forecast.
         </p>
         <ResponsiveContainer width="100%" height={350}>
-          <ComposedChart data={data} margin={{ top: 10, right: 30, left: 10, bottom: 10 }}>
+          <ComposedChart data={data} margin={{ top: 30, right: 30, left: 10, bottom: 10 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
             <XAxis dataKey="displayDate" tick={{ fontSize: 11 }} />
             <YAxis tick={{ fontSize: 12 }} label={{ value: "Nedbør (mm)", angle: -90, position: "insideLeft", fontSize: 12 }} />
@@ -1370,7 +1370,7 @@ function TemperatureForecast() {
           De seneste 14 dages faktiske temperatur samt de næste 14 dages forecast.
         </p>
         <ResponsiveContainer width="100%" height={350}>
-          <ComposedChart data={data} margin={{ top: 10, right: 30, left: 10, bottom: 10 }}>
+          <ComposedChart data={data} margin={{ top: 30, right: 30, left: 10, bottom: 10 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
             <XAxis dataKey="displayDate" tick={{ fontSize: 11 }} />
             <YAxis tick={{ fontSize: 12 }} label={{ value: "Temperatur (°C)", angle: -90, position: "insideLeft", fontSize: 12 }} />
