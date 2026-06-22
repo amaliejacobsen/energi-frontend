@@ -787,13 +787,19 @@ function DKHourly() {
 
   const chartData = (() => {
     const map = {};
-    prices.forEach(r => {
-      map[r.datetime] = { datetime: r.datetime, price: r.price_dkk };
-    });
+    prices
+      .filter(r => {
+        const dt = new Date(r.datetime);
+        return dt.getMinutes() === 0;
+      })
+      .forEach(r => {
+        map[r.datetime] = { datetime: r.datetime, price: r.price_dkk };
+      });
     production.forEach(r => {
       if (!map[r.datetime]) map[r.datetime] = { datetime: r.datetime };
       map[r.datetime][r.source] = r.value_mwh;
     });
+
 
     return Object.values(map)
       .sort((a, b) => a.datetime.localeCompare(b.datetime))
