@@ -707,7 +707,7 @@ function GenerationMixChart({ area }) {
     <div className="chart-box" style={{ height: '100%' }}>
       <h3>{area} – Strømmix i dag (akkumuleret fra kl. 00)</h3>
       <p style={{ fontSize: '11px', color: '#888', margin: '2px 0 12px' }}>
-        Andel af produktion og nettoimport/-eksport siden midnat
+        Andel af produktion og nettoimport siden midnat
       </p>
       <div style={{ position: 'relative', width: '100%', height: 260 }}>
         <ResponsiveContainer width="100%" height="100%">
