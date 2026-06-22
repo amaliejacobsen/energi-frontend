@@ -1312,6 +1312,7 @@ function TemperatureForecast() {
       .select("*")
       .eq("country", country)
       .gte("date", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
+      .lte("date", new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
       .order("date", { ascending: true })
       .then(({ data: fetchedData, error }) => {
         if (error) console.error("Fejl:", error);
