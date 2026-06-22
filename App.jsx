@@ -394,7 +394,6 @@ function DKPrices({ area }) {
 
 function DKProduction() {
   const [area, setArea] = useState("Samlet");
-  const [viewType, setViewType] = useState("monthly"); // "monthly" eller "rolling7"
   
   // Månedlig data
   const [solar, setSolar] = useState([]);
@@ -465,25 +464,13 @@ function DKProduction() {
             <button key={a} className={area === a ? "tab active" : "tab"} onClick={() => setArea(a)}>{a}</button>
           ))}
         </div>
-        <div className="tab-row" style={{ margin: 0 }}>
-          <button className={viewType === "monthly" ? "tab active" : "tab"} onClick={() => setViewType("monthly")}>Månedligt</button>
-          <button className={viewType === "rolling7" ? "tab active" : "tab"} onClick={() => setViewType("rolling7")}>7-dages glidende</button>
-        </div>
       </div>
 
-      {viewType === "monthly" ? (
-        <div>
-          <DKProductionChart data={solar}    valueKey="value_mwh" title={`${area} – Sol produktion (MWh)`}            yLabel="MWh" source="Energidataservice – ProductionConsumptionSettlement" />
-          <DKProductionChart data={offshore} valueKey="value_mwh" title={`${area} – Offshore vind produktion (MWh)`} yLabel="MWh" source="Energidataservice – ProductionConsumptionSettlement" />
-          <DKProductionChart data={onshore}  valueKey="value_mwh" title={`${area} – Onshore vind produktion (MWh)`}  yLabel="MWh" source="Energidataservice – ProductionConsumptionSettlement" />
-        </div>
-      ) : (
-        <div>
-          <DKProductionDailyChart data={solarDaily}    valueKey="value_mwh" title={`${area} – Sol produktion`}            yLabel="MWh" source="Energidataservice – ProductionConsumptionSettlement" />
-          <DKProductionDailyChart data={offshoreDaily} valueKey="value_mwh" title={`${area} – Offshore vind produktion`} yLabel="MWh" source="Energidataservice – ProductionConsumptionSettlement" />
-          <DKProductionDailyChart data={onshoreDaily}  valueKey="value_mwh" title={`${area} – Onshore vind produktion`}  yLabel="MWh" source="Energidataservice – ProductionConsumptionSettlement" />
-        </div>
-      )}
+      <div>
+        <DKProductionChart data={solar}    valueKey="value_mwh" title={`${area} – Sol produktion (MWh)`}            yLabel="MWh" source="Energidataservice – ProductionConsumptionSettlement" />
+        <DKProductionChart data={offshore} valueKey="value_mwh" title={`${area} – Offshore vind produktion (MWh)`} yLabel="MWh" source="Energidataservice – ProductionConsumptionSettlement" />
+        <DKProductionChart data={onshore}  valueKey="value_mwh" title={`${area} – Onshore vind produktion (MWh)`}  yLabel="MWh" source="Energidataservice – ProductionConsumptionSettlement" />
+      </div>
     </div>
   );
 }
