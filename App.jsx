@@ -874,7 +874,7 @@ function DKHourly() {
           <p style={{ color: '#888' }}>Ingen timedata tilgængelig for de seneste {days} dage.</p>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '16px', alignItems: 'start' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '3fr 1fr', gap: '16px', alignItems: 'start' }}>
           <div className="chart-box">
             <h3>{area} – Produktion, Forbrug & Spotpris (seneste {days} dage)</h3>
             <ResponsiveContainer width="100%" height={440}>
