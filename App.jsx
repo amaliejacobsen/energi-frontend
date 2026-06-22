@@ -695,12 +695,12 @@ function GenerationMixChart({ area }) {
   if (loading) return <p style={{ padding: '20px' }}>Henter mix...</p>;
   if (!data.length) return <div className="chart-box"><p style={{ color: '#888' }}>Ingen mix-data tilgængelig for i dag.</p></div>;
 
-  const total = data.reduce((s, d) => s + d.avg_mw, 0);
+  const total = data.filter(d => d.avg_mw > 0).reduce((s, d) => s + d.avg_mw, 0);
   const pieData = data
-    const total = data.filter(d => d.avg_mw > 0).reduce((s, d) => s + d.avg_mw, 0);
+    .filter(d => d.avg_mw > 0)
     .sort((a, b) => b.avg_mw - a.avg_mw)
     .map(d => ({ name: d.source, value: Math.round(d.avg_mw) }));
-
+  
   const largest = pieData[0];
 
   return (
