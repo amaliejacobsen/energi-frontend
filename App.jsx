@@ -877,7 +877,7 @@ function DKHourly() {
         <div style={{ display: 'grid', gridTemplateColumns: '3fr 1fr', gap: '16px', alignItems: 'start' }}>
           <div className="chart-box">
             <h3>{area} – Produktion, Forbrug & Spotpris (seneste {days} dage)</h3>
-            <ResponsiveContainer width="100%" height={440}>
+            <ResponsiveContainer width="100%" height={window.innerHeight - 200}>
               <ComposedChart data={filteredData} margin={{ top: 5, right: 70, left: 20, bottom: 30 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis
