@@ -697,7 +697,7 @@ function GenerationMixChart({ area }) {
 
   const total = data.reduce((s, d) => s + d.avg_mw, 0);
   const pieData = data
-    .filter(d => d.avg_mw > 0)
+    const total = data.filter(d => d.avg_mw > 0).reduce((s, d) => s + d.avg_mw, 0);
     .sort((a, b) => b.avg_mw - a.avg_mw)
     .map(d => ({ name: d.source, value: Math.round(d.avg_mw) }));
 
