@@ -877,7 +877,7 @@ function DKHourly() {
         <div style={{ display: 'grid', gridTemplateColumns: '3fr 1fr', gap: '16px', alignItems: 'start' }}>
           <div className="chart-box">
             <h3>{area} – Produktion, Forbrug & Spotpris (seneste {days} dage)</h3>
-            <ResponsiveContainer width="100%" height={window.innerHeight - 200}>
+            <ResponsiveContainer width="100%" height={450}>
               <ComposedChart data={filteredData} margin={{ top: 5, right: 70, left: 20, bottom: 30 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                 <XAxis
@@ -1470,7 +1470,7 @@ export default function App() {
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); transition: background 0.2s, color 0.2s; }
-        .app { max-width: 1400px; margin: 0 auto; padding: 0 20px 40px; }
+        .app { max-width: 100%; margin: 0 auto; padding: 0 20px 40px; }
         header { padding: 24px 0 16px; border-bottom: 2px solid var(--border); margin-bottom: 16px; }
         h1 { font-size: 1.6rem; color: var(--text); }
         .nav-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 24px; }
