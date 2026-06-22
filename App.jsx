@@ -788,10 +788,7 @@ function DKHourly() {
   const chartData = (() => {
     const map = {};
     prices.forEach(r => {
-      const dt = new Date(r.datetime);
-      dt.setHours(dt.getHours() + 2);
-      const shiftedKey = dt.toISOString().slice(0, 19);
-      map[shiftedKey] = { datetime: shiftedKey, price: r.price_dkk };
+      map[r.datetime] = { datetime: r.datetime, price: r.price_dkk };
     });
     production.forEach(r => {
       if (!map[r.datetime]) map[r.datetime] = { datetime: r.datetime };
