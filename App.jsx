@@ -1216,6 +1216,7 @@ function HydroForecast() {
       .from("hydro_weather_forecast")
       .select("*")
       .eq("country", country)
+      .gte("date", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
       .order("date", { ascending: true })
       .then(({ data: fetchedData, error }) => {
         if (error) console.error("Fejl:", error);
@@ -1310,6 +1311,7 @@ function TemperatureForecast() {
       .from("temperature_forecast")
       .select("*")
       .eq("country", country)
+      .gte("date", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0])
       .order("date", { ascending: true })
       .then(({ data: fetchedData, error }) => {
         if (error) console.error("Fejl:", error);
@@ -1402,7 +1404,7 @@ function TemperatureForecast() {
 }
 
 function ForecastTab() {
-  const [view, setView] = useState("Nedbør");
+  const [view, setView] = useState("🌧️ Nedbør");
   return (
     <div>
       <div className="tab-row">
