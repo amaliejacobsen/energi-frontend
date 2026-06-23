@@ -751,20 +751,34 @@ function DKHourly() {
 
   useEffect(() => {
     setLoading(true);
-  
+    
     const now = new Date();
     const latestHour = new Date(now);
     latestHour.setMinutes(0, 0, 0);
-  
+    
     const from = new Date(latestHour);
     from.setHours(from.getHours() - (days * 24));
-    const fromIso = from.toISOString();
-
+  
+    // Funktion til at lave et tidsstempel, der matcher din python-backend helt uden 'Z'
+    const toBackendString = (date) => {
+      // Vi bruger ISOString, men cutter alt efter sekunderne af (fjerner .000Z)
+      return date.toISOString().split('.')[0]; 
+    };
+  
+    const fromStr = toBackendString(from);
+    const latestHourStr = toBackendString(latestHour);
+  
     Promise.all([
       supabase.from("dk_prices_hourly").select("*")
-        .eq("area", area).gte("datetime", fromIso).lte("datetime", latestHour.toISOString()).order("datetime"),
+        .eq("area", area)
+        .gte("datetime", fromStr)
+        .lte("datetime", latestHourStr)
+        .order("datetime"),
       supabase.from("dk_production_hourly").select("*")
-        .eq("area", area).gte("datetime", fromIso).lte("datetime", latestHour.toISOString()).order("datetime"),
+        .eq("area", area)
+        .gte("datetime", fromStr)
+        .lte("datetime", latestHourStr)
+        .order("datetime"),
     ]).then(([priceRes, prodRes]) => {
       setPrices(priceRes.data || []);
       setProduction(prodRes.data || []);
