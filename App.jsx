@@ -774,17 +774,21 @@ function DKHourly() {
 
   const chartData = (() => {
     const map = {};
+    const normalizedt = (str) => str.replace('+00:00', '').replace('Z', '');
     prices
       .filter(r => {
         const dt = new Date(r.datetime);
         return dt.getMinutes() === 0;
       })
       .forEach(r => {
-        map[r.datetime] = { datetime: r.datetime, price: r.price_dkk };
+        const key = normalizedt(r.datetime);
+        map[key] = { datetime: r.datetime, price: r.price_dkk };
       });
+    
     production.forEach(r => {
-      if (!map[r.datetime]) map[r.datetime] = { datetime: r.datetime };
-      map[r.datetime][r.source] = r.value_mwh;
+      const key = normalizedt(r.datetime);
+      if (!map[key]) map[key] = { datetime: r.datetime };
+      map[key][r.source] = r.value_mwh;
     });
 
 
