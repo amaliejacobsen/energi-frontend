@@ -1094,7 +1094,7 @@ function KPICards() {
 
 function DanmarkSamlet() {
   const [view, setView] = useState("DK1 priser");
-  const views = ["DK1 priser", "DK2 priser", "DK produktion", "Timesdata", "Forbrug DK"];
+  const views = ["DK1 priser", "DK2 priser", "DK produktion", "Markedsoverblik", "Forbrug DK"];
 
   return (
     <div>
@@ -1108,7 +1108,7 @@ function DanmarkSamlet() {
       {view === "DK2 priser"            && <DKPrices area="DK2" />}
       {view === "DK2 produktion"        && <DKProduction area="DK2" />}
       {view === "DK produktion"         && <DKProduction />}
-      {view === "Timesdata"             && <DKHourly />}
+      {view === "Markedsoverblik"             && <DKHourly />}
       {view === "Forbrug DK" && (
         <div>
           <DKConsumption area="DK1" />
