@@ -506,14 +506,20 @@ function NuclearProduction() {
   const [data, setData] = useState([]);
 
   useEffect(() => {
+    const currentYear = new Date().getFullYear();
+    const currentMonth = new Date().getMonth() + 1;
+  
     supabase.from("nuclear_production")
       .select("*")
       .eq("country", selected)
       .order("year")
       .order("month")
       .then(({ data }) => {
-        const normalized = normalizeToDailyAvg(data || []);
-        console.log("Første række før:", data?.[0]?.value_mwh, "efter:", normalized?.[0]?.value_mwh);
+        const filtered = (data || []).filter(d => {
+          if (d.year < currentYear) return true;
+          return d.month < currentMonth;
+        });
+        const normalized = normalizeToDailyAvg(filtered);
         setData(normalized);
       });
   }, [selected]);
