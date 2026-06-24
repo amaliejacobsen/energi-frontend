@@ -231,7 +231,7 @@ function DKProductionDailyChart({ data, valueKey, title, yLabel, source }) {
             endIndex={brushRange.endIndex}
             height={25}
             stroke="#2C3E50"
-            fill="#f0f0f0"
+            fill="var(--chart-grid)"
             travellerWidth={6}
             onChange={(range) => { if (range) setBrushRange(range); }}
           />
@@ -358,7 +358,7 @@ function DKPrices({ area }) {
             <Line type="monotone" dataKey="Solar" stroke="#F4A927" strokeWidth={1.5} dot={false} />
             <Line type="monotone" dataKey="Offshore" stroke="#1A7BB9" strokeWidth={1.5} dot={false} />
             <Line type="monotone" dataKey="Onshore" stroke="#3DAA6E" strokeWidth={1.5} dot={false} strokeDasharray="5 5" />
-            <Brush dataKey="displayDate" height={30} stroke="#2C3E50" fill="#f0f0f0" />
+            <Brush dataKey="displayDate" height={30} stroke="#2C3E50" fill="var(--chart-grid)" />
           </LineChart>
         </ResponsiveContainer>
         <div style={{ marginTop: '16px', padding: '10px 12px', background: 'var(--fafafa)', borderRadius: '6px', border: '1px solid var(--border)' }}>
@@ -378,7 +378,7 @@ function DKPrices({ area }) {
             <Line type="monotone" dataKey="SolarCapture" name="Solar" stroke="#F4A927" strokeWidth={1.5} dot={false} />
             <Line type="monotone" dataKey="OffshoreCapture" name="Offshore" stroke="#1A7BB9" strokeWidth={1.5} dot={false} />
             <Line type="monotone" dataKey="OnshoreCapture" name="Onshore" stroke="#3DAA6E" strokeWidth={1.5} dot={false} strokeDasharray="5 5" />
-            <Brush dataKey="displayDate" height={30} stroke="#2C3E50" fill="#f0f0f0" />
+            <Brush dataKey="displayDate" height={30} stroke="#2C3E50" fill="var(--chart-grid)" />
           </LineChart>
         </ResponsiveContainer>
         <div style={{ marginTop: '16px', padding: '10px 12px', background: 'var(--fafafa)', borderRadius: '6px', border: '1px solid var(--border)' }}>
@@ -962,7 +962,7 @@ function DKHourly() {
                   stroke="#E74C3C" strokeWidth={2.5} dot={false} connectNulls hide={!visible.consumption} />
                 <Line yAxisId="left" type="stepAfter" dataKey="residual" name="Residual load"
                   stroke="#9B59B6" strokeWidth={2} dot={false} connectNulls strokeDasharray="5 5" hide={!visible.residual} />
-                <Brush dataKey="label" height={25} stroke="#2C3E50" fill="#f0f0f0" travellerWidth={6} />
+                <Brush dataKey="label" height={25} stroke="#2C3E50" fill="var(--chart-grid)" travellerWidth={6} />
               </ComposedChart>
             </ResponsiveContainer>
           </div>
@@ -1453,7 +1453,12 @@ export default function App() {
   return (
     <div className="app">
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h1>⚡ Energianalyse</h1>
+        <div>
+          <h1>⚡ Energianalyse</h1>
+          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+            Opdateret: {new Date().toLocaleDateString('da-DK', { day: 'numeric', month: 'long', year: 'numeric' })}
+          </span>
+        </div>
         <button
           onClick={() => setDarkMode(prev => !prev)}
           style={{ padding: '6px 12px', borderRadius: '6px', border: '1px solid var(--border)',
@@ -1512,11 +1517,12 @@ export default function App() {
         .app { max-width: 100%; margin: 0 auto; padding: 0 20px 40px; }
         header { padding: 24px 0 16px; border-bottom: 2px solid var(--border); margin-bottom: 16px; }
         h1 { font-size: 1.6rem; color: var(--text); }
-        .nav-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 24px; }
+        .nav-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 24px; position: sticky; top: 0; z-index: 10; background: var(--bg); padding: 8px 0; }
         .nav-tab { padding: 8px 14px; border: 1px solid var(--tab-border); background: var(--tab-bg); border-radius: 6px; cursor: pointer; font-size: 13px; color: var(--tab-text); transition: all 0.15s; }
         .nav-tab:hover { opacity: 0.8; }
         .nav-tab.active { background: var(--nav-active-bg); color: var(--nav-active-text); border-color: var(--nav-active-bg); }
-        .chart-box { background: var(--surface); border-radius: 10px; padding: 20px 16px; margin-bottom: 20px; box-shadow: var(--shadow); border: 1px solid var(--border); }
+        .chart-box { background: var(--surface); border-radius: 10px; padding: 20px 16px; margin-bottom: 20px; box-shadow: var(--shadow); border: 1px solid var(--border); transition: box-shadow 0.2s, transform 0.2s; }
+        .chart-box:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.13); transform: translateY(-1px); }
         .chart-box h3 { font-size: 1rem; color: var(--text); margin-bottom: 16px; }
         .tab-row { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
        .tab { padding: 6px 12px; border: 1px solid var(--tab-border); background: var(--tab-bg); border-radius: 5px; cursor: pointer; font-size: 13px; color: var(--tab-text); }
