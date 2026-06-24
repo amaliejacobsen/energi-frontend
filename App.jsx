@@ -931,7 +931,7 @@ function DKHourly() {
                   )}
                 />
                 <YAxis yAxisId="left" tick={{ fontSize: 11 }} label={{ value: "MWh", angle: -90, position: 'insideLeft', offset: -5, fontSize: 12 }} />
-                <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11 }} label={{ value: "DKK/MWh", angle: 90, position: 'insideRight', offset: 15, fontSize: 12 }} domain={['auto', dataMax => dataMax * 2]} />
+                <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 11 }} label={{ value: "DKK/MWh", angle: 90, position: 'insideRight', offset: 15, fontSize: 12 }} domain={['auto', dataMax => dataMax * 3]} />
                 <Tooltip
                   labelFormatter={(_, payload) => payload?.[0] ? `🕐 ${payload[0].payload.fullLabel}` : ''}
                   formatter={(value, name) => {
