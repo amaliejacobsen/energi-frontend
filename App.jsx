@@ -1503,25 +1503,45 @@ export default function App() {
   }, [darkMode]);
 
   return (
-    <div className="app">
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <div>
-          <h1>⚡ Energianalyse</h1>
-          <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-            Opdateret: {new Date().toLocaleDateString('da-DK', { day: 'numeric', month: 'long', year: 'numeric' })}
-          </span>
+    <div className="app" style={{ display: 'flex', minHeight: '100vh' }}>
+      {/* Sidebar */}
+      <aside style={{
+        width: '180px', flexShrink: 0, background: 'var(--surface)',
+        borderRight: '1px solid var(--border)', padding: '20px 12px',
+        position: 'sticky', top: 0, height: '100vh', overflowY: 'auto',
+        display: 'flex', flexDirection: 'column', gap: '4px'
+      }}>
+        <div style={{ marginBottom: '20px' }}>
+          <div style={{ fontSize: '20px' }}>⚡</div>
+          <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text)', marginTop: '4px' }}>Energianalyse</div>
+          <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>
+            {new Date().toLocaleDateString('da-DK', { day: 'numeric', month: 'short', year: 'numeric' })}
+          </div>
         </div>
-        <button
-          onClick={() => setDarkMode(prev => !prev)}
-          style={{ padding: '6px 12px', borderRadius: '6px', border: '1px solid var(--border)',
-            background: 'var(--surface)', color: 'var(--text)', cursor: 'pointer', fontSize: '16px' }}>
-          {darkMode ? '☀️' : '🌙'}
-        </button>
-      </header>
-      <nav className="nav-tabs">
-        {TABS.map(t => <button key={t} className={tab === t ? "nav-tab active" : "nav-tab"} onClick={() => setTab(t)}>{t}</button>)}
-      </nav>
-      <main>
+        {TABS.map(t => (
+          <button key={t} onClick={() => setTab(t)}
+            style={{
+              padding: '8px 10px', borderRadius: '6px', border: 'none', cursor: 'pointer',
+              fontSize: '13px', textAlign: 'left', width: '100%',
+              background: tab === t ? 'var(--nav-active-bg)' : 'transparent',
+              color: tab === t ? 'var(--nav-active-text)' : 'var(--tab-text)',
+              fontWeight: tab === t ? '600' : '400',
+              transition: 'background 0.15s',
+            }}>
+            {t}
+          </button>
+        ))}
+        <div style={{ marginTop: 'auto', paddingTop: '16px', borderTop: '1px solid var(--border)' }}>
+          <button onClick={() => setDarkMode(prev => !prev)}
+            style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid var(--border)',
+              background: 'var(--surface)', color: 'var(--text)', cursor: 'pointer', fontSize: '14px' }}>
+            {darkMode ? '☀️ Lys' : '🌙 Mørk'}
+          </button>
+        </div>
+      </aside>
+
+      {/* Hovedindhold */}
+      <div style={{ flex: 1, padding: '24px 24px 40px', overflowX: 'hidden' }}>
         <KPICards />
         {tab === "Danmark" && <DanmarkSamlet />}
         {tab === "Hydro" && <Hydro />}
@@ -1529,7 +1549,8 @@ export default function App() {
         {tab === "Installed capacity" && <InstalledCapacity />}
         {tab === "Kernekraft" && <NuclearProduction />}
         {tab === "Forecast" && <ForecastTab />}
-      </main>
+      </div>
+
       <style>{`
         :root {
           --bg: #f5f7fa;
@@ -1567,20 +1588,14 @@ export default function App() {
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); transition: background 0.2s, color 0.2s; }
-        .app { max-width: 100%; margin: 0 auto; padding: 0 20px 40px; }
-        header { padding: 24px 0 16px; border-bottom: 2px solid var(--border); margin-bottom: 16px; }
+        .app { max-width: 100%; }
         h1 { font-size: 1.6rem; color: var(--text); }
-        .nav-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 24px; position: sticky; top: 0; z-index: 10; background: var(--bg); padding: 8px 0; }
-        .nav-tab { padding: 8px 14px; border: 1px solid var(--tab-border); background: var(--tab-bg); border-radius: 6px; cursor: pointer; font-size: 13px; color: var(--tab-text); transition: all 0.15s; }
-        .nav-tab:hover { opacity: 0.8; }
-        .nav-tab.active { background: var(--nav-active-bg); color: var(--nav-active-text); border-color: var(--nav-active-bg); }
         .chart-box { background: var(--surface); border-radius: 10px; padding: 20px 16px; margin-bottom: 20px; box-shadow: var(--shadow); border: 1px solid var(--border); transition: box-shadow 0.2s, transform 0.2s; }
         .chart-box:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.13); transform: translateY(-1px); }
         .chart-box h3 { font-size: 1rem; color: var(--text); margin-bottom: 16px; }
         .tab-row { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
-       .tab { padding: 6px 12px; border: 1px solid var(--tab-border); background: var(--tab-bg); border-radius: 5px; cursor: pointer; font-size: 13px; color: var(--tab-text); }
+        .tab { padding: 6px 12px; border: 1px solid var(--tab-border); background: var(--tab-bg); border-radius: 5px; cursor: pointer; font-size: 13px; color: var(--tab-text); }
         .tab.active { background: var(--tab-active-bg); color: var(--tab-active-text); border-color: var(--tab-active-bg); }
       `}</style>
     </div>
   );
-}
