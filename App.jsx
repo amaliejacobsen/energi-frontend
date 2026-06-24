@@ -795,10 +795,12 @@ function DKHourly() {
         return dt.getMinutes() === 0;
       })
       .forEach(r => {
-        const key = normalizedt(r.datetime);
-        map[key] = { datetime: r.datetime, price: r.price_dkk };
+        const dt = new Date(r.datetime);
+        dt.setHours(dt.getHours() + 2);
+        const shiftedKey = dt.toISOString().split('.')[0].replace('T', 'T').slice(0, 19);
+        map[shiftedKey] = { datetime: shiftedKey, price: r.price_dkk };
       });
-    
+        
     production.forEach(r => {
       const key = normalizedt(r.datetime);
       if (!map[key]) map[key] = { datetime: r.datetime };
