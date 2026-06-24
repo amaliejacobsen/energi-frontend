@@ -1441,9 +1441,26 @@ const TABS = ["Danmark","Hydro","Forecast","Gas storage","Installed capacity","K
 
 export default function App() {
   const [tab, setTab] = useState(TABS[0]);
+  const [darkMode, setDarkMode] = useState(
+    () => localStorage.getItem('darkMode') === 'true'
+  );
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', darkMode ? 'dark' : '');
+    localStorage.setItem('darkMode', darkMode);
+  }, [darkMode]);
+
   return (
     <div className="app">
-      <header><h1>⚡ Energianalyse</h1></header>
+      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <h1>⚡ Energianalyse</h1>
+        <button
+          onClick={() => setDarkMode(prev => !prev)}
+          style={{ padding: '6px 12px', borderRadius: '6px', border: '1px solid var(--border)',
+            background: 'var(--surface)', color: 'var(--text)', cursor: 'pointer', fontSize: '16px' }}>
+          {darkMode ? '☀️' : '🌙'}
+        </button>
+      </header>
       <nav className="nav-tabs">
         {TABS.map(t => <button key={t} className={tab === t ? "nav-tab active" : "nav-tab"} onClick={() => setTab(t)}>{t}</button>)}
       </nav>
