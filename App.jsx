@@ -1040,53 +1040,89 @@ function DKConsumption({ area }) {
 
 
 function KPICards() {
-  const [kpi, setKpi] = useState({ spotDK1: null, spotDK2: null, solar: null, offshore: null, onshore: null, consumption: null });
+  const [kpi, setKpi] = useState({
+    spotDK1: null, spotDK2: null,
+    solarDK1: null, solarDK2: null,
+    offshoreDK1: null, offshoreDK2: null,
+    onshoreDK1: null, onshoreDK2: null,
+    consumptionDK1: null, consumptionDK2: null,
+    updatedAt: null,
+  });
 
   useEffect(() => {
-    const now = new Date();
-    const hourStr = new Date(now.setMinutes(0,0,0)).toISOString().split('.')[0];
     const fromStr = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString().split('.')[0];
-
     Promise.all([
-      supabase.from("dk_prices_hourly").select("price_dkk").eq("area", "DK1").gte("datetime", fromStr).order("datetime", { ascending: false }).limit(1),
+      supabase.from("dk_prices_hourly").select("price_dkk, datetime").eq("area", "DK1").gte("datetime", fromStr).order("datetime", { ascending: false }).limit(1),
       supabase.from("dk_prices_hourly").select("price_dkk").eq("area", "DK2").gte("datetime", fromStr).order("datetime", { ascending: false }).limit(1),
       supabase.from("dk_production_hourly").select("value_mwh").eq("area", "DK1").eq("source", "solar").gte("datetime", fromStr).order("datetime", { ascending: false }).limit(1),
+      supabase.from("dk_production_hourly").select("value_mwh").eq("area", "DK2").eq("source", "solar").gte("datetime", fromStr).order("datetime", { ascending: false }).limit(1),
       supabase.from("dk_production_hourly").select("value_mwh").eq("area", "DK1").eq("source", "offshore").gte("datetime", fromStr).order("datetime", { ascending: false }).limit(1),
+      supabase.from("dk_production_hourly").select("value_mwh").eq("area", "DK2").eq("source", "offshore").gte("datetime", fromStr).order("datetime", { ascending: false }).limit(1),
       supabase.from("dk_production_hourly").select("value_mwh").eq("area", "DK1").eq("source", "onshore").gte("datetime", fromStr).order("datetime", { ascending: false }).limit(1),
+      supabase.from("dk_production_hourly").select("value_mwh").eq("area", "DK2").eq("source", "onshore").gte("datetime", fromStr).order("datetime", { ascending: false }).limit(1),
       supabase.from("dk_production_hourly").select("value_mwh").eq("area", "DK1").eq("source", "consumption").gte("datetime", fromStr).order("datetime", { ascending: false }).limit(1),
-    ]).then(([dk1, dk2, solar, offshore, onshore, cons]) => {
+      supabase.from("dk_production_hourly").select("value_mwh").eq("area", "DK2").eq("source", "consumption").gte("datetime", fromStr).order("datetime", { ascending: false }).limit(1),
+    ]).then(([dk1p, dk2p, solDK1, solDK2, offDK1, offDK2, onDK1, onDK2, consDK1, consDK2]) => {
       setKpi({
-        spotDK1:     dk1.data?.[0]?.price_dkk ?? null,
-        spotDK2:     dk2.data?.[0]?.price_dkk ?? null,
-        solar:       solar.data?.[0]?.value_mwh ?? null,
-        offshore:    offshore.data?.[0]?.value_mwh ?? null,
-        onshore:     onshore.data?.[0]?.value_mwh ?? null,
-        consumption: cons.data?.[0]?.value_mwh ?? null,
+        spotDK1:       dk1p.data?.[0]?.price_dkk ?? null,
+        spotDK2:       dk2p.data?.[0]?.price_dkk ?? null,
+        solarDK1:      solDK1.data?.[0]?.value_mwh ?? null,
+        solarDK2:      solDK2.data?.[0]?.value_mwh ?? null,
+        offshoreDK1:   offDK1.data?.[0]?.value_mwh ?? null,
+        offshoreDK2:   offDK2.data?.[0]?.value_mwh ?? null,
+        onshoreDK1:    onDK1.data?.[0]?.value_mwh ?? null,
+        onshoreDK2:    onDK2.data?.[0]?.value_mwh ?? null,
+        consumptionDK1: consDK1.data?.[0]?.value_mwh ?? null,
+        consumptionDK2: consDK2.data?.[0]?.value_mwh ?? null,
+        updatedAt:     dk1p.data?.[0]?.datetime ?? null,
       });
     });
   }, []);
 
+  const fmt = (v) => v !== null ? Math.round(v).toLocaleString('da-DK') : '–';
+
   const cards = [
-    { label: "Spotpris DK1", value: kpi.spotDK1, unit: "DKK/MWh", icon: "⚡", color: "#2ECC71" },
-    { label: "Spotpris DK2", value: kpi.spotDK2, unit: "DKK/MWh", icon: "⚡", color: "#3498DB" },
-    { label: "Sol (DK1)",    value: kpi.solar,    unit: "MWh",     icon: "☀️", color: "#F4A927" },
-    { label: "Offshore",     value: kpi.offshore, unit: "MWh",     icon: "🌊", color: "#1A3A5C" },
-    { label: "Onshore",      value: kpi.onshore,  unit: "MWh",     icon: "💨", color: "#1ABC9C" },
-    { label: "Forbrug (DK1)",value: kpi.consumption, unit: "MWh",  icon: "🏭", color: "#E74C3C" },
+    { label: "Spotpris", icon: "⚡", color: "#2ECC71", unit: "DKK/MWh",
+      dk1: kpi.spotDK1, dk2: kpi.spotDK2 },
+    { label: "Sol", icon: "☀️", color: "#F4A927", unit: "MWh",
+      dk1: kpi.solarDK1, dk2: kpi.solarDK2 },
+    { label: "Offshore vind", icon: "🌊", color: "#1A3A5C", unit: "MWh",
+      dk1: kpi.offshoreDK1, dk2: kpi.offshoreDK2 },
+    { label: "Onshore vind", icon: "💨", color: "#1ABC9C", unit: "MWh",
+      dk1: kpi.onshoreDK1, dk2: kpi.onshoreDK2 },
+    { label: "Forbrug", icon: "🏭", color: "#E74C3C", unit: "MWh",
+      dk1: kpi.consumptionDK1, dk2: kpi.consumptionDK2 },
   ];
 
+  const updatedLabel = kpi.updatedAt
+    ? `Opdateret: ${new Date(kpi.updatedAt).toLocaleTimeString('da-DK', { hour: '2-digit', minute: '2-digit' })}`
+    : '';
+
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px', marginBottom: '24px' }}>
-      {cards.map(c => (
-        <div key={c.label} className="chart-box" style={{ padding: '14px 16px', marginBottom: 0, borderTop: `3px solid ${c.color}` }}>
-          <div style={{ fontSize: '20px', marginBottom: '4px' }}>{c.icon}</div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '4px' }}>{c.label}</div>
-          <div style={{ fontSize: '20px', fontWeight: '700', color: 'var(--text)' }}>
-            {c.value !== null ? Math.round(c.value).toLocaleString('da-DK') : '–'}
-          </div>
-          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{c.unit}</div>
+    <div style={{ marginBottom: '24px' }}>
+      {updatedLabel && (
+        <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '8px', textAlign: 'right' }}>
+          {updatedLabel}
         </div>
-      ))}
+      )}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px' }}>
+        {cards.map(c => (
+          <div key={c.label} className="chart-box" style={{ padding: '14px 16px', marginBottom: 0, borderTop: `3px solid ${c.color}` }}>
+            <div style={{ fontSize: '18px', marginBottom: '4px' }}>{c.icon} {c.label}</div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px' }}>
+              <div>
+                <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>DK1</div>
+                <div style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text)' }}>{fmt(c.dk1)}</div>
+              </div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>DK2</div>
+                <div style={{ fontSize: '18px', fontWeight: '700', color: 'var(--text)' }}>{fmt(c.dk2)}</div>
+              </div>
+            </div>
+            <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px' }}>{c.unit}</div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -1513,7 +1549,7 @@ export default function App() {
       }}>
         <div style={{ marginBottom: '20px' }}>
           <div style={{ fontSize: '20px' }}>⚡</div>
-          <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--text)', marginTop: '4px' }}>Energianalyse</div>
+          <div style={{ fontSize: '16px', fontWeight: '700', color: 'var(--text)', marginTop: '4px' }}>Energianalyse</div>
           <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>
             {new Date().toLocaleDateString('da-DK', { day: 'numeric', month: 'short', year: 'numeric' })}
           </div>
@@ -1582,7 +1618,7 @@ export default function App() {
           --nav-active-text: #ffffff;
           --tab-active-bg: #3498DB;
           --tab-active-text: #ffffff;
-          --chart-grid: #2d3141;
+          --chart-grid: #2a2d3e;
           --shadow: 0 1px 4px rgba(0,0,0,0.4);
           --fafafa: #13161f;
         }
