@@ -5,7 +5,7 @@ import { supabase } from "./src/supabaseClient";
 const YEAR_COLORS = ["#2C3E50","#E74C3C","#3498DB","#2ECC71","#9B59B6","#F39C12","#1ABC9C","#E67E22","#95A5A6","#D35400"];
 const MONTH_NAMES = ["Jan","Feb","Mar","Apr","Maj","Jun","Jul","Aug","Sep","Okt","Nov","Dec"];
 const HOUR_LABELS = Array.from({length: 24}, (_, h) => `${String(h).padStart(2,'0')}:00`);
-const Grid = () => <Grid stroke="var(--chart-grid)" strokeOpacity={0.4} />;
+const Grid = () => <Grid stroke="var(--chart-grid)" strokeOpacity={0.6} />;
 
 
 function calcMedian(values) {
@@ -1602,7 +1602,7 @@ export default function App() {
           --nav-active-text: #ffffff;
           --tab-active-bg: #1A7BB9;
           --tab-active-text: #ffffff;
-          --chart-grid: #f0f0f0;
+          --chart-grid: #d0d7de;
           --shadow: 0 1px 4px rgba(0,0,0,0.08);
           --fafafa: #fafafa;
         }
