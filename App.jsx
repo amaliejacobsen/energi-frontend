@@ -5,7 +5,12 @@ import { supabase } from "./src/supabaseClient";
 const YEAR_COLORS = ["#2C3E50","#E74C3C","#3498DB","#2ECC71","#9B59B6","#F39C12","#1ABC9C","#E67E22","#95A5A6","#D35400"];
 const MONTH_NAMES = ["Jan","Feb","Mar","Apr","Maj","Jun","Jul","Aug","Sep","Okt","Nov","Dec"];
 const HOUR_LABELS = Array.from({length: 24}, (_, h) => `${String(h).padStart(2,'0')}:00`);
-const Grid = () => <Grid stroke="var(--chart-grid)" strokeOpacity={0.6} />;
+const gridProps = {
+  strokeDasharray: "3 3",
+  stroke: "var(--chart-grid)",
+  strokeOpacity: 0.6,
+};
+
 
 
 function calcMedian(values) {
@@ -134,7 +139,7 @@ function DKProductionChart({ data, valueKey, title, yLabel, source }) {
       </div>
       <ResponsiveContainer width="100%" height={320}>
         <LineChart data={byDay} margin={{ bottom: 20 }}>
-          <Grid stroke="#f0f0f0" />
+          <CartesianGrid {...gridProps} />
           <XAxis dataKey="day" type="number" domain={[0, 365]} ticks={monthTicks} interval={0}
             tickFormatter={(day) => { const monthIdx = Math.floor(day / 30.5); return MONTH_NAMES[monthIdx] || ""; }}
             tick={{ fontSize: 11, fill: '#2C3E50' }} />
@@ -216,7 +221,7 @@ function DKProductionDailyChart({ data, valueKey, title, yLabel, source }) {
       </div>
       <ResponsiveContainer width="100%" height={320}>
         <LineChart data={visibleData} margin={{ bottom: 20 }}>
-          <Grid stroke="#f0f0f0" />
+          <CartesianGrid {...gridProps} />
           <XAxis dataKey="day" type="number" domain={['auto', 'auto']} ticks={monthTicks} interval={0}
             tickFormatter={(day) => { const monthIdx = Math.floor(day / 30.5); return MONTH_NAMES[monthIdx] || ""; }}
             tick={{ fontSize: 11, fill: '#2C3E50' }} />
@@ -269,7 +274,7 @@ function YearlyLineChart({ data, valueKey, title, yLabel, source }) {
       </div>
       <ResponsiveContainer width="100%" height={320}>
         <LineChart data={byMonth} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-          <Grid stroke="#f0f0f0" />
+          <CartesianGrid {...gridProps} />
           <XAxis dataKey="month" interval={0} tick={{ fontSize: 12, fill: '#2C3E50' }} height={50} />
           <YAxis tick={{ fontSize: 12 }} label={{ value: yLabel, angle: -90, position: 'insideLeft', offset: -10 }} />
           <Tooltip formatter={(value) => value !== null ? [Number(value).toFixed(2)] : [null]} />
@@ -305,7 +310,7 @@ function HourlyLineChart({ data, title, source }) {
       </div>
       <ResponsiveContainer width="100%" height={320}>
         <LineChart data={byHour}>
-          <Grid stroke="#f0f0f0" />
+          <CartesianGrid {...gridProps} />
           <XAxis dataKey="hour" tick={{ fontSize: 11 }} interval={2} />
           <YAxis tick={{ fontSize: 12 }} label={{ value: "MWh", angle: -90, position: "insideLeft", fontSize: 12 }} />
           <Tooltip /><Legend />
@@ -351,7 +356,7 @@ function DKPrices({ area }) {
         <h3>{area} – Prisudvikling 2020-2026 (DKK/MWh)</h3>
         <ResponsiveContainer width="100%" height={400}>
           <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-            <Grid stroke="#f0f0f0" />
+            <CartesianGrid {...gridProps} />
             <XAxis dataKey="displayDate" tick={{ fontSize: 10 }} minTickGap={30} />
             <YAxis tick={{ fontSize: 12 }} label={{ value: "DKK/MWh", angle: -90, position: 'insideLeft', offset: -10 }} />
             <Tooltip /><Legend verticalAlign="top" height={36} />
@@ -372,7 +377,7 @@ function DKPrices({ area }) {
         <h3>{area} – Capture rate udvikling (%)</h3>
         <ResponsiveContainer width="100%" height={400}>
           <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-            <Grid stroke="#f0f0f0" />
+            <CartesianGrid {...gridProps} />
             <XAxis dataKey="displayDate" tick={{ fontSize: 10 }} minTickGap={30} />
             <YAxis tick={{ fontSize: 12 }} label={{ value: "Capture Rate %", angle: -90, position: 'insideLeft', offset: -10 }} />
             <Tooltip /><Legend verticalAlign="top" height={36} />
@@ -620,7 +625,7 @@ function InstalledCapacity() {
         </div>
         <ResponsiveContainer width="100%" height={Math.max(100, visibleTypes.length * years.length * 14)}>
           <BarChart data={chartData} layout="vertical" barGap={2} barCategoryGap="20%">
-            <Grid stroke="var(--chart-grid)" />
+            <CartesianGrid {...gridProps} />
             <XAxis type="number" tick={{ fontSize: 12 }} />
             <YAxis type="category" dataKey="psr" width={200} tick={{ fontSize: 11 }} />
             <Tooltip formatter={(value) => value !== null ? [Number(value).toFixed(2)] : [null]} /><Legend />
@@ -899,7 +904,7 @@ function DKHourly() {
             <h3>{area} – Produktion, Forbrug & Spotpris (seneste {days} dage)</h3>
             <ResponsiveContainer width="100%" height={450}>
               <ComposedChart data={filteredData} margin={{ top: 5, right: 70, left: 20, bottom: 30 }}>
-                <Grid stroke="#f0f0f0" />
+                <CartesianGrid {...gridProps} />
                 <XAxis
                   dataKey="datetime"
                   ticks={filteredData
@@ -1265,7 +1270,7 @@ function HydroForecastChart() {
       
       <ResponsiveContainer width="100%" height={350}>
         <ComposedChart data={data} margin={{ top: 10, right: 30, left: 10, bottom: 10 }}>
-          <Grid stroke="#f0f0f0" />
+          <CartesianGrid {...gridProps} />
           <XAxis 
             dataKey="displayDate" 
             tick={{ fontSize: 11, fill: '#2C3E50' }}
@@ -1373,7 +1378,7 @@ function HydroForecast() {
         </p>
         <ResponsiveContainer width="100%" height={350}>
           <ComposedChart data={data} margin={{ top: 30, right: 30, left: 10, bottom: 10 }}>
-            <Grid stroke="#f0f0f0" />
+            <CartesianGrid {...gridProps} />
             <XAxis dataKey="displayDate" tick={{ fontSize: 11 }} />
             <YAxis tick={{ fontSize: 12 }} label={{ value: "Nedbør (mm)", angle: -90, position: "insideLeft", fontSize: 12 }} />
             <Tooltip formatter={(value) => value !== null ? [`${Number(value).toFixed(1)} mm`] : [null]} />
@@ -1479,7 +1484,7 @@ function TemperatureForecast() {
         </p>
         <ResponsiveContainer width="100%" height={350}>
           <ComposedChart data={data} margin={{ top: 30, right: 30, left: 10, bottom: 10 }}>
-            <Grid stroke="#f0f0f0" />
+            <CartesianGrid {...gridProps} />
             <XAxis dataKey="displayDate" tick={{ fontSize: 11 }} />
             <YAxis tick={{ fontSize: 12 }} label={{ value: "Temperatur (°C)", angle: -90, position: "insideLeft", fontSize: 12 }} />
             <Tooltip formatter={(value) => value !== null ? [`${Number(value).toFixed(1)} °C`] : [null]} />
